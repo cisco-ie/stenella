@@ -3,7 +3,6 @@
   "env": {                           // http://eslint.org/docs/user-guide/configuring.html#specifying-environments
     "node": true                     // Node.js global variables and Node.js-specific rules
     },
-  "parser": "babel-eslint",          // https://github.com/babel/babel-eslint
   "rules": {
 /**
  * Strict mode
@@ -155,4 +154,5 @@
       "exceptions": ["-", "+"],
       "markers": ["=", "!"]          // space here to support sprockets directives
       }]
+    }
 }
