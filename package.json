@@ -29,7 +29,6 @@
     "bluebird": "^3.4.6",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
-    "express-init": "^1.1.0",
     "googleapis": "^14.0.0",
     "lodash": "^4.16.3"
   }
