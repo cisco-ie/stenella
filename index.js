@@ -3,115 +3,103 @@
 /**
  * Variable Declarations
  */
-
-var express = require('express');
+var app = require('express')();
 var Promise = require('bluebird');
 var _ = require('lodash');
+
 var AdministerUsers = require('./services/AdministerUsers');
 var AdministerCalendars = require('./services/AdministerCalendars');
 
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
+var key = config.keys.server;
 var google = require('googleapis');
 
-// var initialize = Promise.promisify(require('express-init'));
-// var app = express();
-// initialize(app).then(setupCalendaring);
-
-var app = express();
-var initialize = require('express-init');
-
-var middleware = function(req, res, next) {
-  // ... the stuff dreams are made of
-  next();
-};
-
-middleware.init = function(app, callback) {
-  // initialize your middleware and callback when ready
-  callback();
-};
-
-var app = express();
-app.use(middleware);
-app.get('/', function(req, res) {
-  req.send('ok');
-});
-initialize(app, function(err, result) {
-  setupCalendaring();
-  app.listen(5000);
+/**
+ * Application Index Route
+ */
+app.get('/', function getResponse(req, res) {
+  res.send('Google Integration is running.');
 });
 
 /**
- * This function setups subscriptions for user directories, calendarList and Events
+ * Initialization of server
  */
-function setupCalendaring() {
-  retrieveUserList();
-  // createCalendarChannel()
+init();
+
+/**
+ * A promise that performs synchronous operations to setup the
+ * server prior to accepting requests
+ * @return {object} Promise which is resolved once all operations are done
+ */
+function init() {
+  setupCalendaring();
+  app.listen(config.port, console.log('Running on port 5000'));
 }
 
-function retrieveUserList() {
-  var key = config.keys.server;
-  var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.userDirectory, config.authorizeAdmin);
-/**
- * @TODO: make promise compliant
- */
-  // var authorizeClient = Promise.promisify(jwtClient.authorize);
-
-  // return authorizeClient
-  //   .then(getUsers)
-  //   .then(extractUserId);
-    // .catch(logError);
-  jwtClient.authorize(function(err, result) {
-    if (err) {
-      console.log(err);
-    }
-    console.log(result);
-    getUsers()
-      .then(function(response) {
-        // console.log(response);
-        var usersIds = extractUserId(response.users);
-        console.log("**************");
-        console.log(usersIds);
-
-        getUsersCalendars(usersIds);
-      });
-  });
+function setupCalendaring() {
+  getUsers()
+    .then(extractUserId)
+    .then(getUsersCalendars)
+    .catch(logError);
+}
 
 /**
  * get list of users
- * @return {[type]} [description]
+ * @return {object} A promise when fulfilled is
  */
-  function getUsers() {
-    var listUsers = Promise.promisify(AdministerUsers.list);
-    return listUsers(jwtClient, null);
-  }
+function getUsers() {
+  var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.userDirectory, config.authorizeAdmin);
+  /**
+   * @TODO: make promise compliant
+   */
+  // var authorizeClient = Promise.promisify(jwtClient.authorize);
+  return new Promise(function(resolve, reject) {
+    jwtClient.authorize(function(error, tokens) {
+      if (error) reject(error);
+      var listUsers = Promise.promisify(AdministerUsers.list);
+
+      listUsers(jwtClient, null)
+        .then(function(response) {
+          resolve(response.users);
+        })
+        .catch(function(listError) {
+          reject(listError);
+        });
+    });
+  });
+}
 
 /**
- * get list of user ids from user records
- * @param  {[type]} users [description]
- * @return {[type]}       [description]
- */
-  function extractUserId(users) {
-    // console.log(users);
-    return _.map(users, function(user) {
-      return user.primaryEmail;
-    });
-  }
+* get list of user ids from user records
+* @param  {[type]} users [description]
+* @return {[type]}       [description]
+*/
+function extractUserId(users) {
+  var userIds = _.map(users, function(user) {
+    return user.primaryEmail;
+  });
+
+  return Promise.resolve(userIds);
+}
 
 /**
  * get calendars for all user ids
  * @param  {[type]} usersIds [description]
  * @return {[type]}          [description]
  */
-  function getUsersCalendars(usersIds) {
-    var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.calendar, config.authorizeAdmin);
+function getUsersCalendars(usersIds) {
+  var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.calendar, config.authorizeAdmin);
 
-    jwtClient.authorize(function(err, result) {
-      _.forEach(usersIds, function(userId) {
-          AdministerCalendars.list(jwtClient, null, userId, function(err, result) {
-            console.log(result);
-          })
+  jwtClient.authorize(function(error) {
+    _.forEach(usersIds, function(userId) {
+      AdministerCalendars.list(jwtClient, null, userId, function(listErr, result) {
+        console.log(result);
       });
-    })
-  }
+    });
+  });
+}
+
+function logError(error) {
+  console.log(error);
 }
