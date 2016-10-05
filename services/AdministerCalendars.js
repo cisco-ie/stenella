@@ -23,13 +23,16 @@ module.exports = Interface;
  * @param  {Function} callback   for google's list of calendars response
  * @return {function} invokes callback
  */
-function getCalendars(authToken, calendarParams, callback) {
+function getCalendars(authToken, calendarParams, userId, callback) {
+  // @TODO: add support for pagination under Utilities
+  var overrideOptions = {
+    url: 'https://www.googleapis.com/calendar/v3/users/' + userId + '/calendarList'
+  };
   if (!authToken) return callback(new Error('No auth token provided'));
   var defaultParams = {
-    customer: '',
-    maxResults: 500,
-    pageToken: ''
+    maxResults: 500
   };
   var params = _.extend(defaultParams, calendarParams);
-  return calendar.list(params, callback);
+  console.log(overrideOptions);
+  return calendar.calendarList.list(params, overrideOptions, callback);
 }
