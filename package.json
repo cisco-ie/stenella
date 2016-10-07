@@ -4,7 +4,7 @@
   "description": "webex google calendar integration",
   "main": "index.js",
   "scripts": {
-    "test": "../node_modules/mocha/bin/mocha",
+    "test": "./node_modules/mocha/bin/mocha",
     "start": "node index.js"
   },
   "repository": {
