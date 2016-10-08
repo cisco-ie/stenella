@@ -39,9 +39,35 @@ function init() {
 
 function setupCalendaring() {
   getUsers()
-    .then(extractUserId)
-    .then(getUsersCalendars)
+    .then(createChannelAndExtractUserIds)
+    // .then(getUsersCalendars)
     .catch(logError);
+}
+
+/**
+ * create User Directory Channel and extract User ids
+ * @param  {[type]} userResponse [description]
+ * @return {[type]}              [description]
+ */
+function createChannelAndExtractUserIds(userResponse){
+  // @TODO: retry creating channel and have a timeout associated with it
+  createChannel('userDirectory');
+  extractUserIds(userResponse.users)
+    .then(createEventsChannel)
+    .catch(function(listError) {
+      console.log(listError);
+    });
+
+}
+
+ // @TODO: Create util library for ancillary functions
+/**
+ * Log the response
+ * @param  {[type]} channelResponse [description]
+ * @return {[type]}                 [description]
+ */
+function logResponse(channelResponse) {
+  console.log(channelResponse)
 }
 
 /**
@@ -83,23 +109,12 @@ function extractUserId(users) {
   return Promise.resolve(userIds);
 }
 
-/**
- * get calendars for all user ids
- * @param  {[type]} usersIds [description]
- * @return {[type]}          [description]
- */
-function getUsersCalendars(usersIds) {
-  var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.calendar, config.authorizeAdmin);
-
-  jwtClient.authorize(function(error) {
-    _.forEach(usersIds, function(userId) {
-      AdministerCalendars.list(jwtClient, null, userId, function(listErr, result) {
-        console.log(result);
-      });
-    });
-  });
-}
 
 function logError(error) {
   console.log(error);
+}
+
+function createEventsChannel(userIds) {
+  createChannel('events')
+
 }
