@@ -11,8 +11,6 @@ var createChannel = require('./services/AdministerChannels').createChannel;
 var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
-var key = config.keys.server;
-var google = require('googleapis');
 
 /**
  * Application Index Route
@@ -72,20 +70,16 @@ function logResponse(channelResponse) {
  * @return {object} A promise when fulfilled is
  */
 function getUsers() {
-  var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.userDirectory, config.authorizeAdmin);
   return new Promise(function(resolve, reject) {
-    jwtClient.authorize(function(error) {
-      if (error) reject(error);
-      var listUsers = Promise.promisify(AdministerUsers.list);
+    createJWT(scope.userDirectory)
+      .then(function authorizeJwtResponse(jwtClient) {
+        var listUsers = Promise.promisify(AdministerUsers.list);
 
-      listUsers(jwtClient, null)
-        .then(function(response) {
-          resolve(response);
-        })
-        .catch(function(listError) {
-          reject(listError);
-        });
-    });
+        listUsers(jwtClient, null)
+          .then(resolve)
+          .catch(reject);
+      })
+      .catch(logError);
   });
 }
 
@@ -105,14 +99,20 @@ function logError(error) {
   console.log(error);
 }
 
+/**
+ * Create an events channel per each userId
+ * @param  {string} userIds <userId>@<domain>
+ * @return {void}
+ */
 function createEventsChannels(userIds) {
-  var channelInfo = {
-    type: 'event'
-  };
   createJWT(scope.calendar)
     .then(function JwtResponse(jwtClient) {
       _.forEach(userIds, function createChannelPerId(userId) {
-        channelInfo.id = userId;
+        // Create a new object appending userId
+        var channelInfo = {
+          type: 'event',
+          id: userId
+        };
         createChannel(jwtClient, channelInfo);
       });
     });
