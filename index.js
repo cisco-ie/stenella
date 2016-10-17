@@ -8,8 +8,8 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 
 var AdministerUsers = require('./services/AdministerUsers');
-var AdministerCalendars = require('./services/AdministerCalendars');
-
+//var AdministerCalendars = require('./services/AdministerCalendars');
+var createChannel = require('./services/AdministerChannels').createChannel;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
 var key = config.keys.server;
@@ -49,15 +49,24 @@ function setupCalendaring() {
  * @param  {[type]} userResponse [description]
  * @return {[type]}              [description]
  */
-function createChannelAndExtractUserIds(userResponse){
+function createChannelAndExtractUserIds(userResponse) {
   // @TODO: retry creating channel and have a timeout associated with it
-  createChannel('userDirectory');
+  // createChannel('userDirectory');
   extractUserIds(userResponse.users)
-    .then(createEventsChannel)
+    .then(function (userIds) {
+      console.log(userIds);
+      var jwtClient = new google.auth.JWT(
+          key.client_email, null, key.private_key, scope.calendar,
+          config.authorizeAdmin);
+      jwtClient.authorize(function(error) {
+        if (error) console.log(error);
+        console.log('create channels')
+        createEventsChannel(jwtClient, userIds);
+      });
+    })
     .catch(function(listError) {
       console.log(listError);
     });
-
 }
 
  // @TODO: Create util library for ancillary functions
@@ -81,12 +90,13 @@ function getUsers() {
    */
   // var authorizeClient = Promise.promisify(jwtClient.authorize);
   return new Promise(function(resolve, reject) {
-    jwtClient.authorize(function(error, tokens) {
+    jwtClient.authorize(function(error) {
       if (error) reject(error);
       var listUsers = Promise.promisify(AdministerUsers.list);
 
       listUsers(jwtClient, null)
         .then(function(response) {
+          console.log(response);
           resolve(response.users);
         })
         .catch(function(listError) {
@@ -101,7 +111,7 @@ function getUsers() {
 * @param  {[type]} users [description]
 * @return {[type]}       [description]
 */
-function extractUserId(users) {
+function extractUserIds(users) {
   var userIds = _.map(users, function(user) {
     return user.primaryEmail;
   });
@@ -114,7 +124,13 @@ function logError(error) {
   console.log(error);
 }
 
-function createEventsChannel(userIds) {
-  createChannel('events')
-
+function createEventsChannel(jwtClient, userIds) {
+  _.forEach(userIds, function(userId) {
+    console.log('creating channel for ', userId);
+    var channelInfo = {
+      type: 'event',
+      id: userId
+    };
+    createChannel(jwtClient, channelInfo);
+  });
 }
