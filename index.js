@@ -6,10 +6,9 @@
 var app = require('express')();
 var Promise = require('bluebird');
 var _ = require('lodash');
-
 var AdministerUsers = require('./services/AdministerUsers');
-//var AdministerCalendars = require('./services/AdministerCalendars');
 var createChannel = require('./services/AdministerChannels').createChannel;
+var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
 var key = config.keys.server;
@@ -40,7 +39,6 @@ function init() {
 function setupCalendaring() {
   getUsers()
     .then(createChannelAndExtractUserIds)
-    // .then(getUsersCalendars)
     .catch(logError);
 }
 
@@ -53,17 +51,7 @@ function createChannelAndExtractUserIds(userResponse) {
   // @TODO: retry creating channel and have a timeout associated with it
   // createChannel('userDirectory');
   extractUserIds(userResponse.users)
-    .then(function (userIds) {
-      console.log(userIds);
-      var jwtClient = new google.auth.JWT(
-          key.client_email, null, key.private_key, scope.calendar,
-          config.authorizeAdmin);
-      jwtClient.authorize(function(error) {
-        if (error) console.log(error);
-        console.log('create channels')
-        createEventsChannel(jwtClient, userIds);
-      });
-    })
+    .then(createEventsChannels)
     .catch(function(listError) {
       console.log(listError);
     });
@@ -85,10 +73,6 @@ function logResponse(channelResponse) {
  */
 function getUsers() {
   var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.userDirectory, config.authorizeAdmin);
-  /**
-   * @TODO: make promise compliant
-   */
-  // var authorizeClient = Promise.promisify(jwtClient.authorize);
   return new Promise(function(resolve, reject) {
     jwtClient.authorize(function(error) {
       if (error) reject(error);
@@ -96,8 +80,7 @@ function getUsers() {
 
       listUsers(jwtClient, null)
         .then(function(response) {
-          console.log(response);
-          resolve(response.users);
+          resolve(response);
         })
         .catch(function(listError) {
           reject(listError);
@@ -112,25 +95,25 @@ function getUsers() {
 * @return {[type]}       [description]
 */
 function extractUserIds(users) {
-  var userIds = _.map(users, function(user) {
+  var userIds = _.map(users, function extractEmail(user) {
     return user.primaryEmail;
   });
-
   return Promise.resolve(userIds);
 }
-
 
 function logError(error) {
   console.log(error);
 }
 
-function createEventsChannel(jwtClient, userIds) {
-  _.forEach(userIds, function(userId) {
-    console.log('creating channel for ', userId);
-    var channelInfo = {
-      type: 'event',
-      id: userId
-    };
-    createChannel(jwtClient, channelInfo);
-  });
+function createEventsChannels(userIds) {
+  var channelInfo = {
+    type: 'event'
+  };
+  createJWT(scope.calendar)
+    .then(function JwtResponse(jwtClient) {
+      _.forEach(userIds, function createChannelPerId(userId) {
+        channelInfo.id = userId;
+        createChannel(jwtClient, channelInfo);
+      });
+    });
 }
