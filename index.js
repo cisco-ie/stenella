@@ -30,13 +30,17 @@ init();
  * @return {object} Promise which is resolved once all operations are done
  */
 function init() {
-  setupCalendaring();
+  setUpChannels();
   app.listen(config.port, console.log('Running on port 5000'));
 }
 
-function setupCalendaring() {
+/**
+ * Set up all the events and userDirectory channels
+ * @return {void}
+ */
+function setUpChannels() {
   getUsers()
-    .then(createChannelAndExtractUserIds)
+    .then(createUserChannelsAndExtractIds)
     .catch(logError);
 }
 
@@ -45,24 +49,12 @@ function setupCalendaring() {
  * @param  {[type]} userResponse [description]
  * @return {[type]}              [description]
  */
-function createChannelAndExtractUserIds(userResponse) {
+function createUserChannelsAndExtractIds(userResponse) {
   // @TODO: retry creating channel and have a timeout associated with it
-  // createChannel('userDirectory');
+  createDirectoryChannel();
   extractUserIds(userResponse.users)
     .then(createEventsChannels)
-    .catch(function(listError) {
-      console.log(listError);
-    });
-}
-
- // @TODO: Create util library for ancillary functions
-/**
- * Log the response
- * @param  {[type]} channelResponse [description]
- * @return {[type]}                 [description]
- */
-function logResponse(channelResponse) {
-  console.log(channelResponse)
+    .catch(logError);
 }
 
 /**
@@ -74,7 +66,6 @@ function getUsers() {
     createJWT(scope.userDirectory)
       .then(function authorizeJwtResponse(jwtClient) {
         var listUsers = Promise.promisify(AdministerUsers.list);
-
         listUsers(jwtClient, null)
           .then(resolve)
           .catch(reject);
@@ -85,8 +76,8 @@ function getUsers() {
 
 /**
 * get list of user ids from user records
-* @param  {[type]} users [description]
-* @return {[type]}       [description]
+* @param  {array} users an array of users from the Google directory response
+* @return {object}       returns an extracted list of Google user ids
 */
 function extractUserIds(users) {
   var userIds = _.map(users, function extractEmail(user) {
@@ -115,5 +106,13 @@ function createEventsChannels(userIds) {
         };
         createChannel(jwtClient, channelInfo);
       });
+    });
+}
+
+function createDirectoryChannel() {
+  createJWT(scope.userDirectory)
+    .then(function JwtResponse(jwtClient) {
+      var channelInfo = { type: 'directory' };
+      createChannel(jwtClient, channelInfo);
     });
 }

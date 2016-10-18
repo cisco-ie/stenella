@@ -68,7 +68,7 @@ function buildParams(jwtClient, channelInfo) {
       payload: true,
       fields: 'id, expiration', // Only because we only want to confirm it has been successful
       resource: {
-        id: UUID,
+        id: 'CAL-' + UUID,
         type: 'web_hook',
         address: config.recievingUrl.events,
         params: {
@@ -85,7 +85,7 @@ function buildParams(jwtClient, channelInfo) {
       // Only care about new additions, deleted ones will fall off over time
       event: 'add',
       resource: {
-        id: UUID,
+        id: 'DIR-' + UUID,
         type: 'web_hook',
         address: config.recievingUrl.users,
         params: {
