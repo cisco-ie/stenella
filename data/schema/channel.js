@@ -12,7 +12,8 @@ var channelSchema = new Schema({
   calendarId: String,
   resourceId: String,
   syncToken: String,
-  expiration: Date
+  expiration: Date,
+  resourceType: String
 });
 
 /**
