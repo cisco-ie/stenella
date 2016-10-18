@@ -17,9 +17,10 @@ var channelSchema = new Schema({
 
 /**
  * A synchronous token return
- * @param  {[type]}   calendarId [description]
- * @param  {Function} callback   [description]
- * @return {[type]}              [description]
+ * @TODO: Change this based on schema update on finalized schema
+ * @param  {string}   calendarId calendarId
+ * @param  {Function} callback   callback function
+ * @return {function)              returns a callback 
  */
 channelSchema.methods.getSyncToken = function (calendarId, callback) {
   var query = {
