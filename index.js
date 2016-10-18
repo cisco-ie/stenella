@@ -19,6 +19,8 @@ app.get('/', function getResponse(req, res) {
   res.send('Google Integration is running.');
 });
 
+app.use('/watch/events', require('./routes/eventsRoute'));
+
 /**
  * Initialization of server
  */
@@ -91,7 +93,7 @@ function logError(error) {
 }
 
 /**
- * Create an events channel per each userId
+ * Create an events watch channel per each userId
  * @param  {string} userIds <userId>@<domain>
  * @return {void}
  */
@@ -109,10 +111,16 @@ function createEventsChannels(userIds) {
     });
 }
 
+/**
+ * Creates an directory watch channel
+ * @return {void}
+ */
 function createDirectoryChannel() {
   createJWT(scope.userDirectory)
     .then(function JwtResponse(jwtClient) {
-      var channelInfo = { type: 'directory' };
+      var channelInfo = {
+        type: 'directory'
+      };
       createChannel(jwtClient, channelInfo);
     });
 }

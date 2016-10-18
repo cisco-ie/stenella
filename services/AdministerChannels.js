@@ -13,7 +13,8 @@ var _ = require('lodash');
  * API to administer Channels
  */
 var Interface = {
-  createChannel: createChannel
+  createChannel: createChannel,
+  parseHeaders: parseHeaders
 };
 
 module.exports = Interface;
@@ -68,7 +69,7 @@ function buildParams(jwtClient, channelInfo) {
       payload: true,
       fields: 'id, expiration', // Only because we only want to confirm it has been successful
       resource: {
-        id: 'CAL-' + UUID,
+        id: 'EVNT-' + UUID,
         type: 'web_hook',
         address: config.recievingUrl.events,
         params: {
@@ -98,3 +99,31 @@ function buildParams(jwtClient, channelInfo) {
   // Extend base params with the custom extended params
   return _.merge(baseParams, extendParams);
 }
+
+/**
+ * Returns a normalized object of the request header for notification request
+ * @param  {object} request HTTP request
+ * @return {object}         Normalized header object
+ */
+function parseHeaders(request) {
+  var headers = request.headers;
+
+  var channelObj = {
+    channelId: headers['x-goog-channel-id'] || null,
+    expiration: headers['x-goog-channel-expiration'] || null,
+    messageNumber: headers['x-goog-message-number'] || null,
+    resourceId: headers['x-goog-resource-id'] || null,
+    resourceState: headers['x-goog-resource-state'] || null,
+    resourceUri: headers['x-google-resource-uri'] || null
+  };
+
+  return channelObj;
+};
+
+function setRenewalChannel(channelId, expiration) {
+  function findTimeLeft(expiryTime) {
+    return ((new Date()) - (new Date(expiryTime)));
+  }
+}
+
+
