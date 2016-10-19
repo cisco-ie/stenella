@@ -18,7 +18,7 @@ var Interface = {
 module.exports = Interface;
 
 /**
- * invoke google api to get directory of users
+ * Invoke google api to get directory of users
  * @param  {object}   authToken <required> secure JWT for user directories
  * @param  {object}   userParams <optional> parameters to retrieve users
  * @param  {Function} callback   for google's directory response
@@ -36,34 +36,4 @@ function getUsers(authToken, userParams, callback) {
   };
   var params = _.extend(defaultParams, userParams);
   return directory.users.list(params, callback);
-}
-
-// function createUserChannel(authToken, params, callback) {
-//   if (!authToken) return callback(new Error('No auth token provided'));
-//   var defaultParams = {
-//     auth: client,
-//     domain: config.domain,
-//     // Only care about new additions, deleted ones will fall off over time
-//     event: 'add',
-//     resource: {
-//       id: UUID,
-//       type: 'web_hook',
-//       address: config.recievingUrl.users,
-//       params: {
-//         ttl: 6400 // 2 hour
-//       }
-//     }
-//   };
-//   var params = _.merge(defaultParams, params);
-//   return directory.users.watch(params, callback);
-// }
-
-function findTimeLeft(expiryTime) {
-  return ((new Date()) - (new Date(expiryTime)));
-}
-
-function setChannelRenewal(expiryTime) {
-  setTimeout(function () {
-
-  }, findTimeLeft(expiryTime));
 }
