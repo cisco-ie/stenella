@@ -21,9 +21,9 @@ var channelSchema = new Schema({
  * @TODO: Change this based on schema update on finalized schema
  * @param  {string}   calendarId calendarId
  * @param  {Function} callback   callback function
- * @return {function)              returns a callback 
+ * @return {function)              returns a callback
  */
-channelSchema.methods.getSyncToken = function (calendarId, callback) {
+channelSchema.statics.getSyncToken = function (calendarId, callback) {
   var query = {
     calendarId: calendarId
   }
