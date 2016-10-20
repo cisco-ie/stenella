@@ -19,7 +19,21 @@ app.get('/', function getResponse(req, res) {
   res.send('Google Integration is running.');
 });
 
-app.use('/watch/events', require('./routes/eventsRoute'));
+/**
+ * Application Defined Routes
+ * @type {Object}
+ */
+var serverAPI = {
+  events: '/watch/events',
+  users: '/watch/users'
+};
+
+/**
+ * Application Middleware
+ * and Route configuration
+ */
+app.use(serverAPI.events, require('./routes/eventsRoute'));
+app.use(serverAPI.users, require('./routes/watchRoute'));
 
 /**
  * Initialization of server
