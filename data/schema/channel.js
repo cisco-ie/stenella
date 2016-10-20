@@ -1,15 +1,14 @@
 /**
  * Variable Declarations
  */
-var mongoose = require('mongoose'),
-  Schema = mongoose.Schema,
+var mongoose = require('mongoose');
+var Schema = mongoose.Schema;
 
 /**
  * Channel Schema
  */
 var channelSchema = new Schema({
   channelId: String,
-  calendarId: String,
   resourceId: String,
   syncToken: String,
   expiration: Date,
