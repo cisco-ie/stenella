@@ -3,11 +3,14 @@
 /**
  * Variable Declarations
  */
-var express        = require('express'),
-  router           = express.Router(),
-  parseHeaders     = require('../services/AdministerChannels').parseHeaders;
-  EventsController = require('../controller/EventsController');
+var express         = require('express');
+var router          = express.Router();
+var parseHeaders    = require('../services/AdministerChannels').parseHeaders;
+var eventController = require('../controllers/eventController');
 
+/**
+ * `watch/event` POST Route
+ */
 router.post('/', function (request, response) {
   var headers = parseHeaders(request)
   // More information regarding syncs:
@@ -18,7 +21,7 @@ router.post('/', function (request, response) {
       console.log(message);
     }
     if (isEventUpdate(headers)) {
-      EventsController.load(headers.channelId);
+      eventController.load(headers.channelId);
     }
     response.sendStatus(200);
   } else {
@@ -26,10 +29,12 @@ router.post('/', function (request, response) {
   }
 });
 
+module.exports = router;
+
 /**
  * Query if Channel Watch Notification
  * @param  {object}  parseHeaders parse request headers
- * @return {Boolean}
+ * @return {Boolean} state of channel notification being watch or not
  */
 function isWatchNotification(parseHeaders) {
   return (parseHeaders.channelId && parseHeaders.resourceId);
@@ -38,7 +43,7 @@ function isWatchNotification(parseHeaders) {
 /**
  * Query if the request is the initial confirmation
  * @param  {object}  parseHeaders parse request headers
- * @return {Boolean}
+ * @return {Boolean} state of notification being initial or not
  */
 function isInitialSync(parseHeaders) {
   return (parseHeaders.resourceState === 'sync');
@@ -47,11 +52,8 @@ function isInitialSync(parseHeaders) {
 /**
  * Query if the request is an event update
  * @param  {object}  parseHeaders parse request headers
- * @return {Boolean}                [description]
+ * @return {Boolean}               state of watch notificatio
  */
 function isEventUpdate(parseHeaders) {
   return (parseHeaders.resourceState === 'exists');
 }
-
-
-module.exports = router;

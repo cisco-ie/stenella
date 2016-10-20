@@ -7,7 +7,7 @@ var app = require('express')();
 var Promise = require('bluebird');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
-var createChannel = require('./services/AdministerChannels').createChannel;
+var AdministerChannels = require('./services/AdministerChannels');
 var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
@@ -34,7 +34,7 @@ var serverAPI = {
  * and Route configuration
  */
 app.use(serverAPI.events, require('./routes/eventsRoute'));
-app.use(serverAPI.users, require('./routes/watchRoute'));
+// app.use(serverAPI.users, require('./routes/watchRoute'));
 
 /**
  * Initialization of server
@@ -68,9 +68,12 @@ function setUpChannels() {
  */
 function createUserChannelsAndExtractIds(userResponse) {
   // @TODO: retry creating channel and have a timeout associated with it
-  createDirectoryChannel();
+  createDirectoryChannel()
+    .then(AdministerChannels.save);
+
   extractUserIds(userResponse.users)
     .then(createEventsChannels)
+    .then(AdministerChannels.save)
     .catch(logError);
 }
 
@@ -79,7 +82,7 @@ function createUserChannelsAndExtractIds(userResponse) {
  * @return {object} A promise when fulfilled is
  */
 function getUsers() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function userPromise(resolve, reject) {
     createJWT(scope.userDirectory)
       .then(function authorizeJwtResponse(jwtClient) {
         var listUsers = Promise.promisify(AdministerUsers.list);
@@ -109,17 +112,16 @@ function extractUserIds(users) {
  * @return {void}
  */
 function createEventsChannels(userIds) {
-  createJWT(scope.calendar)
-    .then(function JwtResponse(jwtClient) {
-      _.forEach(userIds, function createChannelPerId(userId) {
-        // Create a new object appending userId
-        var channelInfo = {
-          type: 'event',
-          id: userId
-        };
-        createChannel(jwtClient, channelInfo);
-      });
-    });
+  _.forEach(userIds, function createChannelPerId(userId) {
+    // Create a new object appending userId
+    var channelInfo = {
+      type: 'event',
+      id: userId
+    };
+
+    console.log(channelInfo);
+    return AdministerChannels.create(channelInfo);
+  });
 }
 
 /**
@@ -127,11 +129,8 @@ function createEventsChannels(userIds) {
  * @return {void}
  */
 function createDirectoryChannel() {
-  createJWT(scope.userDirectory)
-    .then(function JwtResponse(jwtClient) {
-      var channelInfo = {
-        type: 'directory'
-      };
-      createChannel(jwtClient, channelInfo);
-    });
+  var channelInfo = {
+    type: 'directory'
+  };
+  return AdministerChannels.create(channelInfo);
 }
