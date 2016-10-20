@@ -11,6 +11,7 @@ var createChannel = require('./services/AdministerChannels').createChannel;
 var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
+var logError = require('./libs/errorHandlers').logError;
 
 /**
  * Application Index Route
@@ -100,10 +101,6 @@ function extractUserIds(users) {
     return user.primaryEmail;
   });
   return Promise.resolve(userIds);
-}
-
-function logError(error) {
-  console.log(error);
 }
 
 /**
