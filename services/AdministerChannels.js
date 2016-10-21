@@ -28,7 +28,7 @@ module.exports = Interface;
 
 /**
  * Create channels based on desired type
- * @param  {object} jwtClient   authenticated jwt client
+ * @param  {object} jwtClient   authenticated jwtClient
  * @param  {object} channelInfo contains type and associated id
  * @return {void}
  */

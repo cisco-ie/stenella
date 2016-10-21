@@ -6,12 +6,15 @@
 var google = require('googleapis');
 var _ = require('lodash');
 var calendar = google.calendar('v3');
+var Promise = require('bluebird');
 
 /**
  * API to administer Calendars
  */
 var Interface = {
-  list: getCalendars
+  list: getCalendars,
+  fullSync: getFullSync,
+  incrementalSync: getIncrementSync
 };
 
 module.exports = Interface;
@@ -36,3 +39,55 @@ function getCalendars(authToken, calendarParams, userId, callback) {
   console.log(overrideOptions);
   return calendar.calendarList.list(params, overrideOptions, callback);
 }
+
+/**
+ * Only performs the sync of items from Today to Future.
+ * @param  {object}   client     Autheticated clients
+ * @param  {string}   calendarId Associated Email with Calendar
+ */
+function getFullSync(jwtClient, calendarId) {
+  var params = {
+    auth: jwtClient,
+    calendarId: calendarId,
+    timeMin: (new Date()).toISOString(),
+    singleEvents: false
+  };
+
+  // In the rare off cases where pagination is significantly large,
+  // we need to keep making request to get to the last page for
+  // the syncToken.
+  // REF: https://developers.google.com/google-apps/calendar/v3/pagination
+  var eventListRequest = function (params) {
+    calendar.events.list(params, function createEventsWatchCb(err, result) {
+      if (result.nextPageToken) {
+        params.nextPageToken;
+        eventListRequest(params);
+      } else {
+        if (err) Promise.reject(err);
+        Promise.resolve(result);
+      }
+    });
+  };
+
+  // Invoke closure function EventListRequest, which
+  // will paginate if necessary
+  return eventListRequest(params);
+}
+
+/**
+ * Get an incremental sync
+ * @param  {Object}   jwtClient    Authenticated jwtClient
+ * @param  {Object}   calendarInfo contains: id, syncToken
+ * @return {Object}                Promise of calendar event list
+ */
+function getIncrementSync(jwtClient, calendarInfo) {
+  var params = {
+    auth: jwtClient,
+    calendarId: calendarInfo.id,
+    singleEvents: false,
+    syncToken: calendarInfo.syncToken,
+    showDeleted: true
+  };
+
+  return Promise.promisify(calendar.events.list)(params);
+};
