@@ -1,4 +1,3 @@
-// Events Controller
 'use strict';
 
 /**
@@ -77,6 +76,7 @@ function parseEvents (syncResponse) {
     .forEach(eventFactory)
 }
 
+
 function persistNewSyncToken (syncResponse) {
   var query = {
     calendarId: syncResponse.summary
@@ -91,7 +91,7 @@ function persistNewSyncToken (syncResponse) {
     });
 };
 
-// This is logic redirection
+// This is logic redirect
 // based on the event status
 function eventFactory (event) {
   if (!event) return;
@@ -109,12 +109,17 @@ function cancelEvent (event) {
     .then(deleteMeeting);
 }
 
-function isWebEx (event) {
+/**
+ * Checks the state of the event if it contains WebEx in Location
+ * @param  {Object}  event Google event object
+ * @return {Boolean}       true if it is; false otherwise
+ */
+function isWebEx(event) {
   if (!event.location) return false;
   return event.location.match(/@webex/i);
 }
 
-function confirmEvent (event) {
+function confirmEvent(event) {
   if (isWebEx(event)) {
     var webExDetails = WebExService.doesDetailsExist(event.description);
     var header = WebExService.buildHeaderObj();
