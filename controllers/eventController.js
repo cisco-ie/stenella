@@ -109,9 +109,13 @@ function cancelEvent (event) {
     .then(deleteMeeting);
 }
 
+function isWebEx (event) {
+  if (!event.location) return false;
+  return event.location.match(/@webex/i);
+}
+
 function confirmEvent (event) {
-  if (!event.location) return;
-  if (event.location.match(/@webex/i)) {
+  if (isWebEx(event)) {
     var webExDetails = WebExService.doesDetailsExist(event.description);
     var header = WebExService.buildHeaderObj();
     var calendarClient = GoogleAuthService.getJwtClient(scopes.calendar);
@@ -123,39 +127,5 @@ function confirmEvent (event) {
       attendees: event.attendees,
       xsiType: 'java:com.webex.service.binding.meeting.CreateMeeting'
     };
-
-    if (webExDetails) {
-      // Check to see if this is a pre-existing webex meeting
-      // that needs to be cancelled
-
-      // If it exist, check against our existing database for matching details
-      Event.findOne({ id: event.id }, function (err, result) {
-        if (!result) return;
-        // Construct Date objects to match Mongo's Date wrapper within
-        // Date Types.
-        // 2016-08-19T16:00:00-07:00 -> Fri Aug 19 2016 11:17:26 GMT-0700
-        var endDate = moment(event.end.dateTime).toString();
-        var startDate = moment(event.start.dateTime).toString();
-
-        // This will format the date object to remove the Timezone Abbreviations
-        // Fri Aug 19 2016 11:17:26 GMT-0700 (PDT) -> Fri Aug 19 2016 11:17:26 GMT-0700
-        var storedStart = result.start.toString().replace(/\([A-Z]+\)$/,"").trim();
-        var storedEnd = result.end.toString().replace(/\([A-Z]+\)$/,"").trim();
-
-        // If none of the existing details match, update the existing meeting
-        if ((storedStart !== startDate) || (storedEnd !== endDate)) {
-          bodyParams.xsiType = 'java:com.webex.service.binding.meeting.SetMeeting';
-          var body = WebExService.buildBodyObj(bodyParams);
-          var xml = WebExService.buildXml(header, body);
-
-          createMeeting(bodyParams.password, event, xml);
-        }
-      });
-    } else {
-      var body = WebExService.buildBodyObj(bodyParams);
-      var xml = WebExService.buildXml(header, body);
-      createMeeting(bodyParams.password, event, xml);
-      return;
-    }
   }
 }

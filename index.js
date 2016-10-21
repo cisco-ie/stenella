@@ -5,6 +5,7 @@
  */
 var app = require('express')();
 var Promise = require('bluebird');
+var async = require('async');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
 var AdministerChannels = require('./services/AdministerChannels');
@@ -69,11 +70,11 @@ function setUpChannels() {
 function createUserChannelsAndExtractIds(userResponse) {
   // @TODO: retry creating channel and have a timeout associated with it
   createDirectoryChannel()
-    .then(AdministerChannels.save);
+    .then(AdministerChannels.save)
+    .catch(logError);
 
   extractUserIds(userResponse.users)
-    .then(createEventsChannels)
-    .then(AdministerChannels.save)
+    .each(createEventChannelsAndSave)
     .catch(logError);
 }
 
@@ -111,17 +112,33 @@ function extractUserIds(users) {
  * @param  {string} userIds <userId>@<domain>
  * @return {void}
  */
-function createEventsChannels(userIds) {
-  _.forEach(userIds, function createChannelPerId(userId) {
-    // Create a new object appending userId
-    var channelInfo = {
-      type: 'event',
-      id: userId
-    };
+function createEventChannel(userId) {
+  // Create a new object appending userId
+  var channelInfo = {
+    type: 'event',
+    id: userId
+  };
 
-    console.log(channelInfo);
-    return AdministerChannels.create(channelInfo);
-  });
+  return AdministerChannels.create(channelInfo);
+}
+
+/**
+ * Preforms a channel request and saves after successful
+ * @param  {[type]} userId [description]
+ * @return {[type]}        [description]
+ */
+function createEventChannelsAndSave(userId) {
+  createEventChannel(userId)
+    .then(AdministerChannels.save)
+    // @TODO: Should this be abstracted within the service or no?
+    .catch(function holdOffAndRecall() {
+      async.retry({
+        times: 10,
+        interval: function(retryCount) {
+          return 50 * Math.pow(2, retryCount);
+        }
+      }, createEventChannelsAndSave(userId));
+    });
 }
 
 /**

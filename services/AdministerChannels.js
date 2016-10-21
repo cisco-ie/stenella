@@ -30,39 +30,41 @@ module.exports = Interface;
  * Create channels based on desired type
  * @param  {object} jwtClient   authenticated jwt client
  * @param  {object} channelInfo contains type and associated id
- * @param  {number} timeout     delay duration before creating channelInfo
  * @return {void}
  */
-function createChannel(channelInfo, timeout) {
-    var timeout = timeout || 0;
-    return new Promise(function (resolve, reject) {
-      setTimeout(function channelTimeout() {
-        // Create JWT in implementation, n
-        // as JWT can be expired on renewal
-        switch (channelInfo.type) {
-        case 'event':
-          createJWT(scope.calendar)
-            .then(function JwtResponse(jwtClient) {
-              var params = buildParams(jwtClient, channelInfo);
-              console.log(params);
-              var setCalendarWatch = Promise.promisify(calendar.events.watch);
-              setCalendarWatch(params)
-                .catch(function(err) { console.log (err);});
-            });
+function createChannel(channelInfo) {
+  return new Promise(function (resolve, reject) {
+    // Create JWT in implementation,
+    // as JWT can be expired on renewal
+    switch (channelInfo.type) {
+    case 'event':
+      createJWT(scope.calendar)
+        .then(function JwtResponse(jwtClient) {
+          var params = buildParams(jwtClient, channelInfo);
+          calendar.events.watch(params, function calWatchCallback(err, res) {
+            if (err) reject(err);
+            if (res) resolve(res);
+          });
+        })
+        .catch(reject);
+      break;
 
-        case 'directory':
-          createJWT(scope.userDirectory)
-            .then(function JwtResponse(jwtClient) {
-              var params = buildParams(jwtClient, channelInfo);
-              var setDirectoryWatch = Promise.promisify(directory.users.watch);
-              resolve(setDirectoryWatch(params));
-            });
+    case 'directory':
+      createJWT(scope.userDirectory)
+        .then(function JwtResponse(jwtClient) {
+          var params = buildParams(jwtClient, channelInfo);
+          directory.users.watch(params, function dirWatchCallback(err, res) {
+            if (err) reject(err);
+            if (res) resolve(res);
+          });
+        })
+        .catch(reject);
+      break;
 
-        default:
-          return new Error('Undeclared Type');
-        }
-      }, timeout);
-    });
+    default:
+      return new Error('Undeclared Type');
+    }
+  });
 }
 
 /**
@@ -141,18 +143,17 @@ function parseHeaders(request) {
  * @return {Object}             Returns save channel
  */
 function saveChannel(channelInfo) {
-  console.log('saveechanne')
-  console.log(channelInfo);
+  if (!channelInfo) return new Error('Undefined channel information');
   var props = {
-    channelId: '',
+    channelId: channelInfo.id || '',
     resourceId: '',
     syncToken: '',
     expiration: '',
-    resourceType: ''
+    resourceType: channelInfo.type || ''
   };
 
-  _.extend(props, channelInfo);
-  var channelEntry = new Channel(props);
+  var channelProps = _.extend(props, channelInfo);
+  var channelEntry = new Channel(channelProps);
 
   channelEntry.save(logError);
 }
