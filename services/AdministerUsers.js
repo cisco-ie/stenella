@@ -1,8 +1,5 @@
 'use strict';
 
-/**
- * Retrieve the user directories from google api
- */
 var google = require('googleapis');
 var _ = require('lodash');
 var directory = google.admin('directory_v1');

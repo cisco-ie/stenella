@@ -1,8 +1,5 @@
 'use strict';
 
-/**
- * Variable Declarations
- */
 var app = require('express')();
 var Promise = require('bluebird');
 var async = require('async');
@@ -14,48 +11,25 @@ var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
 var logError = require('./libs/errorHandlers').logError;
 
-/**
- * Application Index Route
- */
 app.get('/', function getResponse(req, res) {
   res.send('Google Integration is running.');
 });
 
-/**
- * Application Defined Routes
- * @type {Object}
- */
 var serverAPI = {
   events: '/watch/events',
   users: '/watch/users'
 };
 
-/**
- * Application Middleware
- * and Route configuration
- */
 app.use(serverAPI.events, require('./routes/eventsRoute'));
 // app.use(serverAPI.users, require('./routes/watchRoute'));
 
-/**
- * Initialization of server
- */
-init();
+initServer();
 
-/**
- * A promise that performs synchronous operations to setup the
- * server prior to accepting requests
- * @return {object} Promise which is resolved once all operations are done
- */
-function init() {
+function initServer() {
   setUpChannels();
   app.listen(config.port, console.log('Running on port 5000'));
 }
 
-/**
- * Set up all the events and userDirectory channels
- * @return {void}
- */
 function setUpChannels() {
   getUsers()
     .then(createUserChannelsAndExtractIds)
@@ -68,7 +42,8 @@ function setUpChannels() {
  * @return {[type]}              [description]
  */
 function createUserChannelsAndExtractIds(userResponse) {
-  // @TODO: retry creating channel and have a timeout associated with it
+  // @TODO:
+  // retry creating channel and have a timeout associated with it
   createDirectoryChannel()
     .then(AdministerChannels.save)
     .catch(logError);
@@ -140,10 +115,6 @@ function createEventChannelsAndSave(userId) {
     });
 }
 
-/**
- * Creates an directory watch channel
- * @return {void}
- */
 function createDirectoryChannel() {
   var channelInfo = {
     type: 'directory'

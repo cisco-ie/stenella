@@ -1,8 +1,5 @@
 'use strict';
 
-/**
- * Variable Declarations
- */
 var google = require('googleapis');
 var Promise = require('bluebird');
 var config = require('../configs/config');
