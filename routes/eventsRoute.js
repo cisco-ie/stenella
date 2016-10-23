@@ -22,43 +22,23 @@ router.post('/', function (request, response) {
 
 module.exports = router;
 
-/**
- * This takes in a notification and responds accordingly
- * @param  {Object} parseHeaders parse headers of the notification
- * @return {Void}
- */
 function parseNotificationAndRespond(parseHeaders) {
     // No parsing needed for a confirm notification
-    if (isInitialSync(headers))
+    if (isInitialSyncConfirm(headers))
       console.log(headers.channelId + ' channel has been established.');
     if (isEventUpdate(headers))
       eventController.load(headers.channelId);
     response.sendStatus(200);
 }
 
-/**
- * Query if Channel Watch Notification
- * @param  {object}  parseHeaders parse request headers
- * @return {Boolean} state of channel notification being watch or not
- */
 function isWatchNotification(parseHeaders) {
   return (parseHeaders.channelId && parseHeaders.resourceId);
 }
 
-/**
- * Query if the request is the initial confirmation
- * @param  {object}  parseHeaders parse request headers
- * @return {Boolean} state of notification being initial or not
- */
-function isInitialSync(parseHeaders) {
+function isInitialSyncConfirm(parseHeaders) {
   return (parseHeaders.resourceState === 'sync');
 }
 
-/**
- * Query if the request is an event update
- * @param  {object}  parseHeaders parse request headers
- * @return {Boolean}               state of watch notificatio
- */
 function isEventUpdate(parseHeaders) {
   return (parseHeaders.resourceState === 'exists');
 }
