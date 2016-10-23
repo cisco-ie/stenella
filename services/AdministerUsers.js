@@ -8,9 +8,6 @@ var _ = require('lodash');
 var directory = google.admin('directory_v1');
 var config = require('../configs/config');
 
-/**
- * API to administer User Directory
- */
 var Interface = {
   list: getUsers
 };

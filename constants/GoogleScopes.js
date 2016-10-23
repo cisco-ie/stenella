@@ -1,10 +1,6 @@
 /**
  * Define constants
  */
-
-/**
- * Google API base url
- */
 var baseUrl = 'https://www.googleapis.com/auth/';
 
 /**

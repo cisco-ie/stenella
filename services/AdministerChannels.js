@@ -1,8 +1,5 @@
 'use strict';
 
-/**
- * Retrieve the user calendars from google api
- */
 var google = require('googleapis');
 var calendar = google.calendar('v3');
 var directory = google.admin('directory_v1');
@@ -15,9 +12,6 @@ var Channel = mongoose.model('Channel', require('../data/schema/channel'));
 var createJWT = require('../services/AdministerJWT').createJWT;
 var logError = require('../libs/errorHandlers').logError;
 
-/**
- * API to administer Channels
- */
 var Interface = {
   create: createChannel,
   parseHeaders: parseHeaders,
@@ -77,9 +71,7 @@ function buildParams(jwtClient, channelInfo) {
   var baseParams = {
     auth: jwtClient
   };
-
   var UUID = require('node-uuid').v4();
-
   var extendParams = {};
   if (channelInfo.type === 'event') {
     extendParams = {
@@ -96,11 +88,11 @@ function buildParams(jwtClient, channelInfo) {
       }
     };
   }
-
   if (channelInfo.type === 'directory') {
     extendParams = {
       domain: config.domain,
-      // Only care about new additions, deleted ones will fall off over time
+      // Only care about new users,
+      // deleted users will be ignored after expiration
       event: 'add',
       resource: {
         id: 'DIR-' + UUID,
@@ -112,8 +104,6 @@ function buildParams(jwtClient, channelInfo) {
       }
     };
   }
-
-  // Extend base params with the custom extended params
   return _.merge(baseParams, extendParams);
 }
 
@@ -124,7 +114,6 @@ function buildParams(jwtClient, channelInfo) {
  */
 function parseHeaders(request) {
   var headers = request.headers;
-
   var channelObj = {
     channelId: headers['x-goog-channel-id'] || null,
     expiration: headers['x-goog-channel-expiration'] || null,
@@ -133,7 +122,6 @@ function parseHeaders(request) {
     resourceState: headers['x-goog-resource-state'] || null,
     resourceUri: headers['x-google-resource-uri'] || null
   };
-
   return channelObj;
 };
 
@@ -151,10 +139,8 @@ function saveChannel(channelInfo) {
     expiration: '',
     resourceType: channelInfo.type || ''
   };
-
   var channelProps = _.extend(props, channelInfo);
   var channelEntry = new Channel(channelProps);
-
   channelEntry.save(logError);
 }
 

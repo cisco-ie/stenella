@@ -118,7 +118,6 @@ function createEventChannel(userId) {
     type: 'event',
     id: userId
   };
-
   return AdministerChannels.create(channelInfo);
 }
 
