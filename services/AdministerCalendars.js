@@ -4,11 +4,15 @@ var google = require('googleapis');
 var _ = require('lodash');
 var calendar = google.calendar('v3');
 var Promise = require('bluebird');
+var createJWT = require('../services/AdministerJWT').createJWT;
+var scope = require('../constants/GoogleScopes');
+
 
 var Interface = {
   list: getCalendars,
   fullSync: getFullSync,
-  incrementalSync: getIncrementSync
+  incrementalSync: getIncrementSync,
+  getSyncToken: getSyncToken
 };
 
 module.exports = Interface;
@@ -51,20 +55,19 @@ function getFullSync(jwtClient, calendarId) {
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
   var eventListRequest = function (params) {
-    calendar.events.list(params, function createEventsWatchCb(err, result) {
-      if (result.nextPageToken) {
-        params.nextPageToken;
-        eventListRequest(params);
-      } else {
-        if (err) Promise.reject(err);
-        Promise.resolve(result);
-      }
-    });
+    return new Promise(function(resolve, reject) {
+      calendar.events.list(params, function createEventsWatchCb(err, result) {
+        if (err) return reject(err);
+        if (result.nextPageToken) {
+          params.nextPageToken = result.nextPageToken;
+          eventListRequest(params);
+        }
+        resolve(result);
+      })
+    })
   };
 
-  // Invoke closure function EventListRequest, which
-  // will paginate if necessary
-  return eventListRequest(params);
+  return eventListRequest(params)
 }
 
 /**
@@ -84,3 +87,25 @@ function getIncrementSync(jwtClient, calendarInfo) {
 
   return Promise.promisify(calendar.events.list)(params);
 };
+
+/**
+ * Returns a sync Token
+ * @param  {String} calendarId calendar id of desired token
+ * @return {String}            the syncToken
+ */
+function getSyncToken(calendarId) {
+  return new Promise(function (resolve, reject) {
+    createJWT(scope.calendar)
+      .then(function(jwtClient) {
+        getFullSync(jwtClient, calendarId)
+          .then(function(response) {
+            resolve(response.nextSyncToken);
+          })
+          .catch(function(error){
+            console.log('eee')
+            console.log(error);
+          });
+      })
+      .catch(reject);
+  });
+}

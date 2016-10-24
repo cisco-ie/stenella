@@ -30,9 +30,9 @@ function createJWT(scope) {
 function authorize(jwtClient) {
   return new Promise(function createJWTpromise(resolve, reject) {
     jwtClient.authorize(function authorizeJwtResponse(error) {
-      if (error) reject(error);
+      if (error)
+        reject(error);
       resolve(jwtClient);
-      }
     });
   });
 }
