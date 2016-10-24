@@ -105,9 +105,23 @@ function createEventChannel(userId) {
  * @return {[type]}        [description]
  */
 function createEventChannelsAndSave(userId) {
-  AdministerCalendars.getSyncToken(userId)
-    .then(function(syncToken) {
-      console.log("LINE 110", token);
+  Promise.all([
+    AdministerCalendars.getSyncToken,
+    createEventChannel(userId)
+  ])
+  .spread(function(syncToken, userId) {
+    createEventChannel(userId)
+      .then(AdministerChannels.save)
+      // @TODO: Should this be abstracted within the service or no?
+      .catch(function holdOffAndRecall() {
+        async.retry({
+          times: 10,
+          interval: function(retryCount) {
+            // Exponential back-off
+            return 50 * Math.pow(2, retryCount);
+          }
+        }, createEventChannelsAndSave(userId));
+      });
     })
     .catch(logError);
   // createEventChannel(userId)
