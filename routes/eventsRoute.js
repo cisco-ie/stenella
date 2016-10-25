@@ -16,19 +16,19 @@ router.post('/', function (request, response) {
   // More information: https://developers.google.com/google-apps/calendar/v3/push
   if (!isWatchNotification(headers))
     response.sendStatus(400);
-  parseNotificationAndRespond(headers);
+  parseNotification(headers);
+  response.sendStatus(200);
 });
 
 
 module.exports = router;
 
-function parseNotificationAndRespond(parseHeaders) {
+function parseNotification(parseHeaders) {
     // No parsing needed for a confirm notification
-    if (isInitialSyncConfirm(headers))
-      console.log(headers.channelId + ' channel has been established.');
-    if (isEventUpdate(headers))
-      eventController.load(headers.channelId);
-    response.sendStatus(200);
+    if (isInitialSyncConfirm(parseHeaders))
+      console.log(parseHeaders.channelId + ' channel has been established.');
+    if (isEventUpdate(parseHeaders))
+      eventController.load(parseHeaders.channelId);
 }
 
 function isWatchNotification(parseHeaders) {

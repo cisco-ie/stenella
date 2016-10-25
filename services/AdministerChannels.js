@@ -93,7 +93,7 @@ function buildParams(jwtClient, channelInfo) {
         address: config.recievingUrl.events,
         params: {
           // @TODO: create config for TTL
-          ttl: 6400 // 2 hour
+          ttl: 30 // 2 hour
         }
       }
     };
@@ -141,7 +141,6 @@ function parseHeaders(request) {
  * @return {Object}             Returns save channel
  */
 function saveChannel(channelInfo) {
-  console.log(channelInfo);
   if (!channelInfo) return new Error('Undefined channel information');
   var props = {
     channelId: channelInfo.id || '',

@@ -6,12 +6,12 @@ var calendar = google.calendar('v3');
 var Promise = require('bluebird');
 var createJWT = require('../services/AdministerJWT').createJWT;
 var scope = require('../constants/GoogleScopes');
-
+var logError = require('../libs/errorHandlers').logError;
 
 var Interface = {
   list: getCalendars,
   fullSync: getFullSync,
-  incrementalSync: getIncrementSync,
+  incrementalSync: getIncrementalSync,
   getSyncToken: getSyncToken
 };
 
@@ -42,9 +42,8 @@ function getCalendars(authToken, calendarParams, userId, callback) {
  * @param  {object}   client     Autheticated clients
  * @param  {string}   calendarId Associated Email with Calendar
  */
-function getFullSync(jwtClient, calendarId) {
+function getFullSync(calendarId) {
   var params = {
-    auth: jwtClient,
     calendarId: calendarId,
     timeMin: (new Date()).toISOString(),
     singleEvents: false
@@ -56,37 +55,53 @@ function getFullSync(jwtClient, calendarId) {
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
   var eventListRequest = function (params) {
     return new Promise(function(resolve, reject) {
-      calendar.events.list(params, function createEventsWatchCb(err, result) {
-        if (err) return reject(err);
-        if (result.nextPageToken) {
-          params.nextPageToken = result.nextPageToken;
-          eventListRequest(params);
-        }
-        resolve(result);
-      })
-    })
+      createJWT(scope.calendar)
+        .then(function(jwtClient) {
+          params.auth = jwtClient;
+          calendar.events.list(params, function createEventsWatchCb(err, result) {
+            if (err) reject(err);
+            if (result.nextPageToken) {
+              params.nextPageToken = result.nextPageToken;
+              eventListRequest(params);
+            }
+            resolve(result);
+          });
+        });
+      });
   };
 
-  return eventListRequest(params)
+  return eventListRequest(params);
 }
 
 /**
- * Get an incremental sync
+ * Get an Incremental Sync
  * @param  {Object}   jwtClient    Authenticated jwtClient
  * @param  {Object}   calendarInfo contains: id, syncToken
  * @return {Object}                Promise of calendar event list
  */
-function getIncrementSync(jwtClient, calendarInfo) {
-  var params = {
-    auth: jwtClient,
-    calendarId: calendarInfo.id,
-    singleEvents: false,
-    syncToken: calendarInfo.syncToken,
-    showDeleted: true
-  };
+function getIncrementalSync(calendarInfo) {
+  console.log(calendarInfo)
+  return new Promise(function (resolve, reject) {
+    createJWT(scope.calendar)
+      .then(function(jwtClient) {
+        var params = {
+          auth: jwtClient,
+          calendarId: calendarInfo.calendarId || calendarInfo.id,
+          singleEvents: false,
+          syncToken: calendarInfo.syncToken,
+          showDeleted: true
+        };
 
-  return Promise.promisify(calendar.events.list)(params);
-};
+        console.log(params);
+
+        Promise.promisify(calendar.events.list)(params)
+          .then(function(response) {
+            resolve(response);
+          })
+          .catch(reject);
+      });
+  });
+}
 
 /**
  * Returns a sync Token
@@ -95,17 +110,9 @@ function getIncrementSync(jwtClient, calendarInfo) {
  */
 function getSyncToken(calendarId) {
   return new Promise(function (resolve, reject) {
-    createJWT(scope.calendar)
-      .then(function(jwtClient) {
-        getFullSync(jwtClient, calendarId)
-          .then(function(response) {
-            resolve(response.nextSyncToken);
-          })
-          .catch(function(error){
-            console.log('eee')
-            console.log(error);
-          });
-      })
-      .catch(reject);
+    getFullSync(calendarId)
+      .then(function(response) {
+        resolve(response.nextSyncToken);
+      });
   });
 }

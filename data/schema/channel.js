@@ -8,6 +8,7 @@ var Schema = mongoose.Schema;
  * Channel Schema
  */
 var channelSchema = new Schema({
+  calendarId: String,
   channelId: String,
   resourceId: String,
   syncToken: String,

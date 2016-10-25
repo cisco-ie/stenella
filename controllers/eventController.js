@@ -1,8 +1,6 @@
 'use strict';
 
-/**
- * Variable Declarations
- */
+var _ = require('lodash');
 var logError = require('../libs/errorHandlers').logError;
 var Promise = require('bluebird');
 var channelSchema = require('../data/schema/channel');
@@ -10,13 +8,11 @@ var mongoose = require('mongoose');
 var channel = mongoose.model('Channel', channelSchema);
 var createJWT = require('../services/AdministerJWT').createJWT;
 var scopes = require('../constants/GoogleScopes');
+var AdministerCalendars = require('../services/AdministerCalendars');
+var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
 mongoose.Promise = require('bluebird');
 
-/**
- * Events Controller Interface
- * @type {Object}
- */
 var Interface = {
   load: load
 };
@@ -30,7 +26,7 @@ module.exports = Interface;
  */
 function load(channelId) {
   getChannelEntry(channelId)
-    .then(getIncrementalSync)
+    .then(AdministerCalendars.incrementalSync)
     .then(persistNewSyncToken)
     .then(parseEvents)
     .catch(logError);
@@ -42,7 +38,7 @@ function load(channelId) {
  * @return {Object}           Mongoose Virtual Model of Channel Entry
  */
 function getChannelEntry(channelId) {
-  return Channel.findOne({ channelId: channelId }).exec();
+  return ChannelEntry.findOne({ channelId: channelId });
 }
 
 /**
@@ -76,7 +72,11 @@ function parseEvents (syncResponse) {
     .forEach(eventFactory)
 }
 
-
+/**
+ * Updates the token, but also passes along the response to the chain
+ * @param  {Object} syncResponse Incremental sync JSON response
+ * @return {Object}              Returns the response out to continue the chain
+ */
 function persistNewSyncToken (syncResponse) {
   var query = {
     calendarId: syncResponse.summary
@@ -84,9 +84,11 @@ function persistNewSyncToken (syncResponse) {
   var update = {
     syncToken: syncResponse.nextSyncToken
   };
-  return Subscription.update(query, update)
+
+  return ChannelEntry.update(query, update)
     .exec()
     .then(function (success) {
+      console.log(success);
       return syncResponse;
     });
 };
@@ -102,11 +104,13 @@ function eventFactory (event) {
 }
 
 function cancelEvent (event) {
-  var details = WebExService.doesDetailsExist(event.description);
-  if (!details) return;
-  Event
-    .findOne({ id: event.id })
-    .then(deleteMeeting);
+  return;
+  // Currently no longer used
+  // var details = WebExService.doesDetailsExist(event.description);
+  // if (!details) return;
+  // Event
+  //   .findOne({ id: event.id })
+  //   .then(deleteMeeting);
 }
 
 /**
@@ -121,16 +125,6 @@ function isWebEx(event) {
 
 function confirmEvent(event) {
   if (isWebEx(event)) {
-    var webExDetails = WebExService.doesDetailsExist(event.description);
-    var header = WebExService.buildHeaderObj();
-    var calendarClient = GoogleAuthService.getJwtClient(scopes.calendar);
-    var bodyParams = {
-      name: event.summary,
-      startTime: event.start.dateTime,
-      endTime: event.end.dateTime,
-      password: Math.random().toString(36).substr(2, 9),
-      attendees: event.attendees,
-      xsiType: 'java:com.webex.service.binding.meeting.CreateMeeting'
-    };
+    console.log(event);
   }
 }
