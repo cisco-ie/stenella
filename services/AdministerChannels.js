@@ -40,6 +40,16 @@ function createChannel(channelInfo) {
             if (res) resolve(res);
           });
         })
+      // @TODO: Create retry here
+      // .catch(function holdOffAndRecall() {
+      //   async.retry({
+      //     times: 10,
+      //     interval: function(retryCount) {
+      //       // Exponential back-off
+      //       return 50 * Math.pow(2, retryCount);
+      //     }
+      //   }, createEventChannelsAndSave(userId));
+      // });
         .catch(reject);
       break;
 
@@ -131,6 +141,7 @@ function parseHeaders(request) {
  * @return {Object}             Returns save channel
  */
 function saveChannel(channelInfo) {
+  console.log(channelInfo);
   if (!channelInfo) return new Error('Undefined channel information');
   var props = {
     channelId: channelInfo.id || '',
@@ -141,7 +152,7 @@ function saveChannel(channelInfo) {
   };
   var channelProps = _.extend(props, channelInfo);
   var channelEntry = new Channel(channelProps);
-  channelEntry.save(logError);
+  channelEntry.save();
 }
 
 function setRenewalChannel(channelId, expiration) {

@@ -11,6 +11,8 @@ var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
 var logError = require('./libs/errorHandlers').logError;
+var db = require('./data/db/connection');
+var mongoose = require('mongoose');
 
 app.get('/', function getResponse(req, res) {
   res.send('Google integration is running.');
@@ -40,17 +42,17 @@ function setUpChannels() {
 
 /**
  * Create User Directory Channel and extract User ids
- * @param  {[type]} userResponse [description]
- * @return {[type]}              [description]
+ * @param  {Object} userResponse JSON response for user directory response
+ * @return {Void}
  */
-function createUserChannelsAndExtractIds(userResponse) {
+function createUserChannelsAndExtractIds(userDirResponse) {
   // @TODO:
   // retry creating channel and have a timeout associated with it
   createDirectoryChannel()
     .then(AdministerChannels.save)
     .catch(logError);
 
-  extractUserIds(userResponse.users)
+  extractUserIds(userDirResponse.users)
     // This a series of request per each id
     .each(createEventChannelsAndSave)
     .catch(logError);
@@ -58,7 +60,7 @@ function createUserChannelsAndExtractIds(userResponse) {
 
 /**
  * Get list of users
- * @return {object} A promise when fulfilled is
+ * @return {Object} A promise when fulfilled is
  */
 function getUsers() {
   return new Promise(function userPromise(resolve, reject) {
@@ -86,56 +88,37 @@ function extractUserIds(users) {
 }
 
 /**
+ * Performs a channel request and saves after successful
+ * @param  {String} userId UserId of the eventList to create a watch for
+ * @return {String}
+ */
+function createEventChannelsAndSave(userId) {
+  var eventChannelPromise = createEventChannel(userId);
+  var syncTokenPromise = AdministerCalendars.getSyncToken(userId);
+
+  Promise.all([
+    syncTokenPromise,
+    eventChannelPromise,
+  ])
+  .spread(function(syncToken, channelInfo) {
+    channelInfo.syncToken = syncToken;
+    AdministerChannels.save(channelInfo);
+    // @TODO: this could be abstracted within the service
+  })
+  .catch(logError);
+}
+
+/**
  * Create an events watch channel per each userId
- * @param  {string} userIds <userId>@<domain>
- * @return {void}
+ * @param  {String} userIds <userId>@<domain>
+ * @return {Void}
  */
 function createEventChannel(userId) {
-  // Create a new object appending userId
   var channelInfo = {
     type: 'event',
     id: userId
   };
   return AdministerChannels.create(channelInfo);
-}
-
-/**
- * Performs a channel request and saves after successful
- * @param  {[type]} userId [description]
- * @return {[type]}        [description]
- */
-function createEventChannelsAndSave(userId) {
-  Promise.all([
-    AdministerCalendars.getSyncToken,
-    createEventChannel(userId)
-  ])
-  .spread(function(syncToken, userId) {
-    createEventChannel(userId)
-      .then(AdministerChannels.save)
-      // @TODO: Should this be abstracted within the service or no?
-      .catch(function holdOffAndRecall() {
-        async.retry({
-          times: 10,
-          interval: function(retryCount) {
-            // Exponential back-off
-            return 50 * Math.pow(2, retryCount);
-          }
-        }, createEventChannelsAndSave(userId));
-      });
-    })
-    .catch(logError);
-  // createEventChannel(userId)
-  //   .then(AdministerChannels.save)
-  //   // @TODO: Should this be abstracted within the service or no?
-  //   .catch(function holdOffAndRecall() {
-  //     async.retry({
-  //       times: 10,
-  //       interval: function(retryCount) {
-  //         // Exponential back-off
-  //         return 50 * Math.pow(2, retryCount);
-  //       }
-  //     }, createEventChannelsAndSave(userId));
-  //   });
 }
 
 function createDirectoryChannel() {
