@@ -29,7 +29,7 @@ router.post('/', jsonParser, function (request, response) {
 });
 
 function createChannelAndSave (userId) {
-  // @TODO: Abstract as it's used in INDEX ALSO
+  // @TODO: Abstract as this is used in index.js
   var channelInfo = {
     type: 'event',
     id: userId
