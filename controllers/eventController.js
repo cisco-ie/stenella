@@ -60,15 +60,17 @@ function getIncrementalSync (channelEntry) {
     });
 }
 
-/**
- * [parseEvents description]
- * @param  {[type]} syncResponse [description]
- * @return {[type]}              [description]
- */
 function parseEvents (syncResponse) {
   // Event list is order sensitive
   var eventList = _(syncResponse.items);
+  var userId = parseUserIdFromEmail(syncResponse.summary);
   eventList
+    .map(function(event) {
+      // Used these for individual level parsing
+      event.pmrUserId = userId;
+      event.calendarId = syncResponse.summary;
+      return event;
+    })
     .forEach(eventFactory)
 }
 
@@ -87,8 +89,7 @@ function persistNewSyncToken (syncResponse) {
 
   return ChannelEntry.update(query, update)
     .exec()
-    .then(function (success) {
-      console.log(success);
+    .then(function (updateStats) {
       return syncResponse;
     });
 };
@@ -105,12 +106,6 @@ function eventFactory (event) {
 
 function cancelEvent (event) {
   return;
-  // Currently no longer used
-  // var details = WebExService.doesDetailsExist(event.description);
-  // if (!details) return;
-  // Event
-  //   .findOne({ id: event.id })
-  //   .then(deleteMeeting);
 }
 
 /**
@@ -118,13 +113,79 @@ function cancelEvent (event) {
  * @param  {Object}  event Google event object
  * @return {Boolean}       true if it is; false otherwise
  */
-function isWebEx(event) {
-  if (!event.location) return false;
+function isWebEx (event) {
   return event.location.match(/@webex/i);
 }
 
 function confirmEvent(event) {
-  if (isWebEx(event)) {
-    console.log(event);
+  if (!event.location)
+    return;
+
+  if (isWebEx(event))
+    updateEvent(event);
+}
+
+function updateEvent(event) {
+  var eventDetailsExist = (event.description) ?
+    event.description.indexOf('=== Generated WebEx Details ===') > 0:
+    false;
+
+  var pmrUrl = createPMRUrl(event);
+  var description = (event.description) ?
+      event.description + createSignature(pmrUrl) :
+      createSignature(pmrUrl);
+
+  var updateInfo = {
+    summary: 'WebEx: ' + event.summary,
+    location: event.location,
+    description: description,
+    end: event.end,
+    start: event.start
+  };
+
+  if (eventDetailsExist) {
+    var descriptionHasPMRUrl = event.description.indexOf(pmrUrl) > 0;
+
+    if (descriptionHasPMRUrl)
+      return;
+
+    var WebExDetailsIndex = event.description.indexOf('=== Do not delete or change any of the following text. ===');
+    updateInfo.description = event.description.substring(0, WebExDetailsIndex) + createSignature(pmrUrl);
+    var WebExPrefixIndex = event.summary.indexOf('WebEx: ');
+    updateInfo.summary = event.summary.substr(WebExPrefixIndex);
   }
+
+  var params = {
+    calendarId: event.calendarId,
+    eventId: event.id
+  };
+
+  AdministerCalendars.updateEvent(params, updateInfo)
+    .catch(logError);
+
+  function createPMRUrl (event) {
+    var getPMRUserId = function getPMRUserId (eventLocation) {
+      var containsColon = eventLocation.match(/:/);
+      if (containsColon)
+        return eventLocation.match(/\w+[^webex:]\S/)[0];
+      return event.pmrUserId;
+    };
+
+    var PMRUserId = getPMRUserId(event.location);
+    return 'http://cisco.webex.com/meet/' + PMRUserId;
+  }
+}
+
+function createSignature (pmrUrl) {
+  var signature = '\n\n\n=== Do not delete or change any of the following text. ===';
+      signature += '\n=== Generated WebEx Details ===';
+      signature += '\nJoin the event creator\'s personal room:';
+      signature += '\n' + pmrUrl;
+
+  return signature;
+}
+
+function parseUserIdFromEmail (email) {
+  // Matches any length of chars before @
+  return email.match(/.+?(?=@)/g)[0];
 }

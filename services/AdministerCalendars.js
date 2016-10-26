@@ -12,7 +12,8 @@ var Interface = {
   list: getCalendars,
   fullSync: getFullSync,
   incrementalSync: getIncrementalSync,
-  getSyncToken: getSyncToken
+  getSyncToken: getSyncToken,
+  updateEvent: updateEvent
 };
 
 module.exports = Interface;
@@ -92,8 +93,6 @@ function getIncrementalSync(calendarInfo) {
           showDeleted: true
         };
 
-        console.log(params);
-
         Promise.promisify(calendar.events.list)(params)
           .then(function(response) {
             resolve(response);
@@ -108,11 +107,33 @@ function getIncrementalSync(calendarInfo) {
  * @param  {String} calendarId calendar id of desired token
  * @return {String}            the syncToken
  */
-function getSyncToken(calendarId) {
+function getSyncToken (calendarId) {
   return new Promise(function (resolve, reject) {
     getFullSync(calendarId)
       .then(function(response) {
         resolve(response.nextSyncToken);
       });
   });
+}
+
+/**
+ * Updates the calendar
+ * @param  {String} calendarId calendarId/Google user
+ */
+function updateEvent (params, updateInfo) {
+  var requiredParams = (params.eventId && params.calendarId);
+  if (!requiredParams)
+    throw new Error('Missing required eventId or calendarId');
+
+  var params = {
+    eventId: params.eventId,
+    calendarId: params.calendarId,
+    resource: updateInfo
+  };
+
+  return createJWT(scope.calendar)
+    .then(function(jwtClient) {
+      params.auth = jwtClient;
+      return Promise.promisify(calendar.events.update)(params)
+    });
 }

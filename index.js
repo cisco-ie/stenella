@@ -104,6 +104,7 @@ function createEventChannelsAndSave(userId) {
     console.log(syncToken);
     channelInfo.syncToken = syncToken;
     channelInfo.calendarId = userId;
+    channelInfo.type = 'event'
     AdministerChannels.save(channelInfo);
     // @TODO: this could be abstracted within the service
   })
