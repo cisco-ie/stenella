@@ -1,16 +1,10 @@
 'use strict';
 
-/**
- * Variable Declarations
- */
 var google = require('googleapis');
 var Promise = require('bluebird');
 var config = require('../configs/config');
 var key = config.keys.server;
 
-/**
- * AdministerJwt API
- */
 var Interface = {
   createJWT: createJWT
 };
@@ -34,14 +28,11 @@ function createJWT(scope) {
  * @return {object}           returns error or authenticated JWT client
  */
 function authorize(jwtClient) {
-  // Create a promise
   return new Promise(function createJWTpromise(resolve, reject) {
     jwtClient.authorize(function authorizeJwtResponse(error) {
-      if (error) {
+      if (error)
         reject(error);
-      } else {
-        resolve(jwtClient);
-      }
+      resolve(jwtClient);
     });
   });
 }

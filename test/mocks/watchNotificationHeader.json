@@ -1,0 +1,15 @@
+{
+   "host":"brandonhim.ngrok.io",
+   "accept":"*/*",
+   "x-goog-channel-id":"ccf64d70-73a0-48be-8ec0-82a45c954cce",
+   "x-goog-channel-expiration":"Fri, 12 Aug 2016 18:13:38 GMT",
+   "x-goog-resource-state":"exists",
+   "x-goog-message-number":"11067",
+   "x-goog-resource-id":"Ot03kc_DoEu1bzaySAzuFxAFUH8",
+   "x-goog-resource-uri":"https://www.googleapis.com/calendar/v3/calendars/brhim@apidevdemo.com/events?fields=id&showDeleted=true&alt=json",
+   "content-length":"0",
+   "user-agent":"APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)",
+   "accept-encoding":"gzip,deflate,br",
+   "x-forwarded-proto":"https",
+   "x-forwarded-for":"66.102.7.167"
+}

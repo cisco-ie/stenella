@@ -1,43 +1,39 @@
 'use strict';
 
-/**
- * Variable Declarations
- */
 var app = require('express')();
 var Promise = require('bluebird');
+var async = require('async');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
-var createChannel = require('./services/AdministerChannels').createChannel;
+var AdministerChannels = require('./services/AdministerChannels');
+var AdministerCalendars = require('./services/AdministerCalendars');
 var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
+var logError = require('./libs/errorHandlers').logError;
+var db = require('./data/db/connection');
+var mongoose = require('mongoose');
 
-/**
- * Application Index Route
- */
 app.get('/', function getResponse(req, res) {
-  res.send('Google Integration is running.');
+  res.send('Google integration is running.');
 });
 
-/**
- * Initialization of server
- */
-init();
+var serverAPI = {
+  events: '/watch/events',
+  users: '/watch/users'
+};
 
-/**
- * A promise that performs synchronous operations to setup the
- * server prior to accepting requests
- * @return {object} Promise which is resolved once all operations are done
- */
-function init() {
+app.use(serverAPI.events, require('./routes/eventsRoute'));
+// TODO: Add users
+// app.use(serverAPI.users, require('./routes/watchRoute'));
+
+initServer();
+
+function initServer() {
   setUpChannels();
   app.listen(config.port, console.log('Running on port 5000'));
 }
 
-/**
- * Set up all the events and userDirectory channels
- * @return {void}
- */
 function setUpChannels() {
   getUsers()
     .then(createUserChannelsAndExtractIds)
@@ -45,24 +41,29 @@ function setUpChannels() {
 }
 
 /**
- * create User Directory Channel and extract User ids
- * @param  {[type]} userResponse [description]
- * @return {[type]}              [description]
+ * Create User Directory Channel and extract User ids
+ * @param  {Object} userResponse JSON response for user directory response
+ * @return {Void}
  */
-function createUserChannelsAndExtractIds(userResponse) {
-  // @TODO: retry creating channel and have a timeout associated with it
-  createDirectoryChannel();
-  extractUserIds(userResponse.users)
-    .then(createEventsChannels)
+function createUserChannelsAndExtractIds(userDirResponse) {
+  // @TODO:
+  // retry creating channel and have a timeout associated with it
+  createDirectoryChannel()
+    .then(AdministerChannels.save)
+    .catch(logError);
+
+  extractUserIds(userDirResponse.users)
+    // This a series of request per each id
+    .each(createEventChannelsAndSave)
     .catch(logError);
 }
 
 /**
- * get list of users
- * @return {object} A promise when fulfilled is
+ * Get list of users
+ * @return {Object} A promise when fulfilled is
  */
 function getUsers() {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function userPromise(resolve, reject) {
     createJWT(scope.userDirectory)
       .then(function authorizeJwtResponse(jwtClient) {
         var listUsers = Promise.promisify(AdministerUsers.list);
@@ -75,9 +76,9 @@ function getUsers() {
 }
 
 /**
-* get list of user ids from user records
-* @param  {array} users an array of users from the Google directory response
-* @return {object}       returns an extracted list of Google user ids
+* Get list of user ids from user records
+* @param  {Array} users an array of users from the Google directory response
+* @return {Object}       returns an extracted list of Google user ids
 */
 function extractUserIds(users) {
   var userIds = _.map(users, function extractEmail(user) {
@@ -86,33 +87,46 @@ function extractUserIds(users) {
   return Promise.resolve(userIds);
 }
 
-function logError(error) {
-  console.log(error);
+/**
+ * Performs a channel request and saves after successful
+ * @param  {String} userId UserId of the eventList to create a watch for
+ * @return {String}
+ */
+function createEventChannelsAndSave(userId) {
+  var eventChannelPromise = createEventChannel(userId);
+  var syncTokenPromise = AdministerCalendars.getSyncToken(userId);
+
+  Promise.all([
+    syncTokenPromise,
+    eventChannelPromise,
+  ])
+  .spread(function(syncToken, channelInfo) {
+    console.log(syncToken);
+    channelInfo.syncToken = syncToken;
+    channelInfo.calendarId = userId;
+    channelInfo.type = 'event'
+    AdministerChannels.save(channelInfo);
+    // @TODO: this could be abstracted within the service
+  })
+  .catch(logError);
 }
 
 /**
- * Create an events channel per each userId
- * @param  {string} userIds <userId>@<domain>
- * @return {void}
+ * Create an events watch channel per each userId
+ * @param  {String} userIds <userId>@<domain>
+ * @return {Void}
  */
-function createEventsChannels(userIds) {
-  createJWT(scope.calendar)
-    .then(function JwtResponse(jwtClient) {
-      _.forEach(userIds, function createChannelPerId(userId) {
-        // Create a new object appending userId
-        var channelInfo = {
-          type: 'event',
-          id: userId
-        };
-        createChannel(jwtClient, channelInfo);
-      });
-    });
+function createEventChannel(userId) {
+  var channelInfo = {
+    type: 'event',
+    id: userId
+  };
+  return AdministerChannels.create(channelInfo);
 }
 
 function createDirectoryChannel() {
-  createJWT(scope.userDirectory)
-    .then(function JwtResponse(jwtClient) {
-      var channelInfo = { type: 'directory' };
-      createChannel(jwtClient, channelInfo);
-    });
+  var channelInfo = {
+    type: 'directory'
+  };
+  return AdministerChannels.create(channelInfo);
 }
