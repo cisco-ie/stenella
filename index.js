@@ -6,14 +6,11 @@
 var app = require('express')();
 var Promise = require('bluebird');
 var _ = require('lodash');
-
 var AdministerUsers = require('./services/AdministerUsers');
-var AdministerCalendars = require('./services/AdministerCalendars');
-
+var createChannel = require('./services/AdministerChannels').createChannel;
+var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
-var key = config.keys.server;
-var google = require('googleapis');
 
 /**
  * Application Index Route
@@ -33,14 +30,30 @@ init();
  * @return {object} Promise which is resolved once all operations are done
  */
 function init() {
-  setupCalendaring();
+  setUpChannels();
   app.listen(config.port, console.log('Running on port 5000'));
 }
 
-function setupCalendaring() {
+/**
+ * Set up all the events and userDirectory channels
+ * @return {void}
+ */
+function setUpChannels() {
   getUsers()
-    .then(extractUserId)
-    .then(getUsersCalendars)
+    .then(createUserChannelsAndExtractIds)
+    .catch(logError);
+}
+
+/**
+ * create User Directory Channel and extract User ids
+ * @param  {[type]} userResponse [description]
+ * @return {[type]}              [description]
+ */
+function createUserChannelsAndExtractIds(userResponse) {
+  // @TODO: retry creating channel and have a timeout associated with it
+  createDirectoryChannel();
+  extractUserIds(userResponse.users)
+    .then(createEventsChannels)
     .catch(logError);
 }
 
@@ -49,57 +62,57 @@ function setupCalendaring() {
  * @return {object} A promise when fulfilled is
  */
 function getUsers() {
-  var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.userDirectory, config.authorizeAdmin);
-  /**
-   * @TODO: make promise compliant
-   */
-  // var authorizeClient = Promise.promisify(jwtClient.authorize);
   return new Promise(function(resolve, reject) {
-    jwtClient.authorize(function(error, tokens) {
-      if (error) reject(error);
-      var listUsers = Promise.promisify(AdministerUsers.list);
-
-      listUsers(jwtClient, null)
-        .then(function(response) {
-          resolve(response.users);
-        })
-        .catch(function(listError) {
-          reject(listError);
-        });
-    });
+    createJWT(scope.userDirectory)
+      .then(function authorizeJwtResponse(jwtClient) {
+        var listUsers = Promise.promisify(AdministerUsers.list);
+        listUsers(jwtClient, null)
+          .then(resolve)
+          .catch(reject);
+      })
+      .catch(logError);
   });
 }
 
 /**
 * get list of user ids from user records
-* @param  {[type]} users [description]
-* @return {[type]}       [description]
+* @param  {array} users an array of users from the Google directory response
+* @return {object}       returns an extracted list of Google user ids
 */
-function extractUserId(users) {
-  var userIds = _.map(users, function(user) {
+function extractUserIds(users) {
+  var userIds = _.map(users, function extractEmail(user) {
     return user.primaryEmail;
   });
-
   return Promise.resolve(userIds);
-}
-
-/**
- * get calendars for all user ids
- * @param  {[type]} usersIds [description]
- * @return {[type]}          [description]
- */
-function getUsersCalendars(usersIds) {
-  var jwtClient = new google.auth.JWT(key.client_email, null, key.private_key, scope.calendar, config.authorizeAdmin);
-
-  jwtClient.authorize(function(error) {
-    _.forEach(usersIds, function(userId) {
-      AdministerCalendars.list(jwtClient, null, userId, function(listErr, result) {
-        console.log(result);
-      });
-    });
-  });
 }
 
 function logError(error) {
   console.log(error);
+}
+
+/**
+ * Create an events channel per each userId
+ * @param  {string} userIds <userId>@<domain>
+ * @return {void}
+ */
+function createEventsChannels(userIds) {
+  createJWT(scope.calendar)
+    .then(function JwtResponse(jwtClient) {
+      _.forEach(userIds, function createChannelPerId(userId) {
+        // Create a new object appending userId
+        var channelInfo = {
+          type: 'event',
+          id: userId
+        };
+        createChannel(jwtClient, channelInfo);
+      });
+    });
+}
+
+function createDirectoryChannel() {
+  createJWT(scope.userDirectory)
+    .then(function JwtResponse(jwtClient) {
+      var channelInfo = { type: 'directory' };
+      createChannel(jwtClient, channelInfo);
+    });
 }
