@@ -40,8 +40,8 @@ function getCalendars(authToken, calendarParams, userId, callback) {
 
 /**
  * Only performs the sync of items from Today to Future.
- * @param  {object}   client     Autheticated clients
  * @param  {string}   calendarId Associated Email with Calendar
+ * @return {object} full sync response object
  */
 function getFullSync(calendarId) {
   var params = {
@@ -54,21 +54,21 @@ function getFullSync(calendarId) {
   // we need to keep making request to get to the last page for
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
-  var eventListRequest = function (params) {
-    return new Promise(function(resolve, reject) {
+  var eventListRequest = function eventListRequest(listParams) {
+    return new Promise(function eventListPromise(resolve, reject) {
       createJWT(scope.calendar)
-        .then(function(jwtClient) {
-          params.auth = jwtClient;
-          calendar.events.list(params, function createEventsWatchCb(err, result) {
+        .then(function jwtResponse(jwtClient) {
+          listParams.auth = jwtClient;
+          calendar.events.list(listParams, function createEventsWatchCb(err, result) {
             if (err) reject(err);
             if (result.nextPageToken) {
-              params.nextPageToken = result.nextPageToken;
-              eventListRequest(params);
+              listParams.nextPageToken = result.nextPageToken;
+              eventListRequest(listParams);
             }
             resolve(result);
           });
         });
-      });
+    });
   };
 
   return eventListRequest(params);
@@ -76,15 +76,13 @@ function getFullSync(calendarId) {
 
 /**
  * Get an Incremental Sync
- * @param  {Object}   jwtClient    Authenticated jwtClient
  * @param  {Object}   calendarInfo contains: id, syncToken
- * @return {Object}                Promise of calendar event list
+ * @return {Object}   Promise of calendar event list
  */
 function getIncrementalSync(calendarInfo) {
-  console.log(calendarInfo)
-  return new Promise(function (resolve, reject) {
+  return new Promise(function incrementalSyncPromise(resolve, reject) {
     createJWT(scope.calendar)
-      .then(function(jwtClient) {
+      .then(function jwtResponse(jwtClient) {
         var params = {
           auth: jwtClient,
           calendarId: calendarInfo.calendarId || calendarInfo.id,
@@ -94,9 +92,7 @@ function getIncrementalSync(calendarInfo) {
         };
 
         Promise.promisify(calendar.events.list)(params)
-          .then(function(response) {
-            resolve(response);
-          })
+          .then(resolve)
           .catch(reject);
       });
   });
@@ -107,33 +103,39 @@ function getIncrementalSync(calendarInfo) {
  * @param  {String} calendarId calendar id of desired token
  * @return {String}            the syncToken
  */
-function getSyncToken (calendarId) {
-  return new Promise(function (resolve, reject) {
+function getSyncToken(calendarId) {
+  return new Promise(function syncTokenPromise(resolve, reject) {
     getFullSync(calendarId)
-      .then(function(response) {
+      .then(function fullSyncResponse(response) {
         resolve(response.nextSyncToken);
-      });
+      })
+      .catch(reject);
   });
 }
 
 /**
  * Updates the calendar
- * @param  {String} calendarId calendarId/Google user
+ * @param  {object} params eventId and calendarId
+ * @param  {object} updateInfo contains the event information update
+ * @param  {String} updateInfo.summary summary
+ * @param  {String} updateInfo.location location
+ * @param  {String} updateInfo.description description
+ * @param  {time} updateInfo.start start time
+ * @param  {time} updateInfo.end end time
+ * @return {Object} promise thenable promise
  */
-function updateEvent (params, updateInfo) {
+function updateEvent(params, updateInfo) {
+  if (!params) throw new Error('Missing params for update Event');
   var requiredParams = (params.eventId && params.calendarId);
-  if (!requiredParams)
+  if (!requiredParams) {
     throw new Error('Missing required eventId or calendarId');
-
-  var params = {
-    eventId: params.eventId,
-    calendarId: params.calendarId,
-    resource: updateInfo
-  };
-
+  }
+  // Return if no updates to save redundant API request
+  if (!updateInfo) return;
+  params.resource = updateInfo;
   return createJWT(scope.calendar)
-    .then(function(jwtClient) {
+    .then(function jwtResponse(jwtClient) {
       params.auth = jwtClient;
-      return Promise.promisify(calendar.events.update)(params)
+      return Promise.promisify(calendar.events.update)(params);
     });
 }
