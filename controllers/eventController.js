@@ -121,39 +121,32 @@ function confirmEvent(event) {
   if (!event.location)
     return;
 
-  if (isWebEx(event))
+  var requiresUpdate = checkUpdateState(event)
+  var isWebEx = isWebEx(event);
+
+  if (requiresUpdate && isWebEx)
     updateEvent(event);
 }
 
-function updateEvent(event) {
-  var eventDetailsExist = (event.description) ?
-    event.description.indexOf('=== Generated WebEx Details ===') > 0:
-    false;
+function checkUpdateState (event) {
+  if (!event.description) return true;
 
+  var eventDetailsExist = event.description.indexOf('=== Generated WebEx Details ===') > 0;
   var pmrUrl = createPMRUrl(event);
-  var description = (event.description) ?
-      event.description + createSignature(pmrUrl) :
-      createSignature(pmrUrl);
+  var correctPmrUrl = event.description.indexOf(pmrUrl);
+  if (!correctPmrUrl || !eventDetailsExist) return true;
 
+  return false;
+}
+
+function updateEvent(event) {
   var updateInfo = {
     summary: 'WebEx: ' + event.summary,
     location: event.location,
-    description: description,
     end: event.end,
-    start: event.start
+    start: event.start,
+    description: buildDescription(event)
   };
-
-  if (eventDetailsExist) {
-    var descriptionHasPMRUrl = event.description.indexOf(pmrUrl) > 0;
-
-    if (descriptionHasPMRUrl)
-      return;
-
-    var WebExDetailsIndex = event.description.indexOf('=== Do not delete or change any of the following text. ===');
-    updateInfo.description = event.description.substring(0, WebExDetailsIndex) + createSignature(pmrUrl);
-    var WebExPrefixIndex = event.summary.indexOf('WebEx: ');
-    updateInfo.summary = event.summary.substr(WebExPrefixIndex);
-  }
 
   var params = {
     calendarId: event.calendarId,
@@ -162,22 +155,42 @@ function updateEvent(event) {
 
   AdministerCalendars.updateEvent(params, updateInfo)
     .catch(logError);
+}
 
-  function createPMRUrl (event) {
-    var getPMRUserId = function getPMRUserId (eventLocation) {
-      var containsColon = eventLocation.match(/:/);
-      if (containsColon)
-        return eventLocation.match(/\w+[^webex:]\S/)[0];
-      return event.pmrUserId;
-    };
+function createPMRUrl (event) {
+  var getPMRUserId = function getPMRUserId (eventLocation) {
+    var containsColon = eventLocation.match(/:/);
+    if (containsColon)
+      return eventLocation.match(/\w+[^webex:]\S/)[0];
+    return event.pmrUserId;
+  };
 
-    var PMRUserId = getPMRUserId(event.location);
-    return 'http://cisco.webex.com/meet/' + PMRUserId;
+  var PMRUserId = getPMRUserId(event.location);
+  return 'http://cisco.webex.com/meet/' + PMRUserId;
+}
+
+function buildDescription (event) {
+  var pmrUrl = createPMRUrl(event);
+  if (!event.description) {
+    return createSignature(pmrUrl);
   }
+
+  // While checkUpdateState prevents webex details with
+  // correct urls from passing, we still need to
+  // account for details that need updates
+  var eventDetailsExist = event.description.indexOf('Generated WebEx Details') > 0;
+  if (eventDetailsExist) {
+     var OldDetailsStart = event.description.indexOf('=== Do not delete or change any of the following text. ===');
+     var newDescription = event.description.substring(0, OldDetailsStart) + createSignature(pmrUrl);
+     return newDescription;
+  }
+
+  var appendedDescription = event.description + createSignature(pmrUrl);
+  return appendedDescription;
 }
 
 function createSignature (pmrUrl) {
-  var signature = '\n\n\n=== Do not delete or change any of the following text. ===';
+  var signature = '\n=== Do not delete or change any of the following text. ===';
       signature += '\n=== Generated WebEx Details ===';
       signature += '\nJoin the event creator\'s personal room:';
       signature += '\n' + pmrUrl;
