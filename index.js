@@ -24,8 +24,7 @@ var serverAPI = {
 };
 
 app.use(serverAPI.events, require('./routes/eventsRoute'));
-// TODO: Add users
-// app.use(serverAPI.users, require('./routes/watchRoute'));
+app.use(serverAPI.users, require('./routes/usersRoute'));
 
 initServer();
 
@@ -101,7 +100,6 @@ function createEventChannelsAndSave(userId) {
     eventChannelPromise,
   ])
   .spread(function(syncToken, channelInfo) {
-    console.log(syncToken);
     channelInfo.syncToken = syncToken;
     channelInfo.calendarId = userId;
     channelInfo.type = 'event'
@@ -130,3 +128,5 @@ function createDirectoryChannel() {
   };
   return AdministerChannels.create(channelInfo);
 }
+
+
