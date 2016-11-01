@@ -109,7 +109,7 @@ function buildParams(jwtClient, channelInfo) {
         type: 'web_hook',
         address: config.recievingUrl.users,
         params: {
-          ttl: 6400 // 2 hour
+          ttl: 40 // 2 hour
         }
       }
     };

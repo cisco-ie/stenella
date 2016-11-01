@@ -49,11 +49,12 @@ function createChannelsAndExtractIds(userDirResponse) {
   // @TODO:
   // retry creating channel and have a timeout associated with it
   findDirectoryChannel()
-    .then(function findDirCb(response) {
-      if (response)
-        return setChannelRenewal(response);
+    .then(function findDirCb(currentDirectoryChannel) {
+      if (currentDirectoryChannel)
+        return setChannelRenewal(currentDirectoryChannel);
 
-      createDirChannelAndSave();
+      createDirChannelAndSave()
+        .then(setChannelRenewal);
     });
 
   extractUserIds(userDirResponse.users)
@@ -64,17 +65,31 @@ function createChannelsAndExtractIds(userDirResponse) {
 
 function setChannelRenewal (directoryChannel) {
   var timeoutMs = getDateMsDifference(directoryChannel.expiration);
-  setTimeout(createDirChannelAndSave, timeoutMs);
+  if (timeoutMs < 0) {
+    timeoutMs = 0;
+  }
+
+  function createAndDeleteChannel () {
+    createDirChannelAndSave()
+      .then(function(newChannel) {
+        // Will need to be address,
+        // as response is passed when created
+        // and query lookup is passed during existing renewal
+        var id = directoryChannel.id || directoryChannel.calendarId;
+        Channel.remove({ channelId: id }).exec();
+        // recall to reset up renewal
+        setChannelRenewal(newChannel);
+      });
+  }
+
+  setTimeout(createAndDeleteChannel, timeoutMs);
 }
 
 function createDirChannelAndSave() {
-  createDirectoryChannel()
+  return createDirectoryChannel()
     .then(saveDirectoryChannel)
+    .then(Promise.resolve)
     .catch(logError);
-}
-
-function updateNewExpiration (channel) {
-  getTimeDifference(channel.expiration);
 }
 
 /**
@@ -152,6 +167,7 @@ function createDirectoryChannel() {
 function saveDirectoryChannel(channelInfo) {
   channelInfo.type = 'directory';
   AdministerChannels.save(channelInfo);
+  return Promise.resolve(channelInfo);
 }
 
 function findCalendarChannel(calendarId) {

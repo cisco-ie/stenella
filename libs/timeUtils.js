@@ -7,8 +7,12 @@ var Interface = {
 module.exports = Interface;
 
 function getDateMsDifference(futureDate) {
+    console.log(futureDate);
+  if (typeof futureDate === 'string')
+    futureDate = parseInt(futureDate);
+
   var future = moment(futureDate).format('x');
   var now = moment().format('x');
-  var diff = Math.abs(future - now);
+  var diff = future - now;
   return diff;
 }
