@@ -6,8 +6,10 @@ var scope = require('../constants/GoogleScopes');
 var Promise = require('bluebird');
 var AdministerCalendars = require('../services/AdministerCalendars');
 var AdminsterChannels = require('../services/AdministerChannels');
+var parseHeaders = AdminsterChannels.parseHeaders;
 
-router.post('/', jsonParser, function (request, response) {
+
+router.post('/', function (request, response) {
   var headers = parseHeaders(request);
 
   // Looking only for 'create' events,
@@ -25,7 +27,6 @@ router.post('/', jsonParser, function (request, response) {
 
   // POST request not regarding notifications should not be sent here
   response.sendStatus(400);
-  }
 });
 
 function createChannelAndSave (userId) {

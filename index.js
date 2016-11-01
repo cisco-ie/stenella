@@ -2,7 +2,6 @@
 
 var app = require('express')();
 var Promise = require('bluebird');
-var async = require('async');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
 var AdministerChannels = require('./services/AdministerChannels');
@@ -13,6 +12,8 @@ var scope = require('./constants/GoogleScopes');
 var logError = require('./libs/errorHandlers').logError;
 var db = require('./data/db/connection');
 var mongoose = require('mongoose');
+var Channel = mongoose.model('Channel', require('./data/schema/channel'));
+var getDateMsDifference = require('./libs/timeUtils').getDateMsDifference;
 
 app.get('/', function getResponse(req, res) {
   res.send('Google integration is running.');
@@ -35,7 +36,7 @@ function initServer() {
 
 function setUpChannels() {
   getUsers()
-    .then(createUserChannelsAndExtractIds)
+    .then(createChannelsAndExtractIds)
     .catch(logError);
 }
 
@@ -44,17 +45,36 @@ function setUpChannels() {
  * @param  {Object} userResponse JSON response for user directory response
  * @return {Void}
  */
-function createUserChannelsAndExtractIds(userDirResponse) {
+function createChannelsAndExtractIds(userDirResponse) {
   // @TODO:
   // retry creating channel and have a timeout associated with it
-  createDirectoryChannel()
-    .then(AdministerChannels.save)
-    .catch(logError);
+  findDirectoryChannel()
+    .then(function findDirCb(response) {
+      if (response)
+        return setChannelRenewal(response);
+
+      createDirChannelAndSave();
+    });
 
   extractUserIds(userDirResponse.users)
     // This a series of request per each id
     .each(createEventChannelsAndSave)
     .catch(logError);
+}
+
+function setChannelRenewal (directoryChannel) {
+  var timeoutMs = getDateMsDifference(directoryChannel.expiration);
+  setTimeout(createDirChannelAndSave, timeoutMs);
+}
+
+function createDirChannelAndSave() {
+  createDirectoryChannel()
+    .then(saveDirectoryChannel)
+    .catch(logError);
+}
+
+function updateNewExpiration (channel) {
+  getTimeDifference(channel.expiration);
 }
 
 /**
@@ -127,6 +147,22 @@ function createDirectoryChannel() {
     type: 'directory'
   };
   return AdministerChannels.create(channelInfo);
+}
+
+function saveDirectoryChannel(channelInfo) {
+  channelInfo.type = 'directory';
+  AdministerChannels.save(channelInfo);
+}
+
+function findCalendarChannel(calendarId) {
+  Channel.findOne({calendarId: calendarId})
+    .then(function(response) {
+      console.log(response);
+    });
+}
+
+function findDirectoryChannel() {
+  return Channel.findOne({resourceType: 'directory'});
 }
 
 
