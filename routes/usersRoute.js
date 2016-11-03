@@ -41,7 +41,7 @@ function createChannelAndSave (userId) {
 
   Promise.all([
     syncTokenPromise,
-    eventChannelPromise,
+    eventChannelPromise
   ])
   .spread(function(syncToken, channelInfo) {
     channelInfo.syncToken = syncToken;
