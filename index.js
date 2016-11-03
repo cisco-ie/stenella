@@ -13,7 +13,6 @@ var logError = require('./libs/errorHandlers').logError;
 var db = require('./data/db/connection');
 var mongoose = require('mongoose');
 var Channel = mongoose.model('Channel', require('./data/schema/channel'));
-var getDateMsDifference = require('./libs/timeUtils').getDateMsDifference;
 
 app.get('/', function getResponse(req, res) {
   res.send('Google integration is running.');
@@ -46,68 +45,27 @@ function setUpChannels() {
  * @return {Void}
  */
 function createChannelsAndExtractIds(userDirResponse) {
-  // @TODO:
-  // retry creating channel and have a timeout associated with it
   findDirectoryChannel()
     .then(function findDirCb(directoryChannel) {
       if (directoryChannel)
-        return setChannelRenewal(directoryChannel);
+        return AdministerChannels.renew(directoryChannel);
+
       createDirChannelAndSave()
-        .then(setChannelRenewal);
+        .then(AdministerChannels.renew);
     });
 
   extractUserIds(userDirResponse.users)
     .each(function (userId) {
-      findCalendarChannel(userId)
+      var calendarId = userId;
+      findCalendarChannel(calendarId)
         .then(function(eventChannel) {
           if (eventChannel)
-            return setChannelRenewal(eventChannel);
+            return AdministerChannels.renew(eventChannel);
 
           createEventChannelAndSave(userId)
-            .then(setChannelRenewal);
+            .then(AdministerChannels.renew);
         });
     })
-    .catch(logError);
-}
-
-function setChannelRenewal (existingChannel) {
-  var timeoutMs = getTimeoutMs(existingChannel);
-  // @TODO: locate the property issue
-  var type = existingChannel.type || existingChannel.resourceType;
-  setTimeout(createAndDeleteChannel, timeoutMs);
-
-  function createAndDeleteChannel () {
-    if (type === 'directory') {
-      createDirChannelAndSave()
-        .then(deleteExistingAndRenew);
-    }
-
-    if (type === 'event') {
-      createEventChannelAndSave(existingChannel.calendarId)
-        .then(deleteExistingAndRenew);
-    }
-  }
-
-  function deleteExistingAndRenew (newChannel) {
-    var id = existingChannel.id || existingChannel.calendarId;
-    Channel.remove({ channelId: id }).exec();
-
-    setChannelRenewal(newChannel);
-  }
-}
-
-function getTimeoutMs (channel) {
-  var timeoutMs = getDateMsDifference(channel.expiration);
-  if (timeoutMs < 0) {
-    timeoutMs = 0;
-  }
-  return timeoutMs;
-}
-
-function createDirChannelAndSave() {
-  return createDirectoryChannel()
-    .then(saveDirectoryChannel)
-    .then(Promise.resolve)
     .catch(logError);
 }
 
@@ -140,53 +98,25 @@ function extractUserIds(users) {
   return Promise.resolve(userIds);
 }
 
-/**
- * Performs a channel request and saves after successful
- * @param  {String} userId UserId of the eventList to create a watch for
- * @return {String}
- */
-function createEventChannelAndSave(userId) {
-  var eventChannelPromise = createEventChannel(userId);
-  var syncTokenPromise = AdministerCalendars.getSyncToken(userId);
-
-  return Promise.all([
-    syncTokenPromise,
-    eventChannelPromise
-  ])
-  .spread(function(syncToken, channelInfo) {
-    channelInfo.syncToken = syncToken;
-    channelInfo.calendarId = userId;
-    channelInfo.type = 'event'
-    AdministerChannels.save(channelInfo);
-    return Promise.resolve(channelInfo);
-  })
-  .catch(logError);
-}
-
-/**
- * Create an events watch channel per each userId
- * @param  {String} userIds <userId>@<domain>
- * @return {Void}
- */
-function createEventChannel(userId) {
+function createEventChannelAndSave(calendarId) {
   var channelInfo = {
-    type: 'event',
-    id: userId
+    calendarId: calendarId,
+    resourceType: 'event'
   };
-  return AdministerChannels.create(channelInfo);
+
+  return AdministerChannels.create(channelInfo)
+    .then(AdministerChannels.save)
+    .catch(logError);
 }
 
-function createDirectoryChannel() {
+function createDirChannelAndSave() {
   var channelInfo = {
-    type: 'directory'
+    resourceType: 'directory'
   };
-  return AdministerChannels.create(channelInfo);
-}
 
-function saveDirectoryChannel(channelInfo) {
-  channelInfo.type = 'directory';
-  AdministerChannels.save(channelInfo);
-  return Promise.resolve(channelInfo);
+  return AdministerChannels.create(channelInfo)
+    .then(AdministerChannels.save)
+    .catch(logError);
 }
 
 function findCalendarChannel(calendarId) {

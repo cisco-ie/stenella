@@ -12,9 +12,8 @@ var parseHeaders = AdminsterChannels.parseHeaders;
 router.post('/', function (request, response) {
   var headers = parseHeaders(request);
 
-  // Looking only for 'create' events,
-  // 'update' events may need to be re-looked at,
-  // however, there is apparently an alias which is created
+  // Looking only for 'create' events (new users)
+  // 'update' events may need to be re-looked at
   var isCreateNotification = (headers.channelId &&
                               headers.resourceId &&
                               headers.resourceState === 'create');
@@ -29,26 +28,6 @@ router.post('/', function (request, response) {
   response.sendStatus(400);
 });
 
-function createChannelAndSave (userId) {
-  // @TODO: Abstract as this is used in index.js
-  var channelInfo = {
-    type: 'event',
-    id: userId
-  };
 
-  var eventChannelPromise = AdministerChannels.create(channelInfo);
-  var syncTokenPromise = AdministerCalendars.getSyncToken(userId);
-
-  Promise.all([
-    syncTokenPromise,
-    eventChannelPromise
-  ])
-  .spread(function(syncToken, channelInfo) {
-    channelInfo.syncToken = syncToken;
-    channelInfo.calendarId = userId;
-    channelInfo.type = 'event'
-    AdministerChannels.save(channelInfo);
-  })
-}
 
 module.exports = router;

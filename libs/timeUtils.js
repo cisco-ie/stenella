@@ -7,7 +7,6 @@ var Interface = {
 module.exports = Interface;
 
 function getDateMsDifference(futureDate) {
-    console.log(futureDate);
   if (typeof futureDate === 'string')
     futureDate = parseInt(futureDate);
 
