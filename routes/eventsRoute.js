@@ -19,7 +19,6 @@ router.post('/', function (request, response) {
   response.sendStatus(200);
 });
 
-
 module.exports = router;
 
 function parseNotification(parseHeaders) {

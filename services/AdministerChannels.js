@@ -210,7 +210,8 @@ function saveChannel(channelInfo) {
   var channelProps = _.extend(props, channelInfo);
   var channelEntry = new Channel(channelProps);
   channelEntry.save();
-  // Returning the virtual model to allow deletions / updates to db
+  // Returning the virtual model to allow deletions / updates
+  // to db, used for renewals
   return Promise.resolve(channelEntry);
 }
 
@@ -225,7 +226,8 @@ function createDirChannelAndSave() {
 }
 
 function renewChannel (existingChannel) {
-  var timeoutMs = getTimeoutMs(existingChannel);
+  // subtract 5 seconds (5000ms) to allow some overlap
+  var timeoutMs = getTimeoutMs(existingChannel) - 5000;
   var type = existingChannel.resourceType;
   setTimeout(createAndDeleteChannel, timeoutMs);
 
