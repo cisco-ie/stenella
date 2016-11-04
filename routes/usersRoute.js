@@ -7,11 +7,15 @@ var Promise = require('bluebird');
 var AdministerCalendars = require('../services/AdministerCalendars');
 var AdminsterChannels = require('../services/AdministerChannels');
 var parseHeaders = AdminsterChannels.parseHeaders;
+var bodyParser = require('body-parser');
+var jsonParser = bodyParser.json({type: 'application/*'});
+var mongoose = require('mongoose');
+var Channel = mongoose.model('Channel', require('../data/schema/channel'));
 
 /**
  * `watch/users` POST Route
  */
-router.post('/', function (request, response) {
+router.post('/', jsonParser, function (request, response) {
   var headers = parseHeaders(request);
 
   var syncNotification = (headers.resourceState === 'sync');
@@ -21,12 +25,20 @@ router.post('/', function (request, response) {
   // Looking only for 'create' events (new users)
   // 'update' events may need to be re-looked at
   if (isCreateNotification(headers)) {
-    var calenderId = request.body.primaryEmail;
-    createEventChannel(calenderId)
-      .then(AdminsterChannels.save)
-      .then(AdminsterChannels.renew);
+    // @TODO: Clean up into seperate function
+    return findExisting(headers.channelId)
+      .then(function(existingChannel) {
+        if (existingChannel) {
+          var calendarId = request.body.primaryEmail;
+          createEventChannel(calendarId)
+            .then(AdminsterChannels.save)
+            .then(AdminsterChannels.renew);
 
-    response.sendStatus(200);
+          return response.sendStatus(200);
+        }
+
+        return response.sendStatus(400);
+      });
   }
 
   // POST request not regarding notifications should not be sent here
@@ -39,10 +51,14 @@ function isCreateNotification (parseHeaders) {
 
 function createEventChannel (calendarId) {
   var channelInfo = {
-    type: 'event',
-    calenderId: calenderId
+    resourceType: 'event',
+    calendarId: calendarId
   }
   return AdminsterChannels.create(channelInfo);
+}
+
+function findExisting(channelId) {
+  return Channel.findOne({channelId: channelId});
 }
 
 module.exports = router;

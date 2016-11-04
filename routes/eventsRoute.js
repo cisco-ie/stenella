@@ -13,7 +13,7 @@ router.post('/', function (request, response) {
 
   // More information: https://developers.google.com/google-apps/calendar/v3/push
   if (!isWatchNotification(headers))
-    response.sendStatus(400);
+    return response.sendStatus(400);
 
   parseNotification(headers);
   response.sendStatus(200);

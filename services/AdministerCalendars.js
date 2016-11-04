@@ -61,11 +61,15 @@ function getFullSync(calendarId) {
           listParams.auth = jwtClient;
           calendar.events.list(listParams, function createEventsWatchCb(err, result) {
             if (err) reject(err);
-            if (result.nextPageToken) {
-              listParams.nextPageToken = result.nextPageToken;
-              eventListRequest(listParams);
+            // @TODO: Bug with null results after user
+            // creation, need to investigate
+            if (result) {
+              if (result.nextPageToken) {
+                listParams.nextPageToken = result.nextPageToken;
+                eventListRequest(listParams);
+              }
+              resolve(result);
             }
-            resolve(result);
           });
         });
     });
