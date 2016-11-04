@@ -148,7 +148,7 @@ function buildParams(jwtClient, channelInfo) {
         address: config.recievingUrl.events,
         params: {
           // @TODO: create config for TTL
-          ttl: 30
+          ttl: 1500
         }
       }
     };
@@ -164,7 +164,7 @@ function buildParams(jwtClient, channelInfo) {
         type: 'web_hook',
         address: config.recievingUrl.users,
         params: {
-          ttl: 40 // 2 hour
+          ttl: 1500
         }
       }
     };

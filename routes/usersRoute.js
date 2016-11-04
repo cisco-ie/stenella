@@ -21,7 +21,7 @@ router.post('/', function (request, response) {
   // Looking only for 'create' events (new users)
   // 'update' events may need to be re-looked at
   if (isCreateNotification(headers)) {
-    var calenderId = requrest.body.primaryEmail;
+    var calenderId = request.body.primaryEmail;
     createEventChannel(calenderId)
       .then(AdminsterChannels.save)
       .then(AdminsterChannels.renew);
