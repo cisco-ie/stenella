@@ -8,27 +8,23 @@ var AdministerCalendars = require('../services/AdministerCalendars');
 var AdminsterChannels = require('../services/AdministerChannels');
 var parseHeaders = AdminsterChannels.parseHeaders;
 
-
+/**
+ * `watch/users` POST Route
+ */
 router.post('/', function (request, response) {
   var headers = parseHeaders(request);
 
+  var syncNotification = (headers.resourceState === 'sync');
+  if (syncNotification)
+      console.log(headers.channelId + ' channel has been established.');
+
   // Looking only for 'create' events (new users)
   // 'update' events may need to be re-looked at
-  var isCreateNotification = (headers.channelId &&
-                              headers.resourceId &&
-                              headers.resourceState === 'create');
-
-  if (isCreateNotification) {
-    var calenderId = request.body.primaryEmail;
-
-    var channelInfo = {
-      type: 'event',
-      calenderId: calenderId
-    }
-
-    AdminsterChannels.create(channelInfo)
+  if (isCreateNotification(headers)) {
+    var calenderId = requrest.body.primaryEmail;
+    createEventChannel(calenderId)
       .then(AdminsterChannels.save)
-      .then(AdministerChannels.renew);
+      .then(AdminsterChannels.renew);
 
     response.sendStatus(200);
   }
@@ -37,6 +33,16 @@ router.post('/', function (request, response) {
   response.sendStatus(400);
 });
 
+function isCreateNotification (parseHeaders) {
+  return (parseHeaders.channelId && parseHeaders.resourceId && parseHeaders.resourceState === 'create') ? true : false;
+}
 
+function createEventChannel (calendarId) {
+  var channelInfo = {
+    type: 'event',
+    calenderId: calenderId
+  }
+  return AdminsterChannels.create(channelInfo);
+}
 
 module.exports = router;
