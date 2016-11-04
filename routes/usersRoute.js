@@ -19,8 +19,17 @@ router.post('/', function (request, response) {
                               headers.resourceState === 'create');
 
   if (isCreateNotification) {
-    var userId = request.body.primaryEmail;
-    createChannelAndSave(userId);
+    var calenderId = request.body.primaryEmail;
+
+    var channelInfo = {
+      type: 'event',
+      calenderId: calenderId
+    }
+
+    AdminsterChannels.create(channelInfo)
+      .then(AdminsterChannels.save)
+      .then(AdministerChannels.renew);
+
     response.sendStatus(200);
   }
 
