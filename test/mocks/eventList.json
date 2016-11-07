@@ -23,7 +23,7 @@
          "updated":"2016-08-03T21:21:03.057Z",
          "summary":"Testing",
          "description": "=== Do not delete or change any of the following text. ===\n=== Generated WebEx Details ===\nJoin WebEx meeting\n\nMeeting number (access code): 209 455 748\nMeeting password: HyjW37Ah\n\nJoin from a video system or application Dial 209455748@acecloud.webex.com\n\nFrom the Cisco internal network, dial *777* and the 9-digit meeting number. If you are the host, enter your PIN when prompted.",
-         "location":"Super Conference Room!!",
+         "location":"@Webex",
          "creator":{
             "email":"brhim@apidevdemo.com"
          },
@@ -61,17 +61,49 @@
          "hangoutLink":"https://plus.google.com/hangouts/_/apidevdemo.com/brhim-damyers2?hceid=YnJoaW1AYXBpZGV2ZGVtby5jb20.5hurdmj64kuilb3l3506u25j8s",
          "reminders": {
             "useDefault": true
-         }
+         },
+         "pmrUserId": "squirtle"
       },
       {
          "kind":"calendar#event",
          "etag":"2940699948608000",
          "id":"atf1hn70h4mr8pbpe0uf2sa5g4",
          "status":"confirmed",
+         "location":"conference room",
          "htmlLink":"https://www.google.com/calendar/event?eid=YXRmMWhuNzBoNG1yOHBicGUwdWYyc2E1ZzQgYnJoaW1AYXBpZGV2ZGVtby5jb20",
          "created":"2016-08-04T22:32:54.000Z",
          "updated":"2016-08-04T22:32:54.304Z",
          "summary":"Hello world",
+         "description": "\n=== Do not delete or change any of the following text. ===\n=== Generated WebEx Details ===\nJoin the event creator's personal room:\nhttp://cisco.webex.com/meet/ashketchum",
+         "creator":{
+            "email":"brhim@apidevdemo.com"
+         },
+         "organizer":{
+            "email":"brhim@apidevdemo.com"
+         },
+         "start":{
+            "dateTime":"2016-08-15T17:00:00-07:00"
+         },
+         "end":{
+            "dateTime":"2016-08-15T18:00:00-07:00"
+         },
+         "iCalUID":"atf1hn70h4mr8pbpe0uf2sa5g4@google.com",
+         "sequence":0,
+         "reminders": {
+            "useDefault": true
+         },
+         "pmrUserId": "ashketchum"
+      },
+      {
+         "kind":"calendar#event",
+         "etag":"2940699948608000",
+         "id":"atf1hn70h4mr8pbpe0uf2sa5g4",
+         "status":"confirmed",
+         "location":"@webex:jane",
+         "htmlLink":"https://www.google.com/calendar/event?eid=YXRmMWhuNzBoNG1yOHBicGUwdWYyc2E1ZzQgYnJoaW1AYXBpZGV2ZGVtby5jb20",
+         "created":"2016-08-04T22:32:54.000Z",
+         "updated":"2016-08-04T22:32:54.304Z",
+         "summary":"Hello world!",
          "creator":{
             "email":"brhim@apidevdemo.com"
          },

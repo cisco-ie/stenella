@@ -19,6 +19,24 @@ var Interface = {
 
 module.exports = Interface;
 
+if (process.env.environment === 'testing') {
+  var testInterface = {
+    getChannelEntry: getChannelEntry,
+    getIncrementalSync: getIncrementalSync,
+    parseEvents: parseEvents,
+    isWebEx: isWebEx,
+    buildDescription: buildDescription,
+    createSignature: createSignature,
+    parseUserIdFromEmail: parseUserIdFromEmail,
+    createPMRUrl: createPMRUrl,
+    eventFactory: eventFactory,
+    requiresUpdate: requiresUpdate,
+    persistNewSyncToken: persistNewSyncToken
+  }
+
+  module.exports = testInterface;
+}
+
 /**
  * Loading to the controller based on Channel Id
  * @param  {String} channelId Channel Id recieved from the notification
@@ -114,27 +132,26 @@ function cancelEvent (event) {
  * @return {Boolean}       true if it is; false otherwise
  */
 function isWebEx (event) {
-  return event.location.match(/@webex/i);
+  return (event.location.match(/@webex/i)) ? true : false;
 }
 
 function confirmEvent(event) {
   if (!event.location)
     return;
 
-  var requiresUpdate = checkUpdateState(event)
+  var requiresUpdate = requiresUpdate(event)
   var isWebEx = isWebEx(event);
 
   if (requiresUpdate && isWebEx)
     updateEvent(event);
 }
 
-function checkUpdateState (event) {
+function requiresUpdate (event) {
   if (!event.description) return true;
 
-  var eventDetailsExist = event.description.indexOf('=== Generated WebEx Details ===') > 0;
   var pmrUrl = createPMRUrl(event);
-  var correctPmrUrl = event.description.indexOf(pmrUrl);
-  if (!correctPmrUrl || !eventDetailsExist) return true;
+  var correctPMRUrl = event.description.indexOf(pmrUrl) > -1;
+  if (!correctPMRUrl) return true;
 
   return false;
 }
@@ -175,7 +192,7 @@ function buildDescription (event) {
     return createSignature(pmrUrl);
   }
 
-  // While checkUpdateState prevents webex details with
+  // While requiresUpdate prevents webex details with
   // correct urls from passing, we still need to
   // account for details that need updates
   var eventDetailsExist = event.description.indexOf('Generated WebEx Details') > 0;

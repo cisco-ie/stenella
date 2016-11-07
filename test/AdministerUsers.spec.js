@@ -7,7 +7,7 @@ var AdministerUsers = require('../services/AdministerUsers');
 var userResponse = require('./mocks/userList.json');
 var googleApiUrl = require('./config').googleApiUrl;
 
-describe('GET user directories', function() {
+describe('Administer Users Service', function() {
   beforeEach(function() {
     nock(googleApiUrl)
       .get('/admin/directory/v1/users')
@@ -20,14 +20,14 @@ describe('GET user directories', function() {
       .reply(200, userResponse);
   });
 
-  it('returns users lists', function(done) {
+  it('should return a users lists', function(done) {
     AdministerUsers.list('secureToken', null, function(err, response) {
       expect(response).to.have.any.keys('users');
       done();
     });
   });
 
-  it('throws error when no token', function(done) {
+  it('should throw an error when there is no token', function(done) {
     AdministerUsers.list(null, null, function(err) {
       expect(err).to.be.an('error');
       done();
