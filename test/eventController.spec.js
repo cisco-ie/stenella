@@ -1,7 +1,6 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var eventsMock = require('./mocks/eventList.json');
-
 process.env.environment = 'testing';
 var eventController = require('../controllers/eventController');
 
@@ -60,8 +59,6 @@ describe('Event Controller', function() {
 
   it('should persist to the db with a new token from the response', function (done) {
     var mongoose = require('mongoose');
-    var channel = mongoose.model('Channel', channelSchema);
-    var channelSchema = require('../data/schema/channel');
     var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
     var updateSpy = sinon.spy(ChannelEntry, 'update');

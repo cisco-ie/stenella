@@ -23,6 +23,17 @@ var Interface = {
 
 module.exports = Interface;
 
+if (process.env.environment === 'testing') {
+  var testInterface = {
+    parseHeaders: parseHeaders,
+    getTimeoutMs: getTimeoutMs,
+    renewChannel: renewChannel,
+    buildParams: buildParams
+  }
+
+  module.exports = testInterface;
+}
+
 /**
  * Acts as a initial factory, invoking function per type
  * @param  {object} channelInfo
@@ -58,7 +69,6 @@ function createEventChannel(channelInfo) {
   });
 }
 
-// @TODO: Evaluate if the explict-ness is needed here
 function createDirectoryChannel(channelInfo) {
   return createChannel(channelInfo);
 }
@@ -250,7 +260,7 @@ function renewChannel (existingChannel) {
 function getTimeoutMs (channel) {
   var timeoutMs = getDateMsDifference(channel.expiration);
   if (timeoutMs < 0) {
-    timeoutMs = 0;
+    return 0;
   }
   return timeoutMs;
 }
