@@ -139,10 +139,10 @@ function confirmEvent(event) {
   if (!event.location)
     return;
 
-  var requiresUpdate = requiresUpdate(event)
-  var isWebEx = isWebEx(event);
+  var needsUpdate = requiresUpdate(event)
+  var webExEvent = isWebEx(event);
 
-  if (requiresUpdate && isWebEx)
+  if (needsUpdate && webExEvent)
     updateEvent(event);
 }
 
