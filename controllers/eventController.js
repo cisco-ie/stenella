@@ -32,7 +32,7 @@ if (process.env.environment === 'testing') {
     eventFactory: eventFactory,
     requiresUpdate: requiresUpdate,
     persistNewSyncToken: persistNewSyncToken
-  }
+  };
 
   module.exports = testInterface;
 }
@@ -40,7 +40,7 @@ if (process.env.environment === 'testing') {
 /**
  * Loading to the controller based on Channel Id
  * @param  {String} channelId Channel Id recieved from the notification
- * @return {Void}
+ * @return {Void} None
  */
 function load(channelId) {
   getChannelEntry(channelId)
@@ -64,7 +64,7 @@ function getChannelEntry(channelId) {
  * @param  {Object} channelEntry Channel Database Entry
  * @return {Arrray}              List of Events
  */
-function getIncrementalSync (channelEntry) {
+function getIncrementalSync(channelEntry) {
   // a null entry = an old channelId that hasn't fully expired
   if (!channelEntry) throw new Error('channelId has been replaced with a newer channelId');
   return createJWT(scopes.calendar)
@@ -78,7 +78,7 @@ function getIncrementalSync (channelEntry) {
     });
 }
 
-function parseEvents (syncResponse) {
+function parseEvents(syncResponse) {
   // Event list is order sensitive
   var eventList = _(syncResponse.items);
   var userId = parseUserIdFromEmail(syncResponse.summary);
@@ -97,7 +97,7 @@ function parseEvents (syncResponse) {
  * @param  {Object} syncResponse Incremental sync JSON response
  * @return {Object}              Returns the response out to continue the chain
  */
-function persistNewSyncToken (syncResponse) {
+function persistNewSyncToken(syncResponse) {
   var query = {
     calendarId: syncResponse.summary
   };
@@ -107,14 +107,14 @@ function persistNewSyncToken (syncResponse) {
 
   return ChannelEntry.update(query, update)
     .exec()
-    .then(function (updateStats) {
+    .then(function(updateStats) {
       return syncResponse;
     });
-};
+}
 
 // This is logic redirect
 // based on the event status
-function eventFactory (event) {
+function eventFactory(event) {
   if (!event) return;
   return {
     cancelled: cancelEvent,
@@ -122,7 +122,7 @@ function eventFactory (event) {
   }[event.status](event);
 }
 
-function cancelEvent (event) {
+function cancelEvent(event) {
   return;
 }
 
@@ -131,7 +131,7 @@ function cancelEvent (event) {
  * @param  {Object}  event Google event object
  * @return {Boolean}       true if it is; false otherwise
  */
-function isWebEx (event) {
+function isWebEx(event) {
   return (event.location.match(/@webex/i)) ? true : false;
 }
 
@@ -146,7 +146,7 @@ function confirmEvent(event) {
     updateEvent(event);
 }
 
-function requiresUpdate (event) {
+function requiresUpdate(event) {
   if (!event.description) return true;
 
   var pmrUrl = createPMRUrl(event);
@@ -174,7 +174,7 @@ function updateEvent(event) {
     .catch(logError);
 }
 
-function createPMRUrl (event) {
+function createPMRUrl(event) {
   var getPMRUserId = function getPMRUserId (eventLocation) {
     var containsColon = eventLocation.match(/:/);
     if (containsColon)
@@ -186,7 +186,7 @@ function createPMRUrl (event) {
   return 'http://cisco.webex.com/meet/' + PMRUserId;
 }
 
-function buildDescription (event) {
+function buildDescription(event) {
   var pmrUrl = createPMRUrl(event);
   if (!event.description) {
     return createSignature(pmrUrl);
@@ -206,7 +206,7 @@ function buildDescription (event) {
   return appendedDescription;
 }
 
-function createSignature (pmrUrl) {
+function createSignature(pmrUrl) {
   var signature = '\n=== Do not delete or change any of the following text. ===';
       signature += '\n=== Generated WebEx Details ===';
       signature += '\nJoin the event creator\'s personal room:';
@@ -215,7 +215,7 @@ function createSignature (pmrUrl) {
   return signature;
 }
 
-function parseUserIdFromEmail (email) {
+function parseUserIdFromEmail(email) {
   // Matches any length of chars before @
   return email.match(/.+?(?=@)/g)[0];
 }
