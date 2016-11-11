@@ -28,6 +28,7 @@ if (process.env.environment === 'testing') {
     parseHeaders: parseHeaders,
     getTimeoutMs: getTimeoutMs,
     renewChannel: renewChannel,
+    create: channelFactory,
     buildParams: buildParams
   }
 

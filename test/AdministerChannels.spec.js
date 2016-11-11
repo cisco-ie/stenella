@@ -1,6 +1,11 @@
 var expect = require('chai').expect;
 var sinon = require('sinon');
 var eventsMock = require('./mocks/eventList.json');
+var AdministerJWT = require('../services/AdministerJWT');
+var bluebird = require('bluebird');
+var google = require('googleapis');
+var calendar = google.calendar('v3');
+
 process.env.environment = 'testing';
 var AdministerChannels = require('../services/AdministerChannels');
 
@@ -52,9 +57,21 @@ describe('Administer Channels Service', function() {
     done();
   });
 
+  it('should create a channel', function(done) {
+    sinon.stub(AdministerJWT, 'createJWT', function () {
+      return Promise.resolve('test');
+    });
+    var createEventChannel = sinon.spy(calendar.events, 'watch');
+
+    var channel = {
+      resourceType: 'event'
+    };
+    AdministerChannels.create(channel);
+    console.log(createEventChannel.calledOnce);
+  });
+
   it('should get the delta of expiration of channel', function(done) {
     var today = new Date();
-    // Adds 5 hour
     var addHours = 5;
     var addMs = addHours * 60000;
     var futureDate = new Date(today.getTime() + addMs);
@@ -62,9 +79,9 @@ describe('Administer Channels Service', function() {
       expiration: futureDate
     };
     var msDelta = AdministerChannels.getTimeoutMs(mockChannel);
-    // Since the time diff will be adjusted until
+    // Since the time difference will be adjusted until
     // the test is executed, it should equate to the hour
-    // difference
+    // difference. This could be re-evaluated
     var hourDelta = Math.ceil(msDelta / 60000);
     expect(addHours).to.be.equal(hourDelta);
 
@@ -76,4 +93,6 @@ describe('Administer Channels Service', function() {
     expect(msDelta).to.be.equal(0);
     done();
   });
+
+
 });

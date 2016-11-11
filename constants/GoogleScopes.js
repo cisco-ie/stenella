@@ -1,6 +1,3 @@
-/**
- * Define constants
- */
 var baseUrl = 'https://www.googleapis.com/auth/';
 
 /**
@@ -11,6 +8,5 @@ var scopeUrls = {
   calendar: baseUrl + 'calendar',
   userDirectory: baseUrl + 'admin.directory.user'
 };
-
 
 module.exports = scopeUrls;
