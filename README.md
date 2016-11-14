@@ -4,7 +4,9 @@
 
 Seamlessly attach your WebEx personal meeting rooms to your Google calendar events on any device without any plugins, extensions, or domain scripts.
 
-![Demo Preview](http://g.recordit.co/qcRooy7CDx.gif)
+<p align="center">
+ <img src="http://g.recordit.co/qcRooy7CDx.gif">
+</p>
 
 ## Requirements
 - G Suite (Google Apps for Work)
