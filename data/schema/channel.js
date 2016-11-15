@@ -21,14 +21,14 @@ var channelSchema = new Schema({
  * @TODO: Change this based on schema update on finalized schema
  * @param  {string}   calendarId calendarId
  * @param  {Function} callback   callback function
- * @return {function)              returns a callback
+ * @return {function}             returns a callback
  */
-channelSchema.statics.getSyncToken = function (calendarId, callback) {
+channelSchema.statics.getSyncToken = function getSyncToken(calendarId, callback) {
   var query = {
     calendarId: calendarId
-  }
-
-  this.model(modelName).find(query, 'calendarId, syncToken' , function (err, subscription) {
+  };
+  var returnFields = 'calendarId, syncToken';
+  this.model().find(query, returnFields, function findResponse(err, subscription) {
     callback(err, subscription[0].syncToken);
   });
 };

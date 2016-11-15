@@ -4,7 +4,7 @@ var eventsMock = require('./mocks/eventList.json');
 process.env.environment = 'testing';
 var eventController = require('../controllers/eventController');
 
-describe('Event Controller', function() {
+describe('Event Controller', function EventControllerTest() {
   // it('Parses events and calls correct action', function(done) {
   //   sinon.spy(eventController, 'eventFactory');
   //   sinon.stub(eventController, 'isWebEx');
@@ -12,7 +12,7 @@ describe('Event Controller', function() {
   //   expect(eventController.eventFactory.calledOnce).to.equal(true);
   //   done();
   // });
-  it('should determine WebEx events', function(done) {
+  it('should determine WebEx events', function checkWebExEventTest(done) {
     var webExEvent = eventController.isWebEx(eventsMock.items[0]);
     expect(webExEvent).to.equal(true);
 
@@ -22,17 +22,17 @@ describe('Event Controller', function() {
     done();
   });
 
-  it('should check if new event needs an update', function(done) {
+  it('should check if new event needs an update', function checkEventUpdateTest(done) {
     var webExEvent = eventController.requiresUpdate(eventsMock.items[0]);
     expect(webExEvent).to.equal(true);
 
-    var webExEvent = eventController.requiresUpdate(eventsMock.items[1]);
+    webExEvent = eventController.requiresUpdate(eventsMock.items[1]);
     expect(webExEvent).to.equal(false);
 
     done();
   });
 
-  it('should build a description with the PMR url', function (done) {
+  it('should build a description with the PMR url', function buildPMRTest(done) {
     var url = eventController.createPMRUrl(eventsMock.items[0]);
     expect(url).to.equal('http://cisco.webex.com/meet/squirtle');
 
@@ -45,7 +45,7 @@ describe('Event Controller', function() {
     done();
   });
 
-  it('should get the user from the email', function (done) {
+  it('should get the user from the email', function parseEmailTest(done) {
     var testEmail1 = 'squirtle@live.com';
     var actualEmail1 = eventController.parseUserIdFromEmail(testEmail1);
     expect(actualEmail1).to.equal('squirtle');
@@ -57,7 +57,7 @@ describe('Event Controller', function() {
     done();
   });
 
-  it('should persist to the db with a new token from the response', function (done) {
+  it('should persist to the db with a new token from the response', function persistTokenTest(done) {
     var mongoose = require('mongoose');
     var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 

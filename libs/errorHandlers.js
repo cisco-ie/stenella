@@ -13,6 +13,6 @@ module.exports = Interface;
  * @param  {Object} error Instance of Error Object
  * @return {void}
  */
-function logError (error) {
+function logError(error) {
   console.log(error);
 }

@@ -2,12 +2,7 @@
 
 var _ = require('lodash');
 var logError = require('../libs/errorHandlers').logError;
-var Promise = require('bluebird');
-var channelSchema = require('../data/schema/channel');
 var mongoose = require('mongoose');
-var channel = mongoose.model('Channel', channelSchema);
-var createJWT = require('../services/AdministerJWT').createJWT;
-var scopes = require('../constants/GoogleScopes');
 var AdministerCalendars = require('../services/AdministerCalendars');
 var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
@@ -19,28 +14,10 @@ var Interface = {
 
 module.exports = Interface;
 
-if (process.env.environment === 'testing') {
-  var testInterface = {
-    getChannelEntry: getChannelEntry,
-    getIncrementalSync: getIncrementalSync,
-    parseEvents: parseEvents,
-    isWebEx: isWebEx,
-    buildDescription: buildDescription,
-    createSignature: createSignature,
-    parseUserIdFromEmail: parseUserIdFromEmail,
-    createPMRUrl: createPMRUrl,
-    eventFactory: eventFactory,
-    requiresUpdate: requiresUpdate,
-    persistNewSyncToken: persistNewSyncToken
-  }
-
-  module.exports = testInterface;
-}
-
 /**
  * Loading to the controller based on Channel Id
  * @param  {String} channelId Channel Id recieved from the notification
- * @return {Void}
+ * @return {Void} None
  */
 function load(channelId) {
   getChannelEntry(channelId)
@@ -59,37 +36,18 @@ function getChannelEntry(channelId) {
   return ChannelEntry.findOne({ channelId: channelId });
 }
 
-/**
- * Performs an incremental sync of the event list
- * @param  {Object} channelEntry Channel Database Entry
- * @return {Arrray}              List of Events
- */
-function getIncrementalSync (channelEntry) {
-  // a null entry = an old channelId that hasn't fully expired
-  if (!channelEntry) throw new Error('channelId has been replaced with a newer channelId');
-  return createJWT(scopes.calendar)
-    .then(function jwtResponse(jwtClient) {
-      var eventListParams = {
-        id: channelEntry.resourceId,
-        syncToken: channelEntry.syncToken
-      };
-
-      return getEventList(jwtClient, eventListParams);
-    });
-}
-
-function parseEvents (syncResponse) {
+function parseEvents(syncResponse) {
   // Event list is order sensitive
   var eventList = _(syncResponse.items);
   var userId = parseUserIdFromEmail(syncResponse.summary);
   eventList
-    .map(function(event) {
+    .map(function mapEvents(event) {
       // Used these for individual level parsing
       event.pmrUserId = userId;
       event.calendarId = syncResponse.summary;
       return event;
     })
-    .forEach(eventFactory)
+    .forEach(eventFactory);
 }
 
 /**
@@ -97,7 +55,7 @@ function parseEvents (syncResponse) {
  * @param  {Object} syncResponse Incremental sync JSON response
  * @return {Object}              Returns the response out to continue the chain
  */
-function persistNewSyncToken (syncResponse) {
+function persistNewSyncToken(syncResponse) {
   var query = {
     calendarId: syncResponse.summary
   };
@@ -107,22 +65,23 @@ function persistNewSyncToken (syncResponse) {
 
   return ChannelEntry.update(query, update)
     .exec()
-    .then(function (updateStats) {
+    .then(function updateResponse() {
       return syncResponse;
     });
-};
+}
 
 // This is logic redirect
 // based on the event status
-function eventFactory (event) {
-  if (!event) return;
-  return {
+function eventFactory(event) {
+  if (!event) throw new Error('No event object inputted');
+  var mapFunctions = {
     cancelled: cancelEvent,
     confirmed: confirmEvent
-  }[event.status](event);
+  };
+  return mapFunctions[event.status](event);
 }
 
-function cancelEvent (event) {
+function cancelEvent() {
   return;
 }
 
@@ -131,22 +90,24 @@ function cancelEvent (event) {
  * @param  {Object}  event Google event object
  * @return {Boolean}       true if it is; false otherwise
  */
-function isWebEx (event) {
+function isWebEx(event) {
   return (event.location.match(/@webex/i)) ? true : false;
 }
 
 function confirmEvent(event) {
-  if (!event.location)
+  if (!event.location) {
     return;
+  }
 
-  var needsUpdate = requiresUpdate(event)
+  var needsUpdate = requiresUpdate(event);
   var webExEvent = isWebEx(event);
 
-  if (needsUpdate && webExEvent)
+  if (needsUpdate && webExEvent) {
     updateEvent(event);
+  }
 }
 
-function requiresUpdate (event) {
+function requiresUpdate(event) {
   if (!event.description) return true;
 
   var pmrUrl = createPMRUrl(event);
@@ -174,11 +135,12 @@ function updateEvent(event) {
     .catch(logError);
 }
 
-function createPMRUrl (event) {
-  var getPMRUserId = function getPMRUserId (eventLocation) {
+function createPMRUrl(event) {
+  var getPMRUserId = function getPMRUserId(eventLocation) {
     var containsColon = eventLocation.match(/:/);
-    if (containsColon)
+    if (containsColon) {
       return eventLocation.match(/\w+[^webex:]\S/)[0];
+    }
     return event.pmrUserId;
   };
 
@@ -186,7 +148,7 @@ function createPMRUrl (event) {
   return 'http://cisco.webex.com/meet/' + PMRUserId;
 }
 
-function buildDescription (event) {
+function buildDescription(event) {
   var pmrUrl = createPMRUrl(event);
   if (!event.description) {
     return createSignature(pmrUrl);
@@ -197,25 +159,26 @@ function buildDescription (event) {
   // account for details that need updates
   var eventDetailsExist = event.description.indexOf('Generated WebEx Details') > 0;
   if (eventDetailsExist) {
-     var OldDetailsStart = event.description.indexOf('=== Do not delete or change any of the following text. ===');
-     var newDescription = event.description.substring(0, OldDetailsStart) + createSignature(pmrUrl);
-     return newDescription;
+    var OldDetailsStart = event.description.indexOf('=== Do not delete or change any of the following text. ===');
+    var newDescription = event.description.substring(0, OldDetailsStart)
+                          + createSignature(pmrUrl);
+    return newDescription;
   }
 
   var appendedDescription = event.description + createSignature(pmrUrl);
   return appendedDescription;
 }
 
-function createSignature (pmrUrl) {
+function createSignature(pmrUrl) {
   var signature = '\n=== Do not delete or change any of the following text. ===';
-      signature += '\n=== Generated WebEx Details ===';
-      signature += '\nJoin the event creator\'s personal room:';
-      signature += '\n' + pmrUrl;
+  signature += '\n=== Generated WebEx Details ===';
+  signature += '\nJoin the event creator\'s personal room:';
+  signature += '\n' + pmrUrl;
 
   return signature;
 }
 
-function parseUserIdFromEmail (email) {
+function parseUserIdFromEmail(email) {
   // Matches any length of chars before @
   return email.match(/.+?(?=@)/g)[0];
 }
