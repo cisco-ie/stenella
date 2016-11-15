@@ -33,3 +33,4 @@ MIT
 
 ## RoadMap
 - OBTP (One Button To Push) from scheduled endpoints
+- Accessing Shared Calendars
