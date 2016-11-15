@@ -1,11 +1,12 @@
 'use strict';
 
+/* eslint no-unused-vars: [2, { "varsIgnorePattern": "db" }]*/
+
 var app = require('express')();
 var Promise = require('bluebird');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
 var AdministerChannels = require('./services/AdministerChannels');
-var AdministerCalendars = require('./services/AdministerCalendars');
 var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
@@ -41,32 +42,38 @@ function setUpChannels() {
 
 /**
  * Create User Directory Channel and extract User ids
- * @param  {Object} userResponse JSON response for user directory response
- * @return {Void}
+ * @param  {Object} userDirResponse JSON response for user directory response
+ * @return {Void} n/a
  */
 function createChannelsAndExtractIds(userDirResponse) {
   findDirectoryChannel()
     .then(function findDirCb(directoryChannel) {
-      if (directoryChannel)
-        return AdministerChannels.renew(directoryChannel);
-
-      createDirChannelAndSave()
-        .then(AdministerChannels.renew);
+      if (directoryChannel) {
+        AdministerChannels.renew(directoryChannel);
+      } else {
+        createDirChannelAndSave()
+          .then(AdministerChannels.renew);
+      }
     });
 
   extractUserIds(userDirResponse.users)
-    .each(function (userId) {
+    .each(function iterateUserIds(userId) {
       var calendarId = userId;
       findCalendarChannel(calendarId)
-        .then(function(eventChannel) {
-          if (eventChannel)
-            return AdministerChannels.renew(eventChannel);
-
-          createEventChannelAndSave(userId)
-            .then(AdministerChannels.renew);
+        .then(function calendarChannelResponse(eventChannel) {
+          if (eventChannel) {
+            AdministerChannels.renew(eventChannel);
+          } else {
+            createEventChannelAndSave(userId)
+              .then(AdministerChannels.renew);
+          }
         });
+
+      return;
     })
     .catch(logError);
+
+  return;
 }
 
 /**

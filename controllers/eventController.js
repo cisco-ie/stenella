@@ -2,12 +2,7 @@
 
 var _ = require('lodash');
 var logError = require('../libs/errorHandlers').logError;
-var Promise = require('bluebird');
-var channelSchema = require('../data/schema/channel');
 var mongoose = require('mongoose');
-var channel = mongoose.model('Channel', channelSchema);
-var createJWT = require('../services/AdministerJWT').createJWT;
-var scopes = require('../constants/GoogleScopes');
 var AdministerCalendars = require('../services/AdministerCalendars');
 var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
@@ -41,37 +36,18 @@ function getChannelEntry(channelId) {
   return ChannelEntry.findOne({ channelId: channelId });
 }
 
-/**
- * Performs an incremental sync of the event list
- * @param  {Object} channelEntry Channel Database Entry
- * @return {Arrray}              List of Events
- */
-function getIncrementalSync(channelEntry) {
-  // a null entry = an old channelId that hasn't fully expired
-  if (!channelEntry) throw new Error('channelId has been replaced with a newer channelId');
-  return createJWT(scopes.calendar)
-    .then(function jwtResponse(jwtClient) {
-      var eventListParams = {
-        id: channelEntry.resourceId,
-        syncToken: channelEntry.syncToken
-      };
-
-      return getEventList(jwtClient, eventListParams);
-    });
-}
-
 function parseEvents(syncResponse) {
   // Event list is order sensitive
   var eventList = _(syncResponse.items);
   var userId = parseUserIdFromEmail(syncResponse.summary);
   eventList
-    .map(function(event) {
+    .map(function mapEvents(event) {
       // Used these for individual level parsing
       event.pmrUserId = userId;
       event.calendarId = syncResponse.summary;
       return event;
     })
-    .forEach(eventFactory)
+    .forEach(eventFactory);
 }
 
 /**
@@ -89,7 +65,7 @@ function persistNewSyncToken(syncResponse) {
 
   return ChannelEntry.update(query, update)
     .exec()
-    .then(function(updateStats) {
+    .then(function updateResponse() {
       return syncResponse;
     });
 }
@@ -97,14 +73,15 @@ function persistNewSyncToken(syncResponse) {
 // This is logic redirect
 // based on the event status
 function eventFactory(event) {
-  if (!event) return;
-  return {
+  if (!event) throw new Error('No event object inputted');
+  var mapFunctions = {
     cancelled: cancelEvent,
     confirmed: confirmEvent
-  }[event.status](event);
+  };
+  return mapFunctions[event.status](event);
 }
 
-function cancelEvent(event) {
+function cancelEvent() {
   return;
 }
 
@@ -118,14 +95,16 @@ function isWebEx(event) {
 }
 
 function confirmEvent(event) {
-  if (!event.location)
+  if (!event.location) {
     return;
+  }
 
-  var needsUpdate = requiresUpdate(event)
+  var needsUpdate = requiresUpdate(event);
   var webExEvent = isWebEx(event);
 
-  if (needsUpdate && webExEvent)
+  if (needsUpdate && webExEvent) {
     updateEvent(event);
+  }
 }
 
 function requiresUpdate(event) {
@@ -157,10 +136,11 @@ function updateEvent(event) {
 }
 
 function createPMRUrl(event) {
-  var getPMRUserId = function getPMRUserId (eventLocation) {
+  var getPMRUserId = function getPMRUserId(eventLocation) {
     var containsColon = eventLocation.match(/:/);
-    if (containsColon)
+    if (containsColon) {
       return eventLocation.match(/\w+[^webex:]\S/)[0];
+    }
     return event.pmrUserId;
   };
 
@@ -179,9 +159,10 @@ function buildDescription(event) {
   // account for details that need updates
   var eventDetailsExist = event.description.indexOf('Generated WebEx Details') > 0;
   if (eventDetailsExist) {
-     var OldDetailsStart = event.description.indexOf('=== Do not delete or change any of the following text. ===');
-     var newDescription = event.description.substring(0, OldDetailsStart) + createSignature(pmrUrl);
-     return newDescription;
+    var OldDetailsStart = event.description.indexOf('=== Do not delete or change any of the following text. ===');
+    var newDescription = event.description.substring(0, OldDetailsStart)
+                          + createSignature(pmrUrl);
+    return newDescription;
   }
 
   var appendedDescription = event.description + createSignature(pmrUrl);
@@ -190,9 +171,9 @@ function buildDescription(event) {
 
 function createSignature(pmrUrl) {
   var signature = '\n=== Do not delete or change any of the following text. ===';
-      signature += '\n=== Generated WebEx Details ===';
-      signature += '\nJoin the event creator\'s personal room:';
-      signature += '\n' + pmrUrl;
+  signature += '\n=== Generated WebEx Details ===';
+  signature += '\nJoin the event creator\'s personal room:';
+  signature += '\n' + pmrUrl;
 
   return signature;
 }

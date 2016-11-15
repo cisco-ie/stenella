@@ -1,15 +1,12 @@
 'use strict';
 
 var google = require('googleapis');
-var _ = require('lodash');
 var calendar = google.calendar('v3');
 var Promise = require('bluebird');
 var createJWT = require('../services/AdministerJWT').createJWT;
 var scope = require('../constants/GoogleScopes');
-var logError = require('../libs/errorHandlers').logError;
 
 var Interface = {
-  list: getCalendars,
   fullSync: getFullSync,
   incrementalSync: getIncrementalSync,
   getSyncToken: getSyncToken,
@@ -18,25 +15,25 @@ var Interface = {
 
 module.exports = Interface;
 
-/**
- * Invoke google api to get list of calendars
- * @param  {object}   authToken <required> secure JWT for list of calendars
- * @param  {object}   calendarParams parameters to retrieve list of calendars
- * @param  {Function} callback   for google's list of calendars response
- * @return {function} invokes callback
- */
-function getCalendars(authToken, calendarParams, userId, callback) {
-  // @TODO: add support for pagination under Utilities
-  var overrideOptions = {
-    url: 'https://www.googleapis.com/calendar/v3/users/' + userId + '/calendarList'
-  };
-  if (!authToken) return callback(new Error('No auth token provided'));
-  var defaultParams = {
-    maxResults: 500
-  };
-  var params = _.extend(defaultParams, calendarParams);
-  return calendar.calendarList.list(params, overrideOptions, callback);
-}
+// /**
+//  * Invoke google api to get list of calendars
+//  * @param  {object}   authToken <required> secure JWT for list of calendars
+//  * @param  {object}   calendarParams parameters to retrieve list of calendars
+//  * @param  {Function} callback   for google's list of calendars response
+//  * @return {function} invokes callback
+//  */
+// function getCalendars(authToken, calendarParams, userId, callback) {
+//   // @TODO: add support for pagination under Utilities
+//   var overrideOptions = {
+//     url: 'https://www.googleapis.com/calendar/v3/users/' + userId + '/calendarList'
+//   };
+//   if (!authToken) return callback(new Error('No auth token provided'));
+//   var defaultParams = {
+//     maxResults: 500
+//   };
+//   var params = _.extend(defaultParams, calendarParams);
+//   return calendar.calendarList.list(params, overrideOptions, callback);
+// }
 
 /**
  * Only performs the sync of items from Today to Future.
@@ -131,11 +128,11 @@ function getSyncToken(calendarId) {
 function updateEvent(params, updateInfo) {
   if (!params) throw new Error('Missing params for update Event');
   var requiredParams = (params.eventId && params.calendarId);
-  if (!requiredParams) {
-    throw new Error('Missing required eventId or calendarId');
-  }
+  if (!requiredParams) throw new Error('Missing required eventId or calendarId');
+
   // Return if no updates to save redundant API request
-  if (!updateInfo) return;
+  if (!updateInfo) throw new Error('No update information passed');
+
   params.resource = updateInfo;
   return createJWT(scope.calendar)
     .then(function jwtResponse(jwtClient) {

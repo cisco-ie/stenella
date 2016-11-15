@@ -1,28 +1,27 @@
+'use strict';
+
 var expect = require('chai').expect;
 var sinon = require('sinon');
-var eventsMock = require('./mocks/eventList.json');
 var AdministerJWT = require('../services/AdministerJWT');
-var bluebird = require('bluebird');
 var google = require('googleapis');
 var calendar = google.calendar('v3');
-
-process.env.environment = 'testing';
+var Promise = require('bluebird');
 var AdministerChannels = require('../services/AdministerChannels');
 
-describe('Administer Channels Service', function() {
-  it('should parse request headers', function(done) {
-    var parsedHeaders = AdministerChannels.parseHeaders()
-    expect(parsedHeaders).to.equal();
-    done();
-  });
+describe('Administer Channels Service', function ChannelServiceTest() {
+  // it('should parse request headers', function parseHeadersTest(done) {
+  //   var parsedHeaders = AdministerChannels.parseHeaders();
+  //   expect(parsedHeaders).to.equal();
+  //   done();
+  // });
 
-  it('should set a renewal for channels', function(done) {
-    var parsedHeaders = AdministerChannels.parseHeaders()
-    expect(parsedHeaders).to.equal();
-    done();
-  });
+  // it('should set a renewal for channels', function renewalChannelTest(done) {
+  //   var parsedHeaders = AdministerChannels.parseHeaders();
+  //   expect(parsedHeaders).to.equal();
+  //   done();
+  // });
 
-  it('should build params based on type', function(done) {
+  it('should build params based on type', function buildParamsTest(done) {
     var channelInfo = {
       resourceType: 'event',
       calendarId: 'testUser'
@@ -33,8 +32,8 @@ describe('Administer Channels Service', function() {
     expect(eventParams).to.have.property('resource');
     expect(eventParams.resource.id.indexOf('EVNT')).to.be.above(-1);
 
-    var channelInfo = {
-      resourceType: 'directory',
+    channelInfo = {
+      resourceType: 'directory'
     };
     var dirParams = AdministerChannels.buildParams(null, channelInfo);
     expect(dirParams).to.have.property('auth');
@@ -43,22 +42,22 @@ describe('Administer Channels Service', function() {
     done();
   });
 
-  it('should save a channel', function(done) {
-    var mongoose = require('mongoose');
-    var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
-    var saveSpy = sinon.spy(ChannelEntry, 'save');
-    var channelInfo = {
-      channelId: '123456',
-      resourceId: '',
-      syncToken: '',
-      expiration: '',
-      resourceType: 'event'
-    };
+  it('should save a channel', function saveChannelTest(done) {
+    // var mongoose = require('mongoose');
+    // var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
+    // var saveSpy = sinon.spy(ChannelEntry, 'save');
+    // var channelInfo = {
+    //   channelId: '123456',
+    //   resourceId: '',
+    //   syncToken: '',
+    //   expiration: '',
+    //   resourceType: 'event'
+    // };
     done();
   });
 
-  it('should create a channel', function(done) {
-    sinon.stub(AdministerJWT, 'createJWT', function () {
+  it('should create a channel', function createChannelTest(done) {
+    sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
       return Promise.resolve('test');
     });
     var createEventChannel = sinon.spy(calendar.events, 'watch');
@@ -68,9 +67,10 @@ describe('Administer Channels Service', function() {
     };
     AdministerChannels.create(channel);
     console.log(createEventChannel.calledOnce);
+    done();
   });
 
-  it('should get the delta of expiration of channel', function(done) {
+  it('should get the delta of expiration of channel', function calcExpireDeltaTest(done) {
     var today = new Date();
     var addHours = 5;
     var addMs = addHours * 60000;
@@ -89,10 +89,8 @@ describe('Administer Channels Service', function() {
     var expiredChannel = {
       expiration: pastDate
     };
-    var msDelta = AdministerChannels.getTimeoutMs(expiredChannel);
+    msDelta = AdministerChannels.getTimeoutMs(expiredChannel);
     expect(msDelta).to.be.equal(0);
     done();
   });
-
-
 });

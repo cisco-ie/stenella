@@ -13,6 +13,10 @@ var configs = {
   }
 };
 
+_.forOwn(configs, function iterateConfigKeys(value, key) {
+  if (key === 'keys') throwUndefined(value, key);
+});
+
 function throwUndefined(value, key) {
   if (!value) {
     throw new Error(key + ' is not defined');

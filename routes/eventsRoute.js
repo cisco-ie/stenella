@@ -1,36 +1,39 @@
 'use strict';
 
 var express         = require('express');
-var router          = express.Router();
+var router          = express.Router(); // eslint-disable-line new-cap
 var parseHeaders    = require('../services/AdministerChannels').parseHeaders;
 var eventController = require('../controllers/eventController');
 
 /**
  * `watch/event` POST Route
  */
-router.post('/', function (request, response) {
-  var headers = parseHeaders(request)
+router.post('/', function eventRouteResponse(request, response) {
+  var headers = parseHeaders(request);
 
   // More information: https://developers.google.com/google-apps/calendar/v3/push
-  if (!isWatchNotification(headers))
-    return response.sendStatus(400);
-
-  parseNotification(headers);
-  response.sendStatus(200);
+  if (!isWatchNotification(headers)) {
+    response.sendStatus(400);
+  } else {
+    parseNotification(headers);
+    response.sendStatus(200);
+  }
 });
 
 module.exports = router;
 
-function parseNotification(parseHeaders) {
-  var initialSyncConfirm = (parseHeaders.resourceState === 'sync');
-  if (initialSyncConfirm)
-    console.log(parseHeaders.channelId + ' channel has been established.');
+function parseNotification(parsedHeaders) {
+  var initialSyncConfirm = (parsedHeaders.resourceState === 'sync');
+  if (initialSyncConfirm) {
+    console.log(parsedHeaders.channelId + ' channel has been established.');
+  }
 
-  var eventUpdate = (parseHeaders.resourceState === 'exists');
-  if (eventUpdate)
-    eventController.load(parseHeaders.channelId);
+  var eventUpdate = (parsedHeaders.resourceState === 'exists');
+  if (eventUpdate) {
+    eventController.load(parsedHeaders.channelId);
+  }
 }
 
-function isWatchNotification(parseHeaders) {
-  return (parseHeaders.channelId && parseHeaders.resourceId) ? true : false;
+function isWatchNotification(parsedHeaders) {
+  return (parsedHeaders.channelId && parsedHeaders.resourceId) ? true : false;
 }

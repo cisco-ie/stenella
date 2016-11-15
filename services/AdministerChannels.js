@@ -10,7 +10,6 @@ var Promise = require('bluebird');
 var mongoose = require('mongoose');
 var Channel = mongoose.model('Channel', require('../data/schema/channel'));
 var createJWT = require('../services/AdministerJWT').createJWT;
-var logError = require('../libs/errorHandlers').logError;
 var AdministerCalendars = require('./AdministerCalendars');
 var getDateMsDifference = require('../libs/timeUtils').getDateMsDifference;
 
@@ -23,31 +22,20 @@ var Interface = {
 
 module.exports = Interface;
 
-if (process.env.environment === 'testing') {
-  var testInterface = {
-    parseHeaders: parseHeaders,
-    getTimeoutMs: getTimeoutMs,
-    renewChannel: renewChannel,
-    create: channelFactory,
-    buildParams: buildParams
-  }
-
-  module.exports = testInterface;
-}
-
 /**
  * Acts as a initial factory, invoking function per type
- * @param  {object} channelInfo
+ * @param  {object} channelInfo refer to properties listed below
  * @param  {string} channelInfo.resourceType  event or directory
  * @param  {object} channelInfo.calendarId   calendarId for event channel
  * @return {object}             Promise which is resolved to the channel information
  */
 function channelFactory(channelInfo) {
-  if (!channelInfo) return;
+  if (!channelInfo) throw new Error('No channel information presented');
+
   var factory = {
     directory: createDirectoryChannel,
     event: createEventChannel
-  }
+  };
 
   return Promise.resolve(factory[channelInfo.resourceType](channelInfo));
 }
@@ -63,10 +51,10 @@ function createEventChannel(channelInfo) {
     syncTokenPromise,
     eventChannelPromise
   ])
-  .spread(function(syncToken, channelInfo) {
-    channelInfo.syncToken = syncToken;
-    channelInfo.type = 'event'
-    return Promise.resolve(channelInfo)
+  .spread(function syncTokenAndChannelResolve(syncToken, eventChannel) {
+    eventChannel.syncToken = syncToken;
+    eventChannel.type = 'event';
+    return Promise.resolve(eventChannel);
   });
 }
 
@@ -76,12 +64,11 @@ function createDirectoryChannel(channelInfo) {
 
 /**
  * Create channels based on desired type
- * @param  {object} jwtClient   authenticated jwtClient
  * @param  {object} channelInfo contains type and associated id
- * @return {void}
+ * @return {object} a promise for the channel being created
  */
 function createChannel(channelInfo) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function createChannelPromise(resolve, reject) {
     // Creating a JWT in implementation,
     // as JWT can be expired on renewal
     switch (channelInfo.resourceType) {
@@ -99,7 +86,7 @@ function createChannel(channelInfo) {
               res.resourceType = 'event';
               res.calendarId = channelInfo.calendarId;
               resolve(res);
-            };
+            }
           });
         })
         .catch(reject);
@@ -123,7 +110,7 @@ function createChannel(channelInfo) {
           directory.users.watch(params, function dirWatchCallback(err, res) {
             if (err) reject(err);
             if (res) {
-              res.resourceType = 'directory'
+              res.resourceType = 'directory';
               resolve(res);
             }
           });
@@ -132,7 +119,7 @@ function createChannel(channelInfo) {
       break;
 
     default:
-      return new Error('Undeclared Type');
+      throw new Error('Undeclared Type');
     }
   });
 }
@@ -200,7 +187,7 @@ function parseHeaders(request) {
     resourceUri: headers['x-google-resource-uri'] || null
   };
   return channelObj;
-};
+}
 
 /**
  * Saves channel to the database
@@ -208,8 +195,7 @@ function parseHeaders(request) {
  * @return {Object}             Returns save channel
  */
 function saveChannel(channelInfo) {
-  if (!channelInfo)
-    throw Error('Undefined channel information');
+  if (!channelInfo) throw new Error('Undefined channel information');
 
   var props = {
     channelId: channelInfo.id || '',
@@ -226,23 +212,12 @@ function saveChannel(channelInfo) {
   return Promise.resolve(channelEntry);
 }
 
-function createDirChannelAndSave() {
-  var channelInfo = {
-    resourceType: 'directory'
-  };
-
-  return AdministerChannels.create(channelInfo)
-    .then(AdministerChannels.save)
-    .catch(logError);
-}
-
-function renewChannel (existingChannel) {
+function renewChannel(existingChannel) {
   // subtract 5 seconds (5000ms) to allow some overlap
   var timeoutMs = getTimeoutMs(existingChannel) - 5000;
-  var type = existingChannel.resourceType;
   setTimeout(createAndDeleteChannel, timeoutMs);
 
-  function createAndDeleteChannel () {
+  function createAndDeleteChannel() {
     // Use the properties of the existing channel
     // for the new information
     channelFactory(existingChannel)
@@ -250,7 +225,7 @@ function renewChannel (existingChannel) {
       .then(deleteExistingAndRenew);
   }
 
-  function deleteExistingAndRenew (newChannel) {
+  function deleteExistingAndRenew(newChannel) {
     var id = existingChannel.calendarId;
     Channel.remove({ channelId: id }).exec();
 
@@ -258,10 +233,8 @@ function renewChannel (existingChannel) {
   }
 }
 
-function getTimeoutMs (channel) {
+function getTimeoutMs(channel) {
   var timeoutMs = getDateMsDifference(channel.expiration);
-  if (timeoutMs < 0) {
-    return 0;
-  }
+  if (timeoutMs < 0) return 0;
   return timeoutMs;
 }
