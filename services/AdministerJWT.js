@@ -13,26 +13,31 @@ module.exports = Interface;
 
 /**
  * Creates a JWT authorization and returns a promise
- * @param  {string} scope string of scope url
+ * @param  {string|array} a string of a url scope, a space-delimited string, or an array
  * @return {object}       promise of authorize Jwt
  */
 function createJWT(scope) {
-  var jwtClient = new google.auth.JWT(
-      key.client_email, null, key.private_key, scope, config.authorizeAdmin);
-  return authorize(jwtClient);
-}
+  return new Promise(function createJWTResponse(resolve, reject) {
+    google.auth.getApplicationDefault(function(err, authClient) {
+      if (err)
+        reject (err);
 
-/**
- * Creates an authorization from the JWT Client
- * @param  {object} jwtClient signed JWT client_email
- * @return {object}           returns error or authenticated JWT client
- */
-function authorize(jwtClient) {
-  return new Promise(function createJWTpromise(resolve, reject) {
-    jwtClient.authorize(function authorizeJwtResponse(error) {
-      if (error)
-        reject(error);
-      resolve(jwtClient);
+      if (authClient.createScopedRequired &&
+          authClient.createScopedRequired()) {
+        authClient = authClient.createScoped(scope, config.authorizeAdmin);
+        var reAuthClient = setAdmin(authClient);
+        reAuthClient.authorize(function authorizeJWTResponse(error) {
+          if (error)
+            reject(error);
+          resolve(reAuthClient);
+        });
+      }
     });
   });
+}
+
+function setAdmin(authClient, authorizeAdmin) {
+  return new google.auth.JWT(
+      authClient.client_email, authClient.keyFile, authClient.private_key,
+      authClient.scopes, authorizeAdmin);
 }
