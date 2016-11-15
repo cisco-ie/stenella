@@ -24,20 +24,14 @@ function createJWT(scope) {
 
       if (authClient.createScopedRequired &&
           authClient.createScopedRequired()) {
-        authClient = authClient.createScoped(scope, config.authorizeAdmin);
-        var reAuthClient = setAdmin(authClient);
-        reAuthClient.authorize(function authorizeJWTResponse(error) {
+        authClient = authClient.createScoped(scope);
+        authClient.subject = config.authorizeAdmin;
+        authClient.authorize(function authorizeJWTResponse(error) {
           if (error)
             reject(error);
-          resolve(reAuthClient);
+          resolve(authClient);
         });
       }
     });
   });
-}
-
-function setAdmin(authClient, authorizeAdmin) {
-  return new google.auth.JWT(
-      authClient.client_email, authClient.keyFile, authClient.private_key,
-      authClient.scopes, authorizeAdmin);
 }
