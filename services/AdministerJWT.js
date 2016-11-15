@@ -3,7 +3,6 @@
 var google = require('googleapis');
 var Promise = require('bluebird');
 var config = require('../configs/config');
-var key = config.keys.server;
 
 var Interface = {
   createJWT: createJWT

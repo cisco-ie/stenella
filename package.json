@@ -6,7 +6,9 @@
   "scripts": {
     "pretest": "cp ./example.env ./.env",
     "test": "./node_modules/mocha/bin/mocha",
-    "start": "node index.js"
+    "start": "node index.js",
+    "lint": "eslint .",
+    "validate": "npm ls"
   },
   "repository": {
     "type": "git",
@@ -41,6 +43,12 @@
     "moment": "^2.15.2",
     "mongoose": "^4.6.4",
     "node-uuid": "^1.4.7",
+    "precommit-hook-eslint": "^3.0.0",
     "rewire": "^2.5.2"
-  }
+  },
+  "pre-commit": [
+    "lint",
+    "validate",
+    "test"
+  ]
 }
