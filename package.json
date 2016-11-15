@@ -40,6 +40,7 @@
     "lodash": "^4.16.3",
     "moment": "^2.15.2",
     "mongoose": "^4.6.4",
-    "node-uuid": "^1.4.7"
+    "node-uuid": "^1.4.7",
+    "rewire": "^2.5.2"
   }
 }

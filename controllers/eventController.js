@@ -19,24 +19,6 @@ var Interface = {
 
 module.exports = Interface;
 
-if (process.env.environment === 'testing') {
-  var testInterface = {
-    getChannelEntry: getChannelEntry,
-    getIncrementalSync: getIncrementalSync,
-    parseEvents: parseEvents,
-    isWebEx: isWebEx,
-    buildDescription: buildDescription,
-    createSignature: createSignature,
-    parseUserIdFromEmail: parseUserIdFromEmail,
-    createPMRUrl: createPMRUrl,
-    eventFactory: eventFactory,
-    requiresUpdate: requiresUpdate,
-    persistNewSyncToken: persistNewSyncToken
-  };
-
-  module.exports = testInterface;
-}
-
 /**
  * Loading to the controller based on Channel Id
  * @param  {String} channelId Channel Id recieved from the notification
