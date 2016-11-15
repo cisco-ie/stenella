@@ -30,3 +30,6 @@ Simply add an `@<command>` to your location field of your event.
 
 ## License
 MIT
+
+### RoadMap
+- OBTP (One Button To Push) from scheduled endpoints
