@@ -226,8 +226,8 @@ function renewChannel(existingChannel) {
   }
 
   function deleteExistingAndRenew(newChannel) {
-    var id = existingChannel.calendarId;
-    Channel.remove({ channelId: id }).exec();
+    var oldChannelId = existingChannel.channelId;
+    Channel.remove({ channelId: oldChannelId }).exec();
 
     renewChannel(newChannel);
   }
