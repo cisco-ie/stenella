@@ -1,8 +1,7 @@
-var expect = require('chai').expect;
-var sinon = require('sinon');
-var eventsMock = require('./mocks/eventList.json');
-process.env.environment = 'testing';
-var eventController = require('../controllers/eventController');
+// var expect = require('chai').expect;
+// var sinon = require('sinon');
+// var eventsMock = require('./mocks/eventList.json');
+// var eventController = require('../controllers/eventController');
 
 describe('Event Controller', function EventControllerTest() {
   // it('Parses events and calls correct action', function(done) {
@@ -11,66 +10,66 @@ describe('Event Controller', function EventControllerTest() {
   //   eventController.parseEvents(mockResp);
   //   expect(eventController.eventFactory.calledOnce).to.equal(true);
   //   done();
+  // // });
+  // it('should determine WebEx events', function checkWebExEventTest(done) {
+  //   var webExEvent = eventController.isWebEx(eventsMock.items[0]);
+  //   expect(webExEvent).to.equal(true);
+
+  //   var notWebExEvent = eventController.isWebEx(eventsMock.items[1]);
+  //   expect(notWebExEvent).to.equal(false);
+
+  //   done();
   // });
-  it('should determine WebEx events', function checkWebExEventTest(done) {
-    var webExEvent = eventController.isWebEx(eventsMock.items[0]);
-    expect(webExEvent).to.equal(true);
 
-    var notWebExEvent = eventController.isWebEx(eventsMock.items[1]);
-    expect(notWebExEvent).to.equal(false);
+  // it('should check if new event needs an update', function checkEventUpdateTest(done) {
+  //   var webExEvent = eventController.requiresUpdate(eventsMock.items[0]);
+  //   expect(webExEvent).to.equal(true);
 
-    done();
-  });
+  //   webExEvent = eventController.requiresUpdate(eventsMock.items[1]);
+  //   expect(webExEvent).to.equal(false);
 
-  it('should check if new event needs an update', function checkEventUpdateTest(done) {
-    var webExEvent = eventController.requiresUpdate(eventsMock.items[0]);
-    expect(webExEvent).to.equal(true);
+  //   done();
+  // });
 
-    webExEvent = eventController.requiresUpdate(eventsMock.items[1]);
-    expect(webExEvent).to.equal(false);
+  // it('should build a description with the PMR url', function buildPMRTest(done) {
+  //   var url = eventController.createPMRUrl(eventsMock.items[0]);
+  //   expect(url).to.equal('http://cisco.webex.com/meet/squirtle');
 
-    done();
-  });
+  //   var signature = eventController.createSignature(url);
+  //   expect(signature.indexOf('http://cisco.webex.com/meet/squirtle')).to.be.above(-1);
 
-  it('should build a description with the PMR url', function buildPMRTest(done) {
-    var url = eventController.createPMRUrl(eventsMock.items[0]);
-    expect(url).to.equal('http://cisco.webex.com/meet/squirtle');
+  //   var description = eventController.buildDescription(eventsMock.items[0]);
+  //   expect(description.indexOf(signature)).to.be.above(-1);
 
-    var signature = eventController.createSignature(url);
-    expect(signature.indexOf('http://cisco.webex.com/meet/squirtle')).to.be.above(-1);
+  //   done();
+  // });
 
-    var description = eventController.buildDescription(eventsMock.items[0]);
-    expect(description.indexOf(signature)).to.be.above(-1);
+  // it('should get the user from the email', function parseEmailTest(done) {
+  //   var testEmail1 = 'squirtle@live.com';
+  //   var actualEmail1 = eventController.parseUserIdFromEmail(testEmail1);
+  //   expect(actualEmail1).to.equal('squirtle');
 
-    done();
-  });
+  //   var testEmail2 = 'charmander@live.com';
+  //   var actualEmail2 = eventController.parseUserIdFromEmail(testEmail2);
+  //   expect(actualEmail2).to.equal('charmander');
 
-  it('should get the user from the email', function parseEmailTest(done) {
-    var testEmail1 = 'squirtle@live.com';
-    var actualEmail1 = eventController.parseUserIdFromEmail(testEmail1);
-    expect(actualEmail1).to.equal('squirtle');
+  //   done();
+  // });
 
-    var testEmail2 = 'charmander@live.com';
-    var actualEmail2 = eventController.parseUserIdFromEmail(testEmail2);
-    expect(actualEmail2).to.equal('charmander');
+  // it('should persist to the db with a new token from the response', function persistTokenTest(done) {
+  //   var mongoose = require('mongoose');
+  //   var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
-    done();
-  });
+  //   var updateSpy = sinon.spy(ChannelEntry, 'update');
+  //   eventController.persistNewSyncToken(eventsMock);
+  //   var query = {
+  //     calendarId: eventsMock.summary
+  //   };
+  //   var update = {
+  //     syncToken: eventsMock.nextSyncToken
+  //   };
+  //   expect(updateSpy.calledWithExactly(query, update)).to.equal(true);
 
-  it('should persist to the db with a new token from the response', function persistTokenTest(done) {
-    var mongoose = require('mongoose');
-    var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
-
-    var updateSpy = sinon.spy(ChannelEntry, 'update');
-    eventController.persistNewSyncToken(eventsMock);
-    var query = {
-      calendarId: eventsMock.summary
-    };
-    var update = {
-      syncToken: eventsMock.nextSyncToken
-    };
-    expect(updateSpy.calledWithExactly(query, update)).to.equal(true);
-
-    done();
-  });
+  //   done();
+  // });
 });
