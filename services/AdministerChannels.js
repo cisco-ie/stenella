@@ -1,15 +1,15 @@
 'use strict';
 
-var google = require('googleapis');
-var calendar = google.calendar('v3');
-var directory = google.admin('directory_v1');
-var config = require('../configs/config');
-var scope = require('../constants/GoogleScopes');
-var _ = require('lodash');
-var Promise = require('bluebird');
-var mongoose = require('mongoose');
-var Channel = mongoose.model('Channel', require('../data/schema/channel'));
-var createJWT = require('../services/AdministerJWT').createJWT;
+var google              = require('googleapis');
+var calendar            = google.calendar('v3');
+var directory           = google.admin('directory_v1');
+var config              = require('../configs/config');
+var scope               = require('../constants/GoogleScopes');
+var _                   = require('lodash');
+var Promise             = require('bluebird');
+var mongoose            = require('mongoose');
+var Channel             = mongoose.model('Channel', require('../data/schema/channel'));
+var createJWT           = require('../services/AdministerJWT').createJWT;
 var AdministerCalendars = require('./AdministerCalendars');
 var getDateMsDifference = require('../libs/timeUtils').getDateMsDifference;
 

@@ -1,9 +1,9 @@
 'use strict';
 
-var google = require('googleapis');
-var _ = require('lodash');
+var google    = require('googleapis');
+var _         = require('lodash');
 var directory = google.admin('directory_v1');
-var config = require('../configs/config');
+var config    = require('../configs/config');
 
 var Interface = {
   list: getUsers
