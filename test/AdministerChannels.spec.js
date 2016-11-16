@@ -1,6 +1,6 @@
 'use strict';
 
-var expect = require('chai').expect;
+// var expect = require('chai').expect;
 var sinon = require('sinon');
 var AdministerJWT = require('../services/AdministerJWT');
 var google = require('googleapis');
@@ -21,26 +21,26 @@ describe('Administer Channels Service', function ChannelServiceTest() {
   //   done();
   // });
 
-  it('should build params based on type', function buildParamsTest(done) {
-    var channelInfo = {
-      resourceType: 'event',
-      calendarId: 'testUser'
-    };
-    var eventParams = AdministerChannels.buildParams(null, channelInfo);
-    expect(eventParams).to.have.property('auth');
-    expect(eventParams.calendarId).to.equal('testUser');
-    expect(eventParams).to.have.property('resource');
-    expect(eventParams.resource.id.indexOf('EVNT')).to.be.above(-1);
+  // it('should build params based on type', function buildParamsTest(done) {
+  //   var channelInfo = {
+  //     resourceType: 'event',
+  //     calendarId: 'testUser'
+  //   };
+  //   var eventParams = AdministerChannels.buildParams(null, channelInfo);
+  //   expect(eventParams).to.have.property('auth');
+  //   expect(eventParams.calendarId).to.equal('testUser');
+  //   expect(eventParams).to.have.property('resource');
+  //   expect(eventParams.resource.id.indexOf('EVNT')).to.be.above(-1);
 
-    channelInfo = {
-      resourceType: 'directory'
-    };
-    var dirParams = AdministerChannels.buildParams(null, channelInfo);
-    expect(dirParams).to.have.property('auth');
-    expect(dirParams).to.have.property('resource');
-    expect(dirParams.resource.id.indexOf('DIR')).to.be.above(-1);
-    done();
-  });
+  //   channelInfo = {
+  //     resourceType: 'directory'
+  //   };
+  //   var dirParams = AdministerChannels.buildParams(null, channelInfo);
+  //   expect(dirParams).to.have.property('auth');
+  //   expect(dirParams).to.have.property('resource');
+  //   expect(dirParams.resource.id.indexOf('DIR')).to.be.above(-1);
+  //   done();
+  // });
 
   it('should save a channel', function saveChannelTest(done) {
     // var mongoose = require('mongoose');
@@ -70,27 +70,27 @@ describe('Administer Channels Service', function ChannelServiceTest() {
     done();
   });
 
-  it('should get the delta of expiration of channel', function calcExpireDeltaTest(done) {
-    var today = new Date();
-    var addHours = 5;
-    var addMs = addHours * 60000;
-    var futureDate = new Date(today.getTime() + addMs);
-    var mockChannel = {
-      expiration: futureDate
-    };
-    var msDelta = AdministerChannels.getTimeoutMs(mockChannel);
-    // Since the time difference will be adjusted until
-    // the test is executed, it should equate to the hour
-    // difference. This could be re-evaluated
-    var hourDelta = Math.ceil(msDelta / 60000);
-    expect(addHours).to.be.equal(hourDelta);
+  // it('should get the delta of expiration of channel', function calcExpireDeltaTest(done) {
+  //   var today = new Date();
+  //   var addHours = 5;
+  //   var addMs = addHours * 60000;
+  //   var futureDate = new Date(today.getTime() + addMs);
+  //   var mockChannel = {
+  //     expiration: futureDate
+  //   };
+  //   var msDelta = AdministerChannels.getTimeoutMs(mockChannel);
+  //   // Since the time difference will be adjusted until
+  //   // the test is executed, it should equate to the hour
+  //   // difference. This could be re-evaluated
+  //   var hourDelta = Math.ceil(msDelta / 60000);
+  //   expect(addHours).to.be.equal(hourDelta);
 
-    var pastDate = new Date(today.getTime() - 60000);
-    var expiredChannel = {
-      expiration: pastDate
-    };
-    msDelta = AdministerChannels.getTimeoutMs(expiredChannel);
-    expect(msDelta).to.be.equal(0);
-    done();
-  });
+  //   var pastDate = new Date(today.getTime() - 60000);
+  //   var expiredChannel = {
+  //     expiration: pastDate
+  //   };
+  //   msDelta = AdministerChannels.getTimeoutMs(expiredChannel);
+  //   expect(msDelta).to.be.equal(0);
+  //   done();
+  // });
 });

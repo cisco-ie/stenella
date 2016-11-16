@@ -1,10 +1,10 @@
 'use strict';
 
-var _ = require('lodash');
-var logError = require('../libs/errorHandlers').logError;
-var mongoose = require('mongoose');
+var _                   = require('lodash');
+var logError            = require('../libs/errorHandlers').logError;
+var mongoose            = require('mongoose');
 var AdministerCalendars = require('../services/AdministerCalendars');
-var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
+var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
 
 mongoose.Promise = require('bluebird');
 

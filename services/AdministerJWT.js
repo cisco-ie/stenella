@@ -1,8 +1,8 @@
 'use strict';
 
-var google = require('googleapis');
+var google  = require('googleapis');
 var Promise = require('bluebird');
-var config = require('../configs/config');
+var config  = require('../configs/config');
 
 var Interface = {
   createJWT: createJWT

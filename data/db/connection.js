@@ -1,6 +1,6 @@
 // Connection Configs
 var mongoose = require('mongoose');
-var config = require('../../configs/dbConfig');
+var config   = require('../../configs/dbConfig');
 
 mongoose.connect(config.url);
 

@@ -1,10 +1,10 @@
 'use strict';
 
-var google = require('googleapis');
-var calendar = google.calendar('v3');
-var Promise = require('bluebird');
+var google    = require('googleapis');
+var calendar  = google.calendar('v3');
+var Promise   = require('bluebird');
 var createJWT = require('../services/AdministerJWT').createJWT;
-var scope = require('../constants/GoogleScopes');
+var scope     = require('../constants/GoogleScopes');
 
 var Interface = {
   fullSync: getFullSync,
