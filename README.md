@@ -23,6 +23,9 @@ Simply add an `@<command>` to your location field of your event.
 |------------|-------------------|
 | @webex     | :_[webex username]_|
 
+## Roadmap
+- OBTP (One Button To Push) from scheduled endpoints
+- Accessing Shared Calendars
 
 ## Contributors
 - [Brandon Him](https://github.com/brh55/)
@@ -31,7 +34,3 @@ Simply add an `@<command>` to your location field of your event.
 
 ## License
 MIT
-
-## RoadMap
-- OBTP (One Button To Push) from scheduled endpoints
-- Accessing Shared Calendars
