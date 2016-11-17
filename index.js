@@ -131,11 +131,12 @@ function findDirectoryChannel() {
 
 function removeExpiredChannels() {
   var currentDate = new Date().getTime();
-
   Channel.where('expiration').lt(currentDate)
     .remove()
     .then(function successExpiredRemoval(removed) {
-      console.log('Purged successful, ' + removed.result.n + ' documents have been successfully removed');
+      if (removed.result.n > 0) {
+        console.log(removed.result.n + ' expired documents removed');
+      }
     })
     .catch(console.log);
 }
