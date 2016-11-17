@@ -1,7 +1,5 @@
 'use strict';
 
-/* eslint no-unused-vars: [2, { "varsIgnorePattern": "db" }]*/
-
 var app = require('express')();
 var Promise = require('bluebird');
 var _ = require('lodash');
@@ -10,9 +8,10 @@ var AdministerChannels = require('./services/AdministerChannels');
 var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
-var db = require('./data/db/connection');
+var db = require('./data/db/connection'); // eslint-disable-line no-unused-vars
 var mongoose = require('mongoose');
 var Channel = mongoose.model('Channel', require('./data/schema/channel'));
+mongoose.Promise = require('bluebird');
 
 app.get('/', function getResponse(req, res) {
   res.send('Google integration is running.');
@@ -29,6 +28,7 @@ app.use(serverAPI.users, require('./routes/usersRoute'));
 initServer();
 
 function initServer() {
+  removeExpiredChannels();
   setUpChannels();
   app.listen(config.port, console.log('Running on port 5000'));
 }
@@ -58,7 +58,7 @@ function createChannelsAndExtractIds(userDirResponse) {
   extractUserIds(userDirResponse.users)
     .each(function iterateUserIds(userId) {
       var calendarId = userId;
-      findCalendarChannel(calendarId)
+      findEventChannel(calendarId)
         .then(function calendarChannelResponse(eventChannel) {
           if (eventChannel) {
             AdministerChannels.renew(eventChannel);
@@ -67,12 +67,8 @@ function createChannelsAndExtractIds(userDirResponse) {
               .then(AdministerChannels.renew);
           }
         });
-
-      return;
     })
     .catch(console.log);
-
-  return;
 }
 
 /**
@@ -125,12 +121,23 @@ function createDirChannelAndSave() {
     .catch(console.log);
 }
 
-function findCalendarChannel(calendarId) {
+function findEventChannel(calendarId) {
   return Channel.findOne({calendarId: calendarId});
 }
 
 function findDirectoryChannel() {
   return Channel.findOne({resourceType: 'directory'});
+}
+
+function removeExpiredChannels() {
+  var currentDate = new Date().getTime();
+
+  Channel.where('expiration').lt(currentDate)
+    .remove()
+    .then(function successExpiredRemoval(removed) {
+      console.log('Purged successful, ' + removed.result.n + ' documents have been successfully removed');
+    })
+    .catch(console.log);
 }
 
 
