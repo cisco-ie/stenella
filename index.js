@@ -10,7 +10,6 @@ var AdministerChannels = require('./services/AdministerChannels');
 var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
 var scope = require('./constants/GoogleScopes');
-var logError = require('./libs/errorHandlers').logError;
 var db = require('./data/db/connection');
 var mongoose = require('mongoose');
 var Channel = mongoose.model('Channel', require('./data/schema/channel'));
@@ -37,7 +36,7 @@ function initServer() {
 function setUpChannels() {
   getUsers()
     .then(createChannelsAndExtractIds)
-    .catch(logError);
+    .catch(console.log);
 }
 
 /**
@@ -71,7 +70,7 @@ function createChannelsAndExtractIds(userDirResponse) {
 
       return;
     })
-    .catch(logError);
+    .catch(console.log);
 
   return;
 }
@@ -89,7 +88,7 @@ function getUsers() {
           .then(resolve)
           .catch(reject);
       })
-      .catch(logError);
+      .catch(console.log);
   });
 }
 
@@ -113,7 +112,7 @@ function createEventChannelAndSave(calendarId) {
 
   return AdministerChannels.create(channelInfo)
     .then(AdministerChannels.save)
-    .catch(logError);
+    .catch(console.log);
 }
 
 function createDirChannelAndSave() {
@@ -123,7 +122,7 @@ function createDirChannelAndSave() {
 
   return AdministerChannels.create(channelInfo)
     .then(AdministerChannels.save)
-    .catch(logError);
+    .catch(console.log);
 }
 
 function findCalendarChannel(calendarId) {

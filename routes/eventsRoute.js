@@ -9,6 +9,7 @@ var eventController = require('../controllers/eventController');
  * `watch/event` POST Route
  */
 router.post('/', function eventRouteResponse(request, response) {
+  console.log(request);
   var headers = parseHeaders(request);
 
   // More information: https://developers.google.com/google-apps/calendar/v3/push
