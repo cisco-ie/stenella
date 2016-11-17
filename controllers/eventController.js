@@ -1,7 +1,6 @@
 'use strict';
 
 var _                   = require('lodash');
-var logError            = require('../libs/errorHandlers').logError;
 var mongoose            = require('mongoose');
 var AdministerCalendars = require('../services/AdministerCalendars');
 var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
@@ -24,7 +23,7 @@ function load(channelId) {
     .then(AdministerCalendars.incrementalSync)
     .then(persistNewSyncToken)
     .then(parseEvents)
-    .catch(logError);
+    .catch(console.log);
 }
 
 /**
@@ -132,7 +131,7 @@ function updateEvent(event) {
   };
 
   AdministerCalendars.updateEvent(params, updateInfo)
-    .catch(logError);
+    .catch(console.log);
 }
 
 function createPMRUrl(event) {

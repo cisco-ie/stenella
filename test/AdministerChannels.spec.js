@@ -1,19 +1,43 @@
 'use strict';
 
-// var expect = require('chai').expect;
-var sinon = require('sinon');
-var AdministerJWT = require('../services/AdministerJWT');
-var google = require('googleapis');
-var calendar = google.calendar('v3');
-var Promise = require('bluebird');
+var expect             = require('chai').expect;
+var sinon              = require('sinon');
+var AdministerJWT      = require('../services/AdministerJWT');
+var google             = require('googleapis');
+var calendar           = google.calendar('v3');
+var Promise            = require('bluebird');
+// var rewire             = require('rewire');
 var AdministerChannels = require('../services/AdministerChannels');
 
 describe('Administer Channels Service', function ChannelServiceTest() {
-  // it('should parse request headers', function parseHeadersTest(done) {
-  //   var parsedHeaders = AdministerChannels.parseHeaders();
-  //   expect(parsedHeaders).to.equal();
-  //   done();
-  // });
+  it('should parse request headers', function parseHeadersTest(done) {
+    var sampleRequest = {
+      headers: {
+        'x-goog-channel-id': 'EVNT-7fadc50c-347c-4941-aca6-0abfa961be97',
+        'x-goog-channel-expiration': 'Thu, 17 Nov 2016 01:05:06 GMT',
+        'x-goog-resource-state': 'sync',
+        'x-goog-message-number': '1',
+        'x-goog-resource-id': 'wquZbeosVUDpi0X8l_Jaz_BMTdA',
+        'x-goog-resource-uri': 'https://www.googleapis.com/calendar/v3/calendars/rrawat@apidevdemo.com/events?maxResults=250&alt=json',
+        'content-length': '0',
+        'user-agent': 'APIs-Google; (+https://developers.google.com/webmasters/APIs-Google.html)',
+        'accept-encoding': 'gzip,deflate,br',
+        'x-forwarded-proto': 'https',
+        'x-forwarded-for': '66.102.6.215'
+      }
+    };
+    var actualParsedHeaders = AdministerChannels.parseHeaders(sampleRequest);
+    var parsedHeaders = {
+      channelId: 'EVNT-7fadc50c-347c-4941-aca6-0abfa961be97',
+      expiration: 'Thu, 17 Nov 2016 01:05:06 GMT',
+      messageNumber: '1',
+      resourceId: 'wquZbeosVUDpi0X8l_Jaz_BMTdA',
+      resourceState: 'sync',
+      resourceUri: null
+    };
+    expect(actualParsedHeaders).to.deep.equal(parsedHeaders);
+    done();
+  });
 
   // it('should set a renewal for channels', function renewalChannelTest(done) {
   //   var parsedHeaders = AdministerChannels.parseHeaders();

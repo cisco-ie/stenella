@@ -79,10 +79,6 @@ function createChannel(channelInfo) {
           calendar.events.watch(params, function calWatchCallback(err, res) {
             if (err) reject(err);
             if (res) {
-              // @TODO: Should this be reevaluated,
-              // this is done because created channels
-              // are usually saved right after and we need this
-              // additional information
               res.resourceType = 'event';
               res.calendarId = channelInfo.calendarId;
               resolve(res);
@@ -136,6 +132,7 @@ function buildParams(jwtClient, channelInfo) {
   };
   var UUID = require('node-uuid').v4();
   var extendParams = {};
+
   if (channelInfo.resourceType === 'event') {
     extendParams = {
       calendarId: channelInfo.calendarId,
@@ -151,6 +148,7 @@ function buildParams(jwtClient, channelInfo) {
       }
     };
   }
+
   if (channelInfo.resourceType === 'directory') {
     extendParams = {
       domain: config.domain,
@@ -207,8 +205,8 @@ function saveChannel(channelInfo) {
   var channelProps = _.extend(props, channelInfo);
   var channelEntry = new Channel(channelProps);
   channelEntry.save();
-  // Returning the virtual model to allow deletions / updates
-  // to db, used for renewals
+  // Returning the virtual model to allow
+  // deletions / updates to db, used for renewals
   return Promise.resolve(channelEntry);
 }
 
@@ -226,8 +224,8 @@ function renewChannel(existingChannel) {
   }
 
   function deleteExistingAndRenew(newChannel) {
-    var id = existingChannel.calendarId;
-    Channel.remove({ channelId: id }).exec();
+    var oldChannelId = existingChannel.channelId;
+    Channel.remove({ channelId: oldChannelId }).exec();
 
     renewChannel(newChannel);
   }
