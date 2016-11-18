@@ -8,7 +8,6 @@ var AdministerUsers = rewire('../services/AdministerUsers');
 var sinon = require('sinon');
 
 describe('Administer Users Service', function UserServiceTest() {
-//  @TODO: comeback to this test, sinon is not stubbing the list method
   it('should return a users lists', function(done) {
     var directory = AdministerUsers.__get__('directory');
     var list = sinon.stub(directory.users, 'list');
