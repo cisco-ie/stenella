@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
 // var sinon = require('sinon');
-// var eventsMock = require('./mocks/eventList.json');
+var eventsMock = require('./mocks/eventList.json');
 var rewire = require('rewire');
 var eventController = rewire('../controllers/eventController');
 
@@ -32,21 +32,26 @@ describe('Event Controller', function EventControllerTest() {
   //   done();
   // });
 
-  // it('should build a description with the PMR url', function buildPMRTest(done) {
-  //   var url = eventController.createPMRUrl(eventsMock.items[0]);
-  //   expect(url).to.equal('http://cisco.webex.com/meet/squirtle');
+  it('should build a description with the PMR url', function buildPMRTest(done) {
+    var createPMRUrl = eventController.__get__('createPMRUrl');
+    var createSignature = eventController.__get__('createSignature');
+    var buildDescription = eventController.__get__('buildDescription');
 
-  //   var signature = eventController.createSignature(url);
-  //   expect(signature.indexOf('http://cisco.webex.com/meet/squirtle')).to.be.above(-1);
+    var url = createPMRUrl(eventsMock.items[0]);
+    expect(url).to.equal('http://cisco.webex.com/meet/squirtle');
 
-  //   var description = eventController.buildDescription(eventsMock.items[0]);
-  //   expect(description.indexOf(signature)).to.be.above(-1);
+    var signature = createSignature(url);
+    expect(signature.indexOf('http://cisco.webex.com/meet/squirtle')).to.be.above(-1);
 
-  //   done();
-  // });
+    var description = buildDescription(eventsMock.items[0]);
+    expect(description.indexOf(signature)).to.be.above(-1);
+
+    done();
+  });
 
   it('should get the user from the email', function parseEmailTest(done) {
     var parseUserIdFromEmail = eventController.__get__('parseUserIdFromEmail');
+
     var testEmail1 = 'squirtle@live.com';
     var actualEmail1 = parseUserIdFromEmail(testEmail1);
     expect(actualEmail1).to.equal('squirtle');
