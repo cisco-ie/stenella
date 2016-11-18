@@ -6,8 +6,8 @@ var AdministerJWT      = require('../services/AdministerJWT');
 var google             = require('googleapis');
 var calendar           = google.calendar('v3');
 var Promise            = require('bluebird');
-// var rewire             = require('rewire');
-var AdministerChannels = require('../services/AdministerChannels');
+var rewire             = require('rewire');
+var AdministerChannels = rewire('../services/AdministerChannels');
 
 describe('Administer Channels Service', function ChannelServiceTest() {
   it('should parse request headers', function parseHeadersTest(done) {
@@ -45,26 +45,28 @@ describe('Administer Channels Service', function ChannelServiceTest() {
   //   done();
   // });
 
-  // it('should build params based on type', function buildParamsTest(done) {
-  //   var channelInfo = {
-  //     resourceType: 'event',
-  //     calendarId: 'testUser'
-  //   };
-  //   var eventParams = AdministerChannels.buildParams(null, channelInfo);
-  //   expect(eventParams).to.have.property('auth');
-  //   expect(eventParams.calendarId).to.equal('testUser');
-  //   expect(eventParams).to.have.property('resource');
-  //   expect(eventParams.resource.id.indexOf('EVNT')).to.be.above(-1);
+  it('should build params based on type', function buildParamsTest(done) {
+    var buildParams = AdministerChannels.__get__('buildParams');
+    var channelInfo = {
+      resourceType: 'event',
+      calendarId: 'testUser'
+    };
+    var eventParams = buildParams(null, channelInfo);
+    expect(eventParams).to.have.property('auth');
+    expect(eventParams.calendarId).to.equal('testUser');
+    expect(eventParams).to.have.property('resource');
+    expect(eventParams.resource.id.indexOf('EVNT')).to.be.above(-1);
 
-  //   channelInfo = {
-  //     resourceType: 'directory'
-  //   };
-  //   var dirParams = AdministerChannels.buildParams(null, channelInfo);
-  //   expect(dirParams).to.have.property('auth');
-  //   expect(dirParams).to.have.property('resource');
-  //   expect(dirParams.resource.id.indexOf('DIR')).to.be.above(-1);
-  //   done();
-  // });
+    channelInfo = {
+      resourceType: 'directory'
+    };
+    var dirParams = buildParams(null, channelInfo);
+    expect(dirParams).to.have.property('auth');
+    expect(dirParams).to.have.property('resource');
+    expect(dirParams.resource.id.indexOf('DIR')).to.be.above(-1);
+
+    done();
+  });
 
   it('should save a channel', function saveChannelTest(done) {
     // var mongoose = require('mongoose');
