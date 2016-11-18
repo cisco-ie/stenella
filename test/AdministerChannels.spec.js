@@ -83,40 +83,41 @@ describe('Administer Channels Service', function ChannelServiceTest() {
   });
 
   it('should create a channel', function createChannelTest(done) {
-    sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
-      return Promise.resolve('test');
-    });
-    var createEventChannel = sinon.spy(calendar.events, 'watch');
+    // sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
+    //   return Promise.resolve('test');
+    // });
+    // var createEventChannel = sinon.spy(calendar.events, 'watch');
 
-    var channel = {
-      resourceType: 'event'
-    };
-    AdministerChannels.create(channel);
-    console.log(createEventChannel.calledOnce);
-    done();
+    // var channel = {
+    //   resourceType: 'event'
+    // };
+    // AdministerChannels.create(channel);
+    // expect(createEventChannel.calledOnce).to.be(true);
+    // done();
   });
 
-  // it('should get the delta of expiration of channel', function calcExpireDeltaTest(done) {
-  //   var today = new Date();
-  //   var addHours = 5;
-  //   var addMs = addHours * 60000;
-  //   var futureDate = new Date(today.getTime() + addMs);
-  //   var mockChannel = {
-  //     expiration: futureDate
-  //   };
-  //   var msDelta = AdministerChannels.getTimeoutMs(mockChannel);
-  //   // Since the time difference will be adjusted until
-  //   // the test is executed, it should equate to the hour
-  //   // difference. This could be re-evaluated
-  //   var hourDelta = Math.ceil(msDelta / 60000);
-  //   expect(addHours).to.be.equal(hourDelta);
+  it('should get the delta of expiration of channel', function calcExpireDeltaTest(done) {
+    var getTimeoutMs = AdministerChannels.__get__('getTimeoutMs');
+    var today = new Date();
+    var addHours = 5;
+    var addMs = addHours * 60000;
+    var futureDate = new Date(today.getTime() + addMs);
+    var mockChannel = {
+      expiration: futureDate
+    };
+    var msDelta = getTimeoutMs(mockChannel);
+    // Since the time difference will be adjusted until
+    // the test is executed, it should equate to the hour
+    // difference. This could be re-evaluated
+    var hourDelta = Math.ceil(msDelta / 60000);
+    expect(addHours).to.be.equal(hourDelta);
 
-  //   var pastDate = new Date(today.getTime() - 60000);
-  //   var expiredChannel = {
-  //     expiration: pastDate
-  //   };
-  //   msDelta = AdministerChannels.getTimeoutMs(expiredChannel);
-  //   expect(msDelta).to.be.equal(0);
-  //   done();
-  // });
+    var pastDate = new Date(today.getTime() - 60000);
+    var expiredChannel = {
+      expiration: pastDate
+    };
+    msDelta = getTimeoutMs(expiredChannel);
+    expect(msDelta).to.be.equal(0);
+    done();
+  });
 });
