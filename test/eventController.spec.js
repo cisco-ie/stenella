@@ -1,7 +1,8 @@
-// var expect = require('chai').expect;
+var expect = require('chai').expect;
 // var sinon = require('sinon');
 // var eventsMock = require('./mocks/eventList.json');
-// var eventController = require('../controllers/eventController');
+var rewire = require('rewire');
+var eventController = rewire('../controllers/eventController');
 
 describe('Event Controller', function EventControllerTest() {
   // it('Parses events and calls correct action', function(done) {
@@ -44,17 +45,18 @@ describe('Event Controller', function EventControllerTest() {
   //   done();
   // });
 
-  // it('should get the user from the email', function parseEmailTest(done) {
-  //   var testEmail1 = 'squirtle@live.com';
-  //   var actualEmail1 = eventController.parseUserIdFromEmail(testEmail1);
-  //   expect(actualEmail1).to.equal('squirtle');
+  it('should get the user from the email', function parseEmailTest(done) {
+    var parseUserIdFromEmail = eventController.__get__('parseUserIdFromEmail');
+    var testEmail1 = 'squirtle@live.com';
+    var actualEmail1 = parseUserIdFromEmail(testEmail1);
+    expect(actualEmail1).to.equal('squirtle');
 
-  //   var testEmail2 = 'charmander@live.com';
-  //   var actualEmail2 = eventController.parseUserIdFromEmail(testEmail2);
-  //   expect(actualEmail2).to.equal('charmander');
+    var testEmail2 = 'charmander@live.com';
+    var actualEmail2 = parseUserIdFromEmail(testEmail2);
+    expect(actualEmail2).to.equal('charmander');
 
-  //   done();
-  // });
+    done();
+  });
 
   // it('should persist to the db with a new token from the response', function persistTokenTest(done) {
   //   var mongoose = require('mongoose');
