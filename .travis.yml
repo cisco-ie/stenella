@@ -3,4 +3,5 @@ node_js:
     - 5.10.1
 before_script:
   - npm install
-script: cp ./example.env ./.env && npm test
+  - npm run pretest
+script: npm test
