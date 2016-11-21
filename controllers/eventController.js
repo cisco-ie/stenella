@@ -178,6 +178,9 @@ function createSignature(pmrUrl) {
 }
 
 function parseUserIdFromEmail(email) {
-  // Matches any length of chars before @
+  if (typeof email !== 'string') {
+    throw new Error('Email is not a string');
+  }
+
   return email.match(/.+?(?=@)/g)[0];
 }

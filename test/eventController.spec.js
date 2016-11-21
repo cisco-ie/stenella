@@ -1,7 +1,8 @@
-// var expect = require('chai').expect;
+var expect = require('chai').expect;
 // var sinon = require('sinon');
-// var eventsMock = require('./mocks/eventList.json');
-// var eventController = require('../controllers/eventController');
+var eventsMock = require('./mocks/eventList.json');
+var rewire = require('rewire');
+var eventController = rewire('../controllers/eventController');
 
 describe('Event Controller', function EventControllerTest() {
   // it('Parses events and calls correct action', function(done) {
@@ -11,50 +12,59 @@ describe('Event Controller', function EventControllerTest() {
   //   expect(eventController.eventFactory.calledOnce).to.equal(true);
   //   done();
   // // });
-  // it('should determine WebEx events', function checkWebExEventTest(done) {
-  //   var webExEvent = eventController.isWebEx(eventsMock.items[0]);
-  //   expect(webExEvent).to.equal(true);
 
-  //   var notWebExEvent = eventController.isWebEx(eventsMock.items[1]);
-  //   expect(notWebExEvent).to.equal(false);
+  it('should determine WebEx events', function checkWebExEventTest(done) {
+    var isWebEx = eventController.__get__('isWebEx');
+    var webExEvent = isWebEx(eventsMock.items[0]);
+    expect(webExEvent).to.equal(true);
 
-  //   done();
-  // });
+    var notWebExEvent = isWebEx(eventsMock.items[1]);
+    expect(notWebExEvent).to.equal(false);
 
-  // it('should check if new event needs an update', function checkEventUpdateTest(done) {
-  //   var webExEvent = eventController.requiresUpdate(eventsMock.items[0]);
-  //   expect(webExEvent).to.equal(true);
+    done();
+  });
 
-  //   webExEvent = eventController.requiresUpdate(eventsMock.items[1]);
-  //   expect(webExEvent).to.equal(false);
+  it('should check if new event needs an update', function checkEventUpdateTest(done) {
+    var requiresUpdate = eventController.__get__('requiresUpdate');
+    var webExEvent = requiresUpdate(eventsMock.items[0]);
+    expect(webExEvent).to.equal(true);
 
-  //   done();
-  // });
+    webExEvent = requiresUpdate(eventsMock.items[1]);
+    expect(webExEvent).to.equal(false);
 
-  // it('should build a description with the PMR url', function buildPMRTest(done) {
-  //   var url = eventController.createPMRUrl(eventsMock.items[0]);
-  //   expect(url).to.equal('http://cisco.webex.com/meet/squirtle');
+    done();
+  });
 
-  //   var signature = eventController.createSignature(url);
-  //   expect(signature.indexOf('http://cisco.webex.com/meet/squirtle')).to.be.above(-1);
+  it('should build a description with the PMR url', function buildPMRTest(done) {
+    var createPMRUrl = eventController.__get__('createPMRUrl');
+    var createSignature = eventController.__get__('createSignature');
+    var buildDescription = eventController.__get__('buildDescription');
 
-  //   var description = eventController.buildDescription(eventsMock.items[0]);
-  //   expect(description.indexOf(signature)).to.be.above(-1);
+    var url = createPMRUrl(eventsMock.items[0]);
+    expect(url).to.equal('http://cisco.webex.com/meet/squirtle');
 
-  //   done();
-  // });
+    var signature = createSignature(url);
+    expect(signature.indexOf('http://cisco.webex.com/meet/squirtle')).to.be.above(-1);
 
-  // it('should get the user from the email', function parseEmailTest(done) {
-  //   var testEmail1 = 'squirtle@live.com';
-  //   var actualEmail1 = eventController.parseUserIdFromEmail(testEmail1);
-  //   expect(actualEmail1).to.equal('squirtle');
+    var description = buildDescription(eventsMock.items[0]);
+    expect(description.indexOf(signature)).to.be.above(-1);
 
-  //   var testEmail2 = 'charmander@live.com';
-  //   var actualEmail2 = eventController.parseUserIdFromEmail(testEmail2);
-  //   expect(actualEmail2).to.equal('charmander');
+    done();
+  });
 
-  //   done();
-  // });
+  it('should get the user from the email', function parseEmailTest(done) {
+    var parseUserIdFromEmail = eventController.__get__('parseUserIdFromEmail');
+
+    var testEmail1 = 'squirtle@live.com';
+    var actualEmail1 = parseUserIdFromEmail(testEmail1);
+    expect(actualEmail1).to.equal('squirtle');
+
+    var testEmail2 = 'charmander@live.com';
+    var actualEmail2 = parseUserIdFromEmail(testEmail2);
+    expect(actualEmail2).to.equal('charmander');
+
+    done();
+  });
 
   // it('should persist to the db with a new token from the response', function persistTokenTest(done) {
   //   var mongoose = require('mongoose');
