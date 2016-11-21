@@ -5,10 +5,11 @@ require('dotenv').config();
  * @type {Object}
  */
 var dbConfigs = {
-  url: process.env.DB_URL
+  production_url: process.env.DB_URL,
+  test_url: process.env.DB_URL_TEST
 };
 
-if (!dbConfigs.url) {
+if (!dbConfigs.production_url) {
   throw new Error('DB_URL is not defined');
 }
 
