@@ -12,25 +12,28 @@ describe('Event Controller', function EventControllerTest() {
   //   expect(eventController.eventFactory.calledOnce).to.equal(true);
   //   done();
   // // });
-  // it('should determine WebEx events', function checkWebExEventTest(done) {
-  //   var webExEvent = eventController.isWebEx(eventsMock.items[0]);
-  //   expect(webExEvent).to.equal(true);
 
-  //   var notWebExEvent = eventController.isWebEx(eventsMock.items[1]);
-  //   expect(notWebExEvent).to.equal(false);
+  it('should determine WebEx events', function checkWebExEventTest(done) {
+    var isWebEx = eventController.__get__('isWebEx');
+    var webExEvent = isWebEx(eventsMock.items[0]);
+    expect(webExEvent).to.equal(true);
 
-  //   done();
-  // });
+    var notWebExEvent = isWebEx(eventsMock.items[1]);
+    expect(notWebExEvent).to.equal(false);
 
-  // it('should check if new event needs an update', function checkEventUpdateTest(done) {
-  //   var webExEvent = eventController.requiresUpdate(eventsMock.items[0]);
-  //   expect(webExEvent).to.equal(true);
+    done();
+  });
 
-  //   webExEvent = eventController.requiresUpdate(eventsMock.items[1]);
-  //   expect(webExEvent).to.equal(false);
+  it('should check if new event needs an update', function checkEventUpdateTest(done) {
+    var requiresUpdate = eventController.__get__('requiresUpdate');
+    var webExEvent = requiresUpdate(eventsMock.items[0]);
+    expect(webExEvent).to.equal(true);
 
-  //   done();
-  // });
+    webExEvent = requiresUpdate(eventsMock.items[1]);
+    expect(webExEvent).to.equal(false);
+
+    done();
+  });
 
   it('should build a description with the PMR url', function buildPMRTest(done) {
     var createPMRUrl = eventController.__get__('createPMRUrl');

@@ -1,11 +1,11 @@
 'use strict';
 
 var expect             = require('chai').expect;
-var sinon              = require('sinon');
-var AdministerJWT      = require('../services/AdministerJWT');
-var google             = require('googleapis');
-var calendar           = google.calendar('v3');
-var Promise            = require('bluebird');
+// var sinon              = require('sinon');
+// var AdministerJWT      = require('../services/AdministerJWT');
+// var google             = require('googleapis');
+// var calendar           = google.calendar('v3');
+// var Promise            = require('bluebird');
 var rewire             = require('rewire');
 var AdministerChannels = rewire('../services/AdministerChannels');
 
@@ -68,33 +68,33 @@ describe('Administer Channels Service', function ChannelServiceTest() {
     done();
   });
 
-  it('should save a channel', function saveChannelTest(done) {
-    // var mongoose = require('mongoose');
-    // var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
-    // var saveSpy = sinon.spy(ChannelEntry, 'save');
-    // var channelInfo = {
-    //   channelId: '123456',
-    //   resourceId: '',
-    //   syncToken: '',
-    //   expiration: '',
-    //   resourceType: 'event'
-    // };
-    done();
-  });
+  // it('should save a channel', function saveChannelTest(done) {
+  //   // var mongoose = require('mongoose');
+  //   // var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
+  //   // var saveSpy = sinon.spy(ChannelEntry, 'save');
+  //   // var channelInfo = {
+  //   //   channelId: '123456',
+  //   //   resourceId: '',
+  //   //   syncToken: '',
+  //   //   expiration: '',
+  //   //   resourceType: 'event'
+  //   // };
+  //   // done();
+  // });
 
-  it('should create a channel', function createChannelTest(done) {
-    // sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
-    //   return Promise.resolve('test');
-    // });
-    // var createEventChannel = sinon.spy(calendar.events, 'watch');
+  // it('should create a channel', function createChannelTest(done) {
+  //   // sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
+  //   //   return Promise.resolve('test');
+  //   // });
+  //   // var createEventChannel = sinon.spy(calendar.events, 'watch');
 
-    // var channel = {
-    //   resourceType: 'event'
-    // };
-    // AdministerChannels.create(channel);
-    // expect(createEventChannel.calledOnce).to.be(true);
-    // done();
-  });
+  //   // var channel = {
+  //   //   resourceType: 'event'
+  //   // };
+  //   // AdministerChannels.create(channel);
+  //   // expect(createEventChannel.calledOnce).to.be(true);
+  //   // done();
+  // });
 
   it('should get the delta of expiration of channel', function calcExpireDeltaTest(done) {
     var getTimeoutMs = AdministerChannels.__get__('getTimeoutMs');
