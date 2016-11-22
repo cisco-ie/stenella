@@ -4,6 +4,7 @@ var _                   = require('lodash');
 var mongoose            = require('mongoose');
 var AdministerCalendars = require('../services/AdministerCalendars');
 var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
+var WEBEX_URL           = require('../configs/config').webExDomain;
 
 mongoose.Promise = require('bluebird');
 
@@ -135,16 +136,21 @@ function updateEvent(event) {
 }
 
 function createPMRUrl(event) {
-  var getPMRUserId = function getPMRUserId(eventLocation) {
-    var containsColon = eventLocation.match(/:/);
-    if (containsColon) {
-      return eventLocation.match(/\w+[^webex:]\S/)[0];
-    }
-    return event.pmrUserId;
-  };
+  var pmrUserId = getPmrUserId(event.location);
 
-  var PMRUserId = getPMRUserId(event.location);
-  return 'http://cisco.webex.com/meet/' + PMRUserId;
+  function getPmrUserId(location) {
+    var overrideFlagIndex = location.search(/@webex:/i);
+    // Return owner of event as the default user, if no
+    // override flag is present
+    if (overrideFlagIndex === -1) return event.pmrUserId;
+
+    var webExString = location.substring(overrideFlagIndex, location.length);
+    // First match will always be /webex/i
+    var user = webExString.match(/\w+/g)[1];
+    return user;
+  }
+
+  return WEBEX_URL + 'meet/' + pmrUserId;
 }
 
 function buildDescription(event) {
