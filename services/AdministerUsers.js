@@ -24,10 +24,16 @@ function getUsers(authToken, userParams, callback) {
   if (!authToken) return callback(new Error('No auth token provided'));
   var defaultParams = {
     auth: authToken,
-    domain: config.domain,
     maxResults: 500,
     orderBy: 'email'
   };
+
+  if (config.customer) {
+    defaultParams.customer = config.customer;
+  } else if (config.domain) {
+    defaultParams.domain = config.domain;
+  }
+
   var params = _.extend(defaultParams, userParams);
   return directory.users.list(params, callback);
 }

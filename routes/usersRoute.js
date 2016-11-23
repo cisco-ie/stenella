@@ -16,7 +16,11 @@ router.post('/', jsonParser, function watchIndexResponse(request, response) {
   var headers = parseHeaders(request);
 
   var syncNotification = (headers.resourceState === 'sync');
-  if (syncNotification) logSyncConfirm(headers.channelId);
+  if (syncNotification) {
+    logSyncConfirm(headers.channelId);
+    response.sendStatus(200);
+    return;
+  }
 
   // Looking only for 'create' events (new users)
   // 'update' events may need to be re-looked at
