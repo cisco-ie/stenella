@@ -72,7 +72,7 @@ describe('Event Controller', function EventControllerTest() {
     done();
   });
 
-  it('should update the event', function(done) {
+  it('should update the event', function updateEventTest(done) {
     var AdministerCalendars = eventController.__get__('AdministerCalendars');
     var parseEvents = eventController.__get__('parseEvents');
     var buildSummary = eventController.__get__('buildSummary');
@@ -90,6 +90,7 @@ describe('Event Controller', function EventControllerTest() {
       location: event1.location,
       end: event1.end,
       start: event1.start,
+      description: buildDescription(event1)
     };
 
     var eventParams1 = {
@@ -104,6 +105,7 @@ describe('Event Controller', function EventControllerTest() {
       location: event2.location,
       end: event2.end,
       start: event2.start,
+      description: buildDescription(event2)
     };
 
     var eventParams2 = {

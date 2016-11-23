@@ -139,10 +139,11 @@ function updateEvent(event) {
 }
 
 function buildSummary(existingSummary) {
-  if (typeof existingSummary !== 'string') return;
+  if (typeof existingSummary !== 'string') return '';
 
-  if (existingSummary.match(/webex:/i))
+  if (existingSummary.match(/webex:/i)) {
     return existingSummary;
+  }
 
   return 'WebEx: ' + existingSummary;
 }
