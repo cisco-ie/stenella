@@ -1,10 +1,13 @@
 # webex-google-calendar
 [![GitHub release](https://img.shields.io/github/release/cisco-ie/rubidium.svg?style=flat-square)](https://github.com/cisco-ie/webex-google-calendar/releases)
 [![Travis](https://img.shields.io/travis/cisco-ie/webex-google-calendar.svg?style=flat-square)]()
+[![Style Guide Badge](https://img.shields.io/badge/Code%20Style-Airbnb-ef8686.svg?style=flat-square)](https://github.com/airbnb/javascript/tree/es5-deprecated/es5)
 
 Seamlessly attach your WebEx personal meeting rooms to your Google calendar events on any device without any plugins, extensions, or domain scripts.
 
-![Demo Preview](http://g.recordit.co/qcRooy7CDx.gif)
+<p align="center">
+ <img src="http://g.recordit.co/qcRooy7CDx.gif">
+</p>
 
 ## Requirements
 - G Suite (Google Apps for Work)
@@ -20,6 +23,9 @@ Simply add an `@<command>` to your location field of your event.
 |------------|-------------------|
 | @webex     | :_[webex username]_|
 
+## Roadmap
+- OBTP (One Button To Push) from scheduled endpoints
+- Accessing Shared Calendars
 
 ## Contributors
 - [Brandon Him](https://github.com/brh55/)
