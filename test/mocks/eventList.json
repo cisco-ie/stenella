@@ -22,7 +22,7 @@
          "created":"2016-08-03T21:19:36.000Z",
          "updated":"2016-08-03T21:21:03.057Z",
          "summary":"Testing",
-         "description": "=== Do not delete or change any of the following text. ===\n=== Generated WebEx Details ===\nJoin WebEx meeting\n\nMeeting number (access code): 209 455 748\nMeeting password: HyjW37Ah\n\nJoin from a video system or application Dial 209455748@acecloud.webex.com\n\nFrom the Cisco internal network, dial *777* and the 9-digit meeting number. If you are the host, enter your PIN when prompted.",
+         "description": "meet up online",
          "location":"@Webex",
          "creator":{
             "email":"brhim@apidevdemo.com"

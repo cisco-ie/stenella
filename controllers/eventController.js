@@ -4,7 +4,10 @@ var _                   = require('lodash');
 var mongoose            = require('mongoose');
 var AdministerCalendars = require('../services/AdministerCalendars');
 var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
+
 var WEBEX_URL           = require('../configs/config').webExDomain;
+var WEBEX_PATTERN       = /@webex/i;
+var OVERRIDE_PATTERN    = /@webex:/i;
 
 mongoose.Promise = require('bluebird');
 
@@ -91,7 +94,7 @@ function cancelEvent() {
  * @return {Boolean}       true if it is; false otherwise
  */
 function isWebEx(event) {
-  return (event.location.match(/@webex/i)) ? true : false;
+  return (event.location.match(WEBEX_PATTERN)) ? true : false;
 }
 
 function confirmEvent(event) {
@@ -119,7 +122,7 @@ function requiresUpdate(event) {
 
 function updateEvent(event) {
   var updateInfo = {
-    summary: 'WebEx: ' + event.summary,
+    summary: buildSummary(event.summary),
     location: event.location,
     end: event.end,
     start: event.start,
@@ -135,11 +138,20 @@ function updateEvent(event) {
     .catch(console.log);
 }
 
+function buildSummary(existingSummary) {
+  if (typeof existingSummary !== 'string') return;
+
+  if (existingSummary.match(/webex:/i))
+    return existingSummary;
+
+  return 'WebEx: ' + existingSummary;
+}
+
 function createPMRUrl(event) {
   var pmrUserId = getPmrUserId(event.location);
 
   function getPmrUserId(location) {
-    var overrideFlagIndex = location.search(/@webex:/i);
+    var overrideFlagIndex = location.search(OVERRIDE_PATTERN);
     // Return owner of event as the default user, if no
     // override flag is present
     if (overrideFlagIndex === -1) return event.pmrUserId;

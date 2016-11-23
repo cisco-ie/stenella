@@ -8,7 +8,7 @@ var AdministerUsers = rewire('../services/AdministerUsers');
 var sinon = require('sinon');
 
 describe('Administer Users Service', function UserServiceTest() {
-  it('should return a users lists', function(done) {
+  it('should return a users lists', function testUserList(done) {
     var directory = AdministerUsers.__get__('directory');
     var list = sinon.stub(directory.users, 'list');
     AdministerUsers.list('secureToken', null);

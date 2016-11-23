@@ -1,18 +1,10 @@
 var expect = require('chai').expect;
-// var sinon = require('sinon');
+var sinon = require('sinon');
 var eventsMock = require('./mocks/eventList.json');
 var rewire = require('rewire');
 var eventController = rewire('../controllers/eventController');
 
 describe('Event Controller', function EventControllerTest() {
-  // it('Parses events and calls correct action', function(done) {
-  //   sinon.spy(eventController, 'eventFactory');
-  //   sinon.stub(eventController, 'isWebEx');
-  //   eventController.parseEvents(mockResp);
-  //   expect(eventController.eventFactory.calledOnce).to.equal(true);
-  //   done();
-  // // });
-
   it('should determine WebEx events', function checkWebExEventTest(done) {
     var isWebEx = eventController.__get__('isWebEx');
     var webExEvent = isWebEx(eventsMock.items[0]);
@@ -63,6 +55,66 @@ describe('Event Controller', function EventControllerTest() {
     var actualEmail2 = parseUserIdFromEmail(testEmail2);
     expect(actualEmail2).to.equal('charmander');
 
+    done();
+  });
+
+  it('should prepend WebEx to the summary', function prependWebexTest(done) {
+    var buildSummary = eventController.__get__('buildSummary');
+
+    var summaryInput1 = 'Test Title';
+    var summary1 = buildSummary(summaryInput1);
+    expect(summary1).to.equal('WebEx: Test Title');
+
+    var summaryInput2 = 'WebEx: Test Title 2';
+    var summary2 = buildSummary(summaryInput2);
+    // Should not prepend WebEx
+    expect(summary2).to.equal('WebEx: Test Title 2');
+    done();
+  });
+
+  it('should update the event', function(done) {
+    var AdministerCalendars = eventController.__get__('AdministerCalendars');
+    var parseEvents = eventController.__get__('parseEvents');
+    var buildSummary = eventController.__get__('buildSummary');
+    var buildDescription = eventController.__get__('buildDescription');
+    var updateSpy = sinon.spy(AdministerCalendars, 'updateEvent');
+    parseEvents(eventsMock);
+
+    var event1 = eventsMock.items[0];
+
+    // Test against the event update payload,
+    // because the event update is returning an
+    // invoked function with the final param payload
+    var resourceBody1 = {
+      summary: buildSummary(event1.summary),
+      location: event1.location,
+      end: event1.end,
+      start: event1.start,
+    };
+
+    var eventParams1 = {
+      calendarId: eventsMock.summary,
+      eventId: event1.id,
+      resource: resourceBody1
+    };
+
+    var event2 = eventsMock.items[2];
+    var resourceBody2 = {
+      summary: buildSummary(event2.summary),
+      location: event2.location,
+      end: event2.end,
+      start: event2.start,
+    };
+
+    var eventParams2 = {
+      calendarId: eventsMock.summary,
+      eventId: event2.id,
+      resource: resourceBody2
+    };
+
+    expect(updateSpy.called).to.be.true;
+    sinon.assert.calledWithMatch(updateSpy, sinon.match(eventParams1));
+    sinon.assert.calledWithMatch(updateSpy, sinon.match(eventParams2));
     done();
   });
 
