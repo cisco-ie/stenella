@@ -1,25 +1,25 @@
 var expect = require('chai').expect;
 var rewire = require('rewire');
 var AdministerUsers = rewire('../services/AdministerUsers');
-// var userResponse = require('./mocks/userList.json');
-// var google = require('googleapis');
-// var directory = google.admin('directory_v1');
-// var googleApiUrl = require('./config').googleApiUrl;
-var sinon = require('sinon');
 
 describe('Administer Users Service', function UserServiceTest() {
-  it('should return a users lists', function testUserList(done) {
-    var directory = AdministerUsers.__get__('directory');
-    var list = sinon.stub(directory.users, 'list');
-    AdministerUsers.list('secureToken', null);
-    expect(list.calledOnce).to.be.true;
-    done();
-  });
+  // @TODO: Add promise based test afterwards
+  it('should build user list params', function UserListParams(done) {
+    var buildParams = AdministerUsers.__get__('buildParams');
 
-  it('should throw an error when there is no token', function userListErrorTest(done) {
-    AdministerUsers.list(null, null, function listResponse(err) {
-      expect(err).to.be.an('error');
-      done();
-    });
+    var defaultRequiredParams = {
+      auth: {},
+      maxResults: 500,
+      domain: 'apidevdemo.com',
+      orderBy: 'email'
+    };
+
+    expect(buildParams({})).to.deep.equal(defaultRequiredParams);
+
+    var expectedOverride = defaultRequiredParams;
+    expectedOverride.maxResults = 1;
+
+    expect(buildParams({}, { maxResults: 1 })).to.deep.equal(expectedOverride);
+    done();
   });
 });
