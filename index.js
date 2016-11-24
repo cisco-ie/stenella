@@ -5,10 +5,8 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
 var AdministerChannels = require('./services/AdministerChannels');
-var createJWT = require('./services/AdministerJWT').createJWT;
 var config = require('./configs/config');
-var scope = require('./constants/GoogleScopes');
-var db = require('./data/db/connection'); // eslint-disable-line no-unused-vars
+var db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
 var mongoose = require('mongoose');
 var Channel = mongoose.model('Channel', require('./data/schema/channel'));
 mongoose.Promise = require('bluebird');
@@ -34,7 +32,7 @@ function initServer() {
 }
 
 function setUpChannels() {
-  getUsers()
+  AdministerUsers.list()
     .then(createChannelsAndExtractIds)
     .catch(console.log);
 }
@@ -69,23 +67,6 @@ function createChannelsAndExtractIds(userDirResponse) {
         });
     })
     .catch(console.log);
-}
-
-/**
- * Get list of users
- * @return {Object} A promise when fulfilled is
- */
-function getUsers() {
-  return new Promise(function userPromise(resolve, reject) {
-    createJWT(scope.userDirectory)
-      .then(function authorizeJwtResponse(jwtClient) {
-        var listUsers = Promise.promisify(AdministerUsers.list);
-        listUsers(jwtClient, null)
-          .then(resolve)
-          .catch(reject);
-      })
-      .catch(console.log);
-  });
 }
 
 /**

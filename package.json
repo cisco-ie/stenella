@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "pretest": "cp ./example.env ./.env",
-    "test": "./node_modules/mocha/bin/mocha",
+    "test": "npm run pretest & ./node_modules/mocha/bin/mocha",
     "start": "node index.js",
     "lint": "eslint .",
     "validate": "npm ls"
@@ -36,6 +36,7 @@
     "async": "^2.1.2",
     "bluebird": "^3.4.6",
     "body-parser": "^1.15.2",
+    "chai-as-promised": "^6.0.0",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "googleapis": "^14.0.0",
