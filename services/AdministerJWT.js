@@ -20,6 +20,10 @@ function createJWT(scope) {
     google.auth.getApplicationDefault(function getCredentialsResponse(err, authClient) {
       if (err) reject(err);
 
+      if (!authClient) {
+        var error = new Error("Check credentials location and environment variable entry: GOOGLE_APPLICATION_CREDENTIALS");
+        reject(error);
+      }
       if (authClient.createScopedRequired &&
           authClient.createScopedRequired()) {
         var scopedAuthClient = authClient.createScoped(scope);

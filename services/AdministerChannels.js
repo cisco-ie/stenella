@@ -142,7 +142,6 @@ function buildParams(jwtClient, channelInfo) {
         type: 'web_hook',
         address: config.recievingUrl.events,
         params: {
-          // @TODO: create config for TTL
           ttl: config.ttl || 1500
         }
       }
