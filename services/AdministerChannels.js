@@ -143,7 +143,7 @@ function buildParams(jwtClient, channelInfo) {
         address: config.recievingUrl.events,
         params: {
           // @TODO: create config for TTL
-          ttl: 1500
+          ttl: config.ttl || 1500
         }
       }
     };
