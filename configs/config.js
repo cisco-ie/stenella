@@ -22,9 +22,12 @@ if (process.env.CUSTOMER) {
   configs.customer = process.env.CUSTOMER;
 }
 
-// @TODO: Add tests to check if env file variables are defined
 _.forOwn(configs, function iterateConfigKeys(value, key) {
-  if (!configs[key]) throwUndefined(value, key);
+  if (!configs[key]) {
+    if (key !== 'ttl') {
+      throwUndefined(value, key);
+    }
+  }
 });
 
 function throwUndefined(value, key) {
