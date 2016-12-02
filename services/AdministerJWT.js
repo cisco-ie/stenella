@@ -18,7 +18,9 @@ module.exports = Interface;
 function createJWT(scope) {
   return new Promise(function createJWTResponse(resolve, reject) {
     google.auth.getApplicationDefault(function getCredentialsResponse(err, authClient) {
-      if (err) reject(err);
+      if (err) {
+        throw err;
+      }
 
       if (authClient.createScopedRequired &&
           authClient.createScopedRequired()) {

@@ -23,12 +23,16 @@ if (process.env.CUSTOMER) {
 }
 
 _.forOwn(configs, function iterateConfigKeys(value, key) {
-  if (key === 'keys') throwUndefined(value, key);
+  if (!configs[key]) {
+    if (key !== 'ttl') {
+      throwUndefined(value, key);
+    }
+  }
 });
 
 function throwUndefined(value, key) {
   if (!value) {
-    throw new Error(key + ' is not defined');
+    throw new Error(key + ' is not defined in .env file');
   }
 }
 
