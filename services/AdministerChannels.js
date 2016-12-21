@@ -199,7 +199,8 @@ function saveChannel(channelInfo) {
     resourceId: '',
     syncToken: '',
     expiration: '',
-    resourceType: channelInfo.resourceType || ''
+    resourceType: channelInfo.resourceType || '',
+    webhookUrl: config.recievingUrl
   };
   var channelProps = _.extend(props, channelInfo);
   var channelEntry = new Channel(channelProps);

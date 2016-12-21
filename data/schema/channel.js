@@ -13,7 +13,8 @@ var channelSchema = new Schema({
   resourceId: String,
   syncToken: String,
   expiration: Date,
-  resourceType: String
+  resourceType: String,
+  webhookUrl: String
 });
 
 /**
