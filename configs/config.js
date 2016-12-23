@@ -3,14 +3,16 @@
 var _ = require('lodash');
 require('dotenv').config();
 
+var RECEIVING_URL = normalizeUrl(process.env.RECEIVING_URL);
+
 var configs = {
   port: Number(process.env.PORT) || 5000,
   authorizeAdmin: process.env.ADMIN,
   webExDomain: process.env.WEBEX_DOMAIN,
   recievingUrl: {
-    base: process.env.RECIEVING_URL,
-    events: process.env.RECIEVING_URL + 'watch/events',
-    users: process.env.RECIEVING_URL + 'watch/users'
+    base: RECEIVING_URL,
+    events: RECEIVING_URL + '/watch/events',
+    users: RECEIVING_URL + '/watch/users'
   }
 };
 
@@ -34,6 +36,18 @@ function throwUndefined(value, key) {
   if (!value) {
     throw new Error(key + ' is not defined in .env file');
   }
+}
+
+function normalizeUrl(receivingUrl) {
+  if (typeof receivingUrl !== 'string') {
+    throw new Error('Receiving URL is not defined');
+  }
+
+  // Check for trailing back slash
+  if (receivingUrl.charAt(receivingUrl.length - 1) === '/') {
+    return receivingUrl.substring(0, receivingUrl.length - 1);
+  }
+  return receivingUrl;
 }
 
 module.exports = configs;
