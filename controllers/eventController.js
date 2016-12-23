@@ -149,21 +149,26 @@ function buildSummary(existingSummary) {
 }
 
 function createPMRUrl(event) {
-  var pmrUserId = getPmrUserId(event.location);
+  var pmrUserId = event.pmrUserId;
+  var webexCMRUrl = getAltWebExCMR(event.location);
 
-  function getPmrUserId(location) {
+  function getAltWebExCMR(location) {
     var overrideFlagIndex = location.search(OVERRIDE_PATTERN);
     // Return owner of event as the default user, if no
     // override flag is present
-    if (overrideFlagIndex === -1) return event.pmrUserId;
+    if (overrideFlagIndex === -1) return WEBEX_URL;
 
     var webExString = location.substring(overrideFlagIndex, location.length);
     // First match will always be /webex/i
-    var user = webExString.match(/\w+/g)[1];
-    return user;
+    var newCMR = webExString.match(/\w+/g)[1];
+    // Extract the domain and replace it with the newdomain specified in
+    // the @webex:newdomain on the UI
+    var cmrBase = /[^.]+/.exec(WEBEX_URL)[0].substr(7);
+    var newCMRUrl = WEBEX_URL.replace(cmrBase, newCMR);
+    return newCMRUrl;
   }
 
-  return WEBEX_URL + 'meet/' + pmrUserId;
+  return webexCMRUrl + 'meet/' + pmrUserId;
 }
 
 function buildDescription(event) {
