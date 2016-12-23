@@ -111,18 +111,36 @@ function findDirectoryChannel() {
 }
 
 function removeExpiredChannels() {
-  var currentDate = new Date().getTime();
-  // For the current being, this will remove any non matchinig configured URLs,
-  // which limits the application to only handle 1 set desired URL.
-  Channel
-    .where('expiration').lt(currentDate)
-    .where('webhookUrl').ne(config.webhookUrl)
+  var channels = findNonMatchingExpiredChannel();
+  channels
     .remove()
     .then(function successExpiredRemoval(removed) {
       if (removed.result.n > 0) {
         console.log(removed.result.n + ' expired documents removed');
       }
     });
+}
+
+function findNonMatchingExpiredChannel() {
+  // For the current being, this will remove any non matchinig configured URLs,
+  // which limits the application to only handle 1 set desired URL.
+  var currentDate = new Date().getTime();
+
+  var query = {
+    $or: [
+      {
+        expiration: {
+          $lt: currentDate
+        }
+      },
+      {
+        webhookUrl: {
+          $ne: config.webhookUrl
+        }
+      }
+    ]
+  };
+  return Channel.find(query);
 }
 
 
