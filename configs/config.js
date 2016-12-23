@@ -9,7 +9,7 @@ var configs = {
   port: Number(process.env.PORT) || 5000,
   authorizeAdmin: process.env.ADMIN,
   webExDomain: process.env.WEBEX_DOMAIN,
-  recievingUrl: {
+  receivingUrl: {
     base: RECEIVING_URL,
     events: RECEIVING_URL + '/watch/events',
     users: RECEIVING_URL + '/watch/users'

@@ -112,14 +112,17 @@ function findDirectoryChannel() {
 
 function removeExpiredChannels() {
   var currentDate = new Date().getTime();
-  Channel.where('expiration').lt(currentDate)
+  // For the current being, this will remove any non matchinig configured URLs,
+  // which limits the application to only handle 1 set desired URL.
+  Channel
+    .where('expiration').lt(currentDate)
+    .where('webhookUrl').ne(config.webhookUrl)
     .remove()
     .then(function successExpiredRemoval(removed) {
       if (removed.result.n > 0) {
         console.log(removed.result.n + ' expired documents removed');
       }
-    })
-    .catch(console.log);
+    });
 }
 
 

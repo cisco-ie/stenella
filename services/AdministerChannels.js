@@ -140,7 +140,7 @@ function buildParams(jwtClient, channelInfo) {
       resource: {
         id: 'EVNT-' + UUID,
         type: 'web_hook',
-        address: config.recievingUrl.events,
+        address: config.receivingUrl.events,
         params: {
           ttl: config.ttl || 1500
         }
@@ -157,7 +157,7 @@ function buildParams(jwtClient, channelInfo) {
       resource: {
         id: 'DIR-' + UUID,
         type: 'web_hook',
-        address: config.recievingUrl.users,
+        address: config.receivingUrl.users,
         params: {
           ttl: 1500
         }
@@ -200,7 +200,7 @@ function saveChannel(channelInfo) {
     syncToken: '',
     expiration: '',
     resourceType: channelInfo.resourceType || '',
-    webhookUrl: config.recievingUrl
+    webhookUrl: config.receivingUrl.base
   };
   var channelProps = _.extend(props, channelInfo);
   var channelEntry = new Channel(channelProps);
