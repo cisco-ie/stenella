@@ -6,8 +6,7 @@ var scope     = require('../constants/GoogleScopes');
 var directory = google.admin('directory_v1');
 var config    = require('../configs/config');
 var Promise   = require('bluebird');
-var createJWT = require('../services/AdministerJWT').createJWT;
-var getDirectory = Promise.promisify(directory.users.list);
+var AdministerJWT = require('../services/AdministerJWT');
 
 var Interface = {
   list: getUsers
@@ -22,7 +21,7 @@ module.exports = Interface;
  */
 function getUsers(overrideParams) {
   return new Promise(function userPromise(resolve, reject) {
-    createJWT(scope.userDirectory)
+    AdministerJWT.createJWT(scope.userDirectory)
       .then(function authorizeJwtResponse(jwtClient) {
         var params = buildParams(jwtClient, overrideParams);
         requestUserList(params)
@@ -34,6 +33,8 @@ function getUsers(overrideParams) {
 }
 
 function requestUserList(params) {
+  var getDirectory = Promise.promisify(directory.users.list);
+
   // Returns a user listing response in the
   // cases of pagination, the response will
   // paginate, and append the users into
@@ -49,8 +50,9 @@ function requestUserList(params) {
           .then(function mergeResponse(paginatedResponse) {
             var mergeUsers = _.concat(userResponse.users,
                                       paginatedResponse.users);
-            userResponse.users = mergeUsers;
-            return userResponse;
+            var modifiedResponse = Object.create(userResponse);
+            modifiedResponse.users = mergeUsers;
+            return modifiedResponse;
           });
       }
       return userResponse;
