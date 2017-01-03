@@ -5,10 +5,10 @@ var expect             = require('chai').expect;
 // var AdministerJWT      = require('../services/AdministerJWT');
 // var google             = require('googleapis');
 // var calendar           = google.calendar('v3');
-var mongoose           = require('mongoose');
-var db                 = require('../data/db/connection')('test');
 var rewire             = require('rewire');
 var AdministerChannels = rewire('../services/AdministerChannels');
+var connectToDb        = require('../data/db/connection');
+connectToDb('test');
 
 describe('Administer Channels Service', function ChannelServiceTest() {
   it('should parse request headers', function parseHeadersTest(done) {
@@ -73,7 +73,7 @@ describe('Administer Channels Service', function ChannelServiceTest() {
     var mongoose = require('mongoose');
     var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
     var saveChannel = AdministerChannels.__get__('saveChannel');
-    
+
     var channelInfo = {
       channelId: 'test-12345',
       resourceId: '',
@@ -84,7 +84,7 @@ describe('Administer Channels Service', function ChannelServiceTest() {
 
     saveChannel(channelInfo);
 
-    ChannelEntry.findOne({ channelId: 'test-12345'} , function(err, document) {
+    ChannelEntry.findOne({ channelId: 'test-12345'}, function findCb(err, document) {
       expect(document).to.exist;
       ChannelEntry.remove({});
       done();
