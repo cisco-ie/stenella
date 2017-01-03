@@ -55,6 +55,7 @@
   "pre-commit": [
     "lint",
     "validate",
-    "test"
+    "test",
+    "test-codecov"
   ]
 }
