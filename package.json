@@ -8,7 +8,8 @@
     "test": "npm run pretest & ./node_modules/mocha/bin/mocha",
     "start": "node index.js",
     "lint": "eslint .",
-    "validate": "npm ls"
+    "validate": "npm ls",
+    "test-cov": "npm run pretest & istanbul cover _mocha"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
   "homepage": "https://github.com/cisco-ie/webex-google-calendar#readme",
   "devDependencies": {
     "chai": "^3.5.0",
+    "istanbul": "^0.4.5",
     "mocha": "^3.1.0",
     "nock": "^8.0.0",
     "sinon": "^1.17.6"
@@ -37,10 +39,12 @@
     "bluebird": "^3.4.6",
     "body-parser": "^1.15.2",
     "chai-as-promised": "^6.0.0",
+    "coveralls": "^2.11.15",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "googleapis": "^14.0.0",
     "lodash": "^4.16.3",
+    "mocha-lcov-reporter": "^1.2.0",
     "moment": "^2.15.2",
     "mongoose": "^4.6.4",
     "node-uuid": "^1.4.7",
