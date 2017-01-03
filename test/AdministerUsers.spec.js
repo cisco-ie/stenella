@@ -35,16 +35,40 @@ describe('Administer Users Service', function UserServiceTest() {
     done();
   });
 
-  it('should retrieve users', function GetUserTest(done) {
+  it('should get users with desired params and authentication', function GetUserSetUp(done) {
+    var getUsers = AdministerUsers.__get__('getUsers');
+
+    // Can't invoke a spy on a private function,
+    // but want to check integrity of the params
+    var requestUserStub = function paramCheck(params) {
+      return Promise.resolve(params);
+    };
+    var revertRequestStub = AdministerUsers.__set__('requestUserList', requestUserStub);
+    getUsers({ maxResults: 1 })
+      .then(function(requestParams) {
+        var expectedParams = {
+          auth: 'a secured client',
+          maxResults: 1,
+          orderBy: 'email',
+          domain: 'apidevdemo.com'
+        };
+        expect(requestParams).to.deep.equal(expectedParams);
+        revertRequestStub();
+        done();
+      });
+  });
+
+  it('should get users', function GetUserTest(done) {
     var requestUserList = AdministerUsers.__get__('requestUserList');
     var listStub = function list(params, cb) {
       return cb(undefined, userListMock);
     };
-    AdministerUsers.__set__('directory.users.list', listStub);
+    var revertUserListStub = AdministerUsers.__set__('directory.users.list', listStub);
 
     requestUserList()
       .then(function(response) {
         expect(response).to.deep.equal(userListMock);
+        revertUserListStub();
         done();
       });
   });
