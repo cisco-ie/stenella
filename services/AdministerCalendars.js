@@ -3,7 +3,7 @@
 var google    = require('googleapis');
 var calendar  = google.calendar('v3');
 var Promise   = require('bluebird');
-var createJWT = require('../services/AdministerJWT').createJWT;
+var AdministerJWT = require('../services/AdministerJWT');
 var scope     = require('../constants/GoogleScopes');
 
 var Interface = {
@@ -53,7 +53,7 @@ function getFullSync(calendarId) {
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
   var eventListRequest = function eventListRequest(listParams) {
     return new Promise(function eventListPromise(resolve, reject) {
-      createJWT(scope.calendar)
+      AdministerJWT.createJWT(scope.calendar)
         .then(function jwtResponse(jwtClient) {
           listParams.auth = jwtClient;
           calendar.events.list(listParams, function createEventsWatchCb(err, result) {
@@ -82,7 +82,7 @@ function getFullSync(calendarId) {
  */
 function getIncrementalSync(calendarInfo) {
   return new Promise(function incrementalSyncPromise(resolve, reject) {
-    createJWT(scope.calendar)
+    AdministerJWT.createJWT(scope.calendar)
       .then(function jwtResponse(jwtClient) {
         var params = {
           auth: jwtClient,
@@ -134,7 +134,7 @@ function updateEvent(params, updateInfo) {
   if (!updateInfo) throw new Error('No update information passed');
 
   params.resource = updateInfo;
-  return createJWT(scope.calendar)
+  return AdministerJWT.createJWT(scope.calendar)
     .then(function jwtResponse(jwtClient) {
       params.auth = jwtClient;
       return Promise.promisify(calendar.events.update)(params);

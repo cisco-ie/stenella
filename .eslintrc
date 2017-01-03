@@ -156,6 +156,7 @@
   "globals": {
     "_": true,
     "describe": true,
-    "it": true
+    "it": true,
+    "beforeEach": true
   }
 }
