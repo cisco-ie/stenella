@@ -7,6 +7,7 @@ var directory = google.admin('directory_v1');
 var config    = require('../configs/config');
 var Promise   = require('bluebird');
 var createJWT = require('../services/AdministerJWT').createJWT;
+var getDirectory = Promise.promisify(directory.users.list);
 
 var Interface = {
   list: getUsers
@@ -33,13 +34,11 @@ function getUsers(overrideParams) {
 }
 
 function requestUserList(params) {
-  var directoryList = Promise.promisify(directory.users.list);
-
   // Returns a user listing response in the
   // cases of pagination, the response will
   // paginate, and append the users into
   // a single response
-  return directoryList(params)
+  return getDirectory(params)
     .then(function directoryListResponse(userResponse) {
       if (userResponse.nextPageToken) {
         var pageToken = userResponse.nextPageToken;
