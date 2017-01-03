@@ -9,7 +9,8 @@
     "start": "node index.js",
     "lint": "eslint .",
     "validate": "npm ls",
-    "test-cov": "npm run pretest & istanbul cover _mocha"
+    "test-cov": "npm run pretest & istanbul cover _mocha",
+    "test-codecov": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && codecov --token=a032f333-f808-4dc6-8b1f-31e4519ebccb"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
   "homepage": "https://github.com/cisco-ie/webex-google-calendar#readme",
   "devDependencies": {
     "chai": "^3.5.0",
+    "codecov": "^1.0.1",
     "istanbul": "^0.4.5",
     "mocha": "^3.1.0",
     "nock": "^8.0.0",
@@ -39,7 +41,6 @@
     "bluebird": "^3.4.6",
     "body-parser": "^1.15.2",
     "chai-as-promised": "^6.0.0",
-    "coveralls": "^2.11.15",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "googleapis": "^14.0.0",
