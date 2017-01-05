@@ -6,6 +6,9 @@ var Promise = require('bluebird');
 var AdministerCalendars = rewire('../services/AdministerCalendars');
 
 describe('Administer Calendar Test', function CalendarTestSuite() {
+  var calendar = AdministerCalendars.__get__('calendar');
+  var listSpy = sinon.spy(calendar.events, 'list');
+
   beforeEach(function setUp(done) {
     var jwtMock = {
       createJWT: function jwtFake() {
@@ -18,7 +21,6 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
   });
 
   it('should send an update to Google Calendar', function UserListParams(done) {
-    var calendar = AdministerCalendars.__get__('calendar');
     var updateEvent = AdministerCalendars.__get__('updateEvent');
     var updateSpy = sinon.spy(calendar.events, 'update');
     var fakeResourceBody = {
@@ -45,20 +47,29 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
     var mockFullSync = function sync() {
       return Promise.resolve(mockEventList);
     };
-    AdministerCalendars.__set__('getFullSync', mockFullSync);
+    var revert = AdministerCalendars.__set__('getFullSync', mockFullSync);
 
     var getSyncToken = AdministerCalendars.__get__('getSyncToken');
     getSyncToken().then(function syncTokenResponse(syncToken) {
       expect(syncToken).to.equal('CPiw4dWUu84CEPiw4dWUu84CGAU=');
+      revert();
       done();
     });
   });
 
-  it('should perform an incremental sync', function incrementSyncTest(done) {
-    var calendar = AdministerCalendars.__get__('calendar');
-    var getIncrementalSync = AdministerCalendars.__get__('getIncrementalSync');
-    var updateSpy = sinon.spy(calendar.events, 'list');
+  it('should perform a full sync', function fullSyncTest(done) {
+    var getFullSync = AdministerCalendars.__get__('getFullSync');
 
+    getFullSync()
+      .catch(function fullSyncResponse() {
+        // @TODO: Add nextPageToken test and rewrite
+        expect(listSpy.called).to.be.true;
+        done();
+      });
+  });
+
+  it('should perform an incremental sync', function incrementSyncTest(done) {
+    var getIncrementalSync = AdministerCalendars.__get__('getIncrementalSync');
     var mockCalendarInfo = {
       syncToken: '12345abcefg',
       calendarId: 'calendarId1'
@@ -74,8 +85,7 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
           showDeleted: true
         };
 
-        expect(updateSpy.calledWith(expectedParams)).to.be.true;
-        done();
+        expect(listSpy.calledWith(expectedParams)).to.be.true;        done();
       });
   });
 });
