@@ -66,6 +66,34 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
         expect(listSpy.called).to.be.true;
         done();
       });
+
+    var mock1 = {
+      events: [1, 2],
+      nextPageToken: 2
+    };
+
+    var mock2 = {
+      events: [3, 4],
+      syncToken: 'token'
+    };
+
+    // Override eventList to check integrity of callback
+    var eventListMock = function list(params, cb) {
+      if (params.nextPageToken) {
+        return cb(undefined, mock2);
+      }
+
+      return cb(undefined, mock1);
+    };
+
+    var revert = AdministerCalendars.__set__('calendar.events.list', eventListMock);
+
+    getFullSync()
+      .then(function fullSyncResponse(lastPageResponse) {
+        expect(lastPageResponse.syncToken).to.equal('token');
+        revert();
+        done();
+      });
   });
 
   it('should perform an incremental sync', function incrementSyncTest(done) {

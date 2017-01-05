@@ -32,24 +32,23 @@ function getFullSync(calendarId) {
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
   var eventListRequest = function eventListRequest(listParams) {
-    return new Promise(function eventListPromise(resolve, reject) {
-      AdministerJWT.createJWT(scope.calendar)
-        .then(function jwtResponse(jwtClient) {
-          listParams.auth = jwtClient;
-          calendar.events.list(listParams, function createEventsWatchCb(err, result) {
-            if (err) reject(err);
-            // @TODO: Bug with null results after user
-            // creation, need to investigate
-            if (result) {
-              if (result.nextPageToken) {
-                listParams.nextPageToken = result.nextPageToken;
-                eventListRequest(listParams);
-              }
-              resolve(result);
-            }
-          });
+    return AdministerJWT.createJWT(scope.calendar)
+      .then(function jwtResponse(jwtClient) {
+        listParams.auth = jwtClient;
+
+        return calendar.events.list(listParams, function createEventsWatchCb(err, result) {
+          if (err) {
+            return Promise.reject(err);
+          }
+
+          if (result.nextPageToken) {
+            listParams.nextPageToken = result.nextPageToken;
+            return eventListRequest(listParams);
+          }
+
+          return Promise.resolve(result);
         });
-    });
+      });
   };
 
   return eventListRequest(params);
