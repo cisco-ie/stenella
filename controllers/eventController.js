@@ -126,7 +126,8 @@ function updateEvent(event) {
     location: event.location,
     end: event.end,
     start: event.start,
-    description: buildDescription(event)
+    description: buildDescription(event),
+    attendees: event.attendees || []
   };
 
   var params = {
