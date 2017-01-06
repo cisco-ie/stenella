@@ -3,7 +3,7 @@
 var google    = require('googleapis');
 var calendar  = google.calendar('v3');
 var Promise   = require('bluebird');
-var createJWT = require('../services/AdministerJWT').createJWT;
+var AdministerJWT = require('../services/AdministerJWT');
 var scope     = require('../constants/GoogleScopes');
 
 var Interface = {
@@ -14,26 +14,6 @@ var Interface = {
 };
 
 module.exports = Interface;
-
-// /**
-//  * Invoke google api to get list of calendars
-//  * @param  {object}   authToken <required> secure JWT for list of calendars
-//  * @param  {object}   calendarParams parameters to retrieve list of calendars
-//  * @param  {Function} callback   for google's list of calendars response
-//  * @return {function} invokes callback
-//  */
-// function getCalendars(authToken, calendarParams, userId, callback) {
-//   // @TODO: add support for pagination under Utilities
-//   var overrideOptions = {
-//     url: 'https://www.googleapis.com/calendar/v3/users/' + userId + '/calendarList'
-//   };
-//   if (!authToken) return callback(new Error('No auth token provided'));
-//   var defaultParams = {
-//     maxResults: 500
-//   };
-//   var params = _.extend(defaultParams, calendarParams);
-//   return calendar.calendarList.list(params, overrideOptions, callback);
-// }
 
 /**
  * Only performs the sync of items from Today to Future.
@@ -52,24 +32,23 @@ function getFullSync(calendarId) {
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
   var eventListRequest = function eventListRequest(listParams) {
-    return new Promise(function eventListPromise(resolve, reject) {
-      createJWT(scope.calendar)
-        .then(function jwtResponse(jwtClient) {
-          listParams.auth = jwtClient;
-          calendar.events.list(listParams, function createEventsWatchCb(err, result) {
-            if (err) reject(err);
-            // @TODO: Bug with null results after user
-            // creation, need to investigate
-            if (result) {
-              if (result.nextPageToken) {
-                listParams.nextPageToken = result.nextPageToken;
-                eventListRequest(listParams);
-              }
-              resolve(result);
-            }
-          });
+    return AdministerJWT.createJWT(scope.calendar)
+      .then(function jwtResponse(jwtClient) {
+        listParams.auth = jwtClient;
+
+        return calendar.events.list(listParams, function createEventsWatchCb(err, result) {
+          if (err) {
+            return Promise.reject(err);
+          }
+
+          if (result.nextPageToken) {
+            listParams.nextPageToken = result.nextPageToken;
+            return eventListRequest(listParams);
+          }
+
+          return Promise.resolve(result);
         });
-    });
+      });
   };
 
   return eventListRequest(params);
@@ -82,7 +61,7 @@ function getFullSync(calendarId) {
  */
 function getIncrementalSync(calendarInfo) {
   return new Promise(function incrementalSyncPromise(resolve, reject) {
-    createJWT(scope.calendar)
+    AdministerJWT.createJWT(scope.calendar)
       .then(function jwtResponse(jwtClient) {
         var params = {
           auth: jwtClient,
@@ -134,7 +113,7 @@ function updateEvent(params, updateInfo) {
   if (!updateInfo) throw new Error('No update information passed');
 
   params.resource = updateInfo;
-  return createJWT(scope.calendar)
+  return AdministerJWT.createJWT(scope.calendar)
     .then(function jwtResponse(jwtClient) {
       params.auth = jwtClient;
       return Promise.promisify(calendar.events.update)(params);

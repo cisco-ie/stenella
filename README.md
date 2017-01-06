@@ -1,6 +1,7 @@
 # webex-google-calendar
 [![GitHub release](https://img.shields.io/github/release/cisco-ie/rubidium.svg?style=flat-square)](https://github.com/cisco-ie/webex-google-calendar/releases)
 [![Travis](https://img.shields.io/travis/cisco-ie/webex-google-calendar.svg?style=flat-square)]()
+[![codecov](https://codecov.io/gh/cisco-ie/webex-google-calendar/branch/master/graph/badge.svg?token=tBquxtI1KC)](https://codecov.io/gh/cisco-ie/webex-google-calendar)
 [![Style Guide Badge](https://img.shields.io/badge/Code%20Style-Airbnb-ef8686.svg?style=flat-square)](https://github.com/airbnb/javascript/tree/es5-deprecated/es5)
 
 Seamlessly attach your WebEx personal meeting rooms to your Google calendar events on any device without any plugins, extensions, or domain scripts.
