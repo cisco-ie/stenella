@@ -23,11 +23,14 @@ module.exports = Interface;
  * @return {Void} None
  */
 function load(channelId) {
-  getChannelEntry(channelId)
-    .then(AdministerCalendars.incrementalSync)
-    .then(persistNewSyncToken)
-    .then(parseEvents)
-    .catch(console.log);
+  getChannelEntry(channelId).then(function(channelEntry) {
+    if (!channelEntry) { return; }
+
+    AdministerCalendars.incrementalSync(channelEntry)
+      .then(persistNewSyncToken)
+      .then(parseEvents)
+      .catch(console.log);
+  });
 }
 
 /**

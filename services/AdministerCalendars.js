@@ -60,6 +60,10 @@ function getFullSync(calendarId) {
  * @return {Object}   Promise of calendar event list
  */
 function getIncrementalSync(calendarInfo) {
+  if (!calendarInfo) {
+    throw new Error('CalendarInfo is not defined');
+  }
+
   return new Promise(function incrementalSyncPromise(resolve, reject) {
     AdministerJWT.createJWT(scope.calendar)
       .then(function jwtResponse(jwtClient) {
