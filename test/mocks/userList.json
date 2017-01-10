@@ -1,0 +1,270 @@
+{
+ "kind": "admin#directory#users",
+ "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/znRWrJC97mIGMWGp6Jf7mXz-NnM\"",
+ "users": [
+  {
+
+   "kind": "admin#directory#user",
+   "id": "101373287208687170508",
+   "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/U1yIEEXq902LdMFKqVe_bXkh8Nk\"",
+   "primaryEmail": "spaghetti@foobar.com",
+   "name": {
+    "givenName": "Brandon",
+    "familyName": "Him",
+    "fullName": "Brandon Him"
+   },
+   "isAdmin": true,
+   "isDelegatedAdmin": false,
+   "lastLoginTime": "2016-09-23T17:50:29.000Z",
+   "creationTime": "2016-08-03T21:16:16.000Z",
+   "agreedToTerms": true,
+   "suspended": false,
+   "changePasswordAtNextLogin": false,
+   "ipWhitelisted": false,
+   "emails": [
+    {
+     "address": "spaghetti@foobar.com",
+     "primary": true
+    }
+   ],
+   "nonEditableAliases": [
+    "spaghetti@foobar.com.test-google-a.com"
+   ],
+   "customerId": "C026k18i1",
+   "orgUnitPath": "/",
+   "isMailboxSetup": true,
+   "includeInGlobalAddressList": true
+  },
+  {
+
+   "kind": "admin#directory#user",
+   "id": "111264292218899910974",
+   "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/c79THvV0R-NpSKcWBHwOoIaHOJA\"",
+   "primaryEmail": "tuser@foobar.com",
+   "name": {
+    "givenName": "Test",
+    "familyName": "User",
+    "fullName": "Test User"
+   },
+   "isAdmin": true,
+   "isDelegatedAdmin": false,
+   "lastLoginTime": "2016-09-25T06:23:08.000Z",
+   "creationTime": "2016-07-08T22:20:37.000Z",
+   "agreedToTerms": true,
+   "suspended": false,
+   "changePasswordAtNextLogin": false,
+   "ipWhitelisted": false,
+   "emails": [
+    {
+     "address": "tuser@foobar.com",
+     "primary": true
+    }
+   ],
+   "nonEditableAliases": [
+    "tuser@foobar.com.test-google-a.com"
+   ],
+   "customerId": "C026k18i1",
+   "orgUnitPath": "/",
+   "isMailboxSetup": true,
+   "includeInGlobalAddressList": true
+  },
+  {
+
+   "kind": "admin#directory#user",
+   "id": "105835237668095695410",
+   "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/F7_2nT9Tf48nfLrW8bWL9_ve394\"",
+   "primaryEmail": "feeeefeee@foobar.com",
+   "name": {
+    "givenName": "feee",
+    "familyName": "feeee",
+    "fullName": "feee feeee"
+   },
+   "isAdmin": false,
+   "isDelegatedAdmin": false,
+   "lastLoginTime": "1970-01-01T00:00:00.000Z",
+   "creationTime": "2016-09-06T22:17:54.000Z",
+   "agreedToTerms": true,
+   "suspended": false,
+   "changePasswordAtNextLogin": true,
+   "ipWhitelisted": false,
+   "emails": [
+    {
+     "address": "feeeefeee@foobar.com",
+     "primary": true
+    }
+   ],
+   "nonEditableAliases": [
+    "feeeefeee@foobar.com.test-google-a.com"
+   ],
+   "customerId": "C026k18i1",
+   "orgUnitPath": "/",
+   "isMailboxSetup": true,
+   "includeInGlobalAddressList": true
+  },
+  {
+
+   "kind": "admin#directory#user",
+   "id": "109701498123803915010",
+   "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/0sNh99kBrTMgg9ijPDY47iJlLNI\"",
+   "primaryEmail": "geebar@foobar.com",
+   "name": {
+    "givenName": "gee",
+    "familyName": "bar",
+    "fullName": "gee bar"
+   },
+   "isAdmin": false,
+   "isDelegatedAdmin": false,
+   "lastLoginTime": "1970-01-01T00:00:00.000Z",
+   "creationTime": "2016-09-06T22:25:30.000Z",
+   "agreedToTerms": true,
+   "suspended": false,
+   "changePasswordAtNextLogin": true,
+   "ipWhitelisted": false,
+   "emails": [
+    {
+     "address": "geebar@foobar.com",
+     "primary": true
+    }
+   ],
+   "nonEditableAliases": [
+    "geebar@foobar.com.test-google-a.com"
+   ],
+   "customerId": "C026k18i1",
+   "orgUnitPath": "/",
+   "isMailboxSetup": true,
+   "includeInGlobalAddressList": true
+  },
+  {
+
+   "kind": "admin#directory#user",
+   "id": "111266005924449257794",
+   "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/lKnFl2AGYsLvtaL8I9fHlNH_Xak\"",
+   "primaryEmail": "remcampb@foobar.com",
+   "name": {
+    "givenName": "Remington",
+    "familyName": "Campbell",
+    "fullName": "Remington Campbell"
+   },
+   "isAdmin": true,
+   "isDelegatedAdmin": false,
+   "lastLoginTime": "2016-08-17T23:24:01.000Z",
+   "creationTime": "2016-07-08T22:26:11.000Z",
+   "agreedToTerms": true,
+   "suspended": false,
+   "changePasswordAtNextLogin": false,
+   "ipWhitelisted": false,
+   "emails": [
+    {
+     "address": "remcampb@foobar.com",
+     "primary": true
+    }
+   ],
+   "nonEditableAliases": [
+    "remcampb@foobar.com.test-google-a.com"
+   ],
+   "customerId": "C026k18i1",
+   "orgUnitPath": "/",
+   "isMailboxSetup": true,
+   "includeInGlobalAddressList": true
+  },
+  {
+
+   "kind": "admin#directory#user",
+   "id": "111665363046845295144",
+   "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/cJYwDjVW20s3YdrEXqpByojiQLU\"",
+   "primaryEmail": "penne@foobar.com",
+   "name": {
+    "givenName": "Rekha",
+    "familyName": "rawat",
+    "fullName": "Rekha rawat"
+   },
+   "isAdmin": true,
+   "isDelegatedAdmin": false,
+   "lastLoginTime": "2016-10-04T17:43:19.000Z",
+   "creationTime": "2016-08-01T23:17:40.000Z",
+   "agreedToTerms": true,
+   "suspended": false,
+   "changePasswordAtNextLogin": false,
+   "ipWhitelisted": false,
+   "emails": [
+    {
+     "address": "penne@foobar.com",
+     "primary": true
+    }
+   ],
+   "nonEditableAliases": [
+    "penne@foobar.com.test-google-a.com"
+   ],
+   "customerId": "C026k18i1",
+   "orgUnitPath": "/",
+   "isMailboxSetup": true,
+   "includeInGlobalAddressList": true
+  },
+  {
+
+   "kind": "admin#directory#user",
+   "id": "107645585026607759195",
+   "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/5jB7YyuNZKSU1bPGdsp0iNTgmBo\"",
+   "primaryEmail": "t1@foobar.com",
+   "name": {
+    "givenName": "test user",
+    "familyName": "user",
+    "fullName": "test user user"
+   },
+   "isAdmin": false,
+   "isDelegatedAdmin": false,
+   "lastLoginTime": "2016-09-16T19:31:32.000Z",
+   "creationTime": "2016-09-16T19:30:08.000Z",
+   "agreedToTerms": true,
+   "suspended": false,
+   "changePasswordAtNextLogin": false,
+   "ipWhitelisted": false,
+   "emails": [
+    {
+     "address": "t1@foobar.com",
+     "primary": true
+    }
+   ],
+   "nonEditableAliases": [
+    "t1@foobar.com.test-google-a.com"
+   ],
+   "customerId": "C026k18i1",
+   "orgUnitPath": "/",
+   "isMailboxSetup": true,
+   "includeInGlobalAddressList": true
+  },
+  {
+
+   "kind": "admin#directory#user",
+   "id": "115529733080234551355",
+   "etag": "\"XGyyUMiAmCo7o31SWwFDDNla4RE/yQpn2G1eZNsRVfkfQqq43__t6es\"",
+   "primaryEmail": "pattern@foobar.com",
+   "name": {
+    "givenName": "Company",
+    "familyName": "pattern",
+    "fullName": "Company pattern"
+   },
+   "isAdmin": false,
+   "isDelegatedAdmin": false,
+   "lastLoginTime": "2016-07-20T16:14:03.000Z",
+   "creationTime": "2016-07-20T16:10:58.000Z",
+   "agreedToTerms": true,
+   "suspended": false,
+   "changePasswordAtNextLogin": false,
+   "ipWhitelisted": false,
+   "emails": [
+    {
+     "address": "pattern@foobar.com",
+     "primary": true
+    }
+   ],
+   "nonEditableAliases": [
+    "pattern@foobar.com.test-google-a.com"
+   ],
+   "customerId": "C026k18i1",
+   "orgUnitPath": "/",
+   "isMailboxSetup": true,
+   "includeInGlobalAddressList": true
+  }
+ ]
+}
