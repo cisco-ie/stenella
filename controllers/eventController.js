@@ -1,21 +1,27 @@
 'use strict';
 
-var _                   = require('lodash');
-var mongoose            = require('mongoose');
-var AdministerCalendars = require('../services/AdministerCalendars');
-var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
+const _                   = require('lodash');
+const mongoose            = require('mongoose');
+const AdministerCalendars = require('../services/AdministerCalendars');
+const ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
 
-
-//var SEARCH_PATTERN       = /searchPattern/i;
-//var OVERRIDE_PATTERN    = /searchPattern:/i;
+//const SEARCH_PATTERN       = /searchPattern/i;
+//const OVERRIDE_PATTERN    = /searchPattern:/i;
 
 mongoose.Promise = require('bluebird');
 
-var Interface = {
+const Interface = {
   load: load
 };
 
 module.exports = Interface;
+
+/**
+ * Returns the Channel Entry from Database
+ * @param  {String} channelId string of channel entry
+ * @return {Object}           Mongoose Virtual Model of Channel Entry
+ */
+const getChannelEntry = (channelId) => ChannelEntry.findOne({ channelId: channelId });
 
 /**
  * Loading to the controller based on Channel Id
@@ -23,8 +29,8 @@ module.exports = Interface;
  * @return {Void} None
  */
 function load(channelId) {
-  getChannelEntry(channelId).then(function(channelEntry) {
-    if (!channelEntry) { return; }
+  getChannelEntry(channelId).then(channelEntry => {
+    if (!channelEntry) return;
 
     AdministerCalendars.incrementalSync(channelEntry)
       .then(persistNewSyncToken)
@@ -33,18 +39,10 @@ function load(channelId) {
   });
 }
 
-/**
- * Returns the Channel Entry from Database
- * @param  {String} channelId string of channel entry
- * @return {Object}           Mongoose Virtual Model of Channel Entry
- */
-function getChannelEntry(channelId) {
-  return ChannelEntry.findOne({ channelId: channelId });
-}
 
 function parseEvents(syncResponse) {
   // Event list is order sensitive
-  var eventList = _(syncResponse.items);
+  let eventList = _(syncResponse.items);
   eventList
     .map(function mapEvents(event) {
       // Used these for individual level parsing
@@ -60,33 +58,27 @@ function parseEvents(syncResponse) {
  * @return {Object}              Returns the response out to continue the chain
  */
 function persistNewSyncToken(syncResponse) {
-  var query = {
+  const query = {
     calendarId: syncResponse.summary
   };
-  var update = {
+  const update = {
     syncToken: syncResponse.nextSyncToken
   };
 
   return ChannelEntry.update(query, update)
     .exec()
-    .then(function updateResponse() {
-      return syncResponse;
-    });
+    .then(() => syncResponse);
 }
 
 // This is logic redirect
 // based on the event status
 function eventFactory(event) {
   if (!event) throw new Error('No event object inputted');
-  var mapFunctions = {
-    cancelled: cancelEvent,
+  const mapFunctions = {
+    cancelled: () => ({}), // NOOP
     confirmed: confirmEvent
   };
   return mapFunctions[event.status](event);
-}
-
-function cancelEvent() {
-  return;
 }
 
 /**
@@ -99,16 +91,11 @@ function isMatching(event) {
 }
 
 function confirmEvent(event) {
-  if (!event.location) {
-    return;
-  }
+  if (!event.location) return;
+  const needsUpdate = requiresUpdate(event);
+  const matchEvent = isMatching(event);
 
-  var needsUpdate = requiresUpdate(event);
-  var matchEvent = isMatching(event);
-
-  if (needsUpdate && matchEvent) {
-    updateEvent(event);
-  }
+  if (needsUpdate && matchEvent) updateEvent(event);
 }
 
 function requiresUpdate(event) {
@@ -118,15 +105,13 @@ function requiresUpdate(event) {
 }
 
 function updateEvent(event) {
-// Build the webhook that occurs on updateEvent
-
-  var params = {
+  // Build the webhook that occurs on updateEvent
+  const params = {
     calendarId: event.calendarId,
     eventId: event.id
   };
 
-  var updateInfo = {};
-
+  const updateInfo = {};
   AdministerCalendars.updateEvent(params, updateInfo)
     .catch(console.log);
 }

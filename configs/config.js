@@ -3,9 +3,21 @@
 const _ = require('lodash');
 require('dotenv').config();
 
+const normalizeUrl = (receivingUrl) => {
+  if (typeof receivingUrl !== 'string') {
+    throw new Error('Receiving URL is not defined');
+  }
+
+  // Check for trailing back slash
+  if (receivingUrl.charAt(receivingUrl.length - 1) === '/') {
+    return receivingUrl.substring(0, receivingUrl.length - 1);
+  }
+  return receivingUrl;
+};
+
 const RECEIVING_URL = normalizeUrl(process.env.RECEIVING_URL);
 
-const configs = {
+let configs = {
   port: Number(process.env.PORT) || 5000,
   authorizeAdmin: process.env.ADMIN,
   receivingUrl: {
@@ -19,18 +31,6 @@ const throwUndefined = (value, key) => {
   if (!value) {
     throw new Error(key + ' is not defined in .env file');
   }
-};
-
-const normalizeUrl = (receivingUrl) => {
-  if (typeof receivingUrl !== 'string') {
-    throw new Error('Receiving URL is not defined');
-  }
-
-  // Check for trailing back slash
-  if (receivingUrl.charAt(receivingUrl.length - 1) === '/') {
-    return receivingUrl.substring(0, receivingUrl.length - 1);
-  }
-  return receivingUrl;
 };
 
 if (process.env.DOMAIN) {

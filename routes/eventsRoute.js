@@ -1,15 +1,15 @@
 'use strict';
 
-var express         = require('express');
-var router          = express.Router(); // eslint-disable-line new-cap
-var parseHeaders    = require('../services/AdministerChannels').parseHeaders;
-var eventController = require('../controllers/eventController');
+const express         = require('express');
+const router          = express.Router(); // eslint-disable-line new-cap
+const parseHeaders    = require('../services/AdministerChannels').parseHeaders;
+const eventController = require('../controllers/eventController');
 
 /**
  * `watch/event` POST Route
  */
 router.post('/', function eventRouteResponse(request, response) {
-  var headers = parseHeaders(request);
+  const headers = parseHeaders(request);
 
   // More information: https://developers.google.com/google-apps/calendar/v3/push
   if (!isWatchNotification(headers)) {
@@ -23,12 +23,12 @@ router.post('/', function eventRouteResponse(request, response) {
 module.exports = router;
 
 function parseNotification(parsedHeaders) {
-  var initialSyncConfirm = (parsedHeaders.resourceState === 'sync');
+  const initialSyncConfirm = (parsedHeaders.resourceState === 'sync');
   if (initialSyncConfirm) {
     console.log(parsedHeaders.channelId + ' channel has been established.');
   }
 
-  var eventUpdate = (parsedHeaders.resourceState === 'exists');
+  const eventUpdate = (parsedHeaders.resourceState === 'exists');
   if (eventUpdate) {
     eventController.load(parsedHeaders.channelId);
   }

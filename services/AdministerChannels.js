@@ -1,19 +1,20 @@
 'use strict';
 
-var google              = require('googleapis');
-var calendar            = google.calendar('v3');
-var directory           = google.admin('directory_v1');
-var config              = require('../configs/config');
-var scope               = require('../constants/GoogleScopes');
-var _                   = require('lodash');
-var Promise             = require('bluebird');
-var mongoose            = require('mongoose');
-var Channel             = mongoose.model('Channel', require('../data/schema/channel'));
-var createJWT           = require('../services/AdministerJWT').createJWT;
-var AdministerCalendars = require('./AdministerCalendars');
-var getDateMsDifference = require('../libs/timeUtils').getDateMsDifference;
+const google              = require('googleapis');
+const calendar            = google.calendar('v3');
+const directory           = google.admin('directory_v1');
+const config              = require('../configs/config');
+const scope               = require('../constants/GoogleScopes');
+const _                   = require('lodash');
+const Promise             = require('bluebird');
+const mongoose            = require('mongoose');
+const Channel             = mongoose.model('Channel', require('../data/schema/channel'));
+const createJWT           = require('../services/AdministerJWT').createJWT;
+const AdministerCalendars = require('./AdministerCalendars');
+const getDateMsDifference = require('../libs/timeUtils').getDateMsDifference;
+const debug = require('debug')('channel');
 
-var Interface = {
+const Interface = {
   create: channelFactory,
   parseHeaders: parseHeaders,
   save: saveChannel,
@@ -32,7 +33,7 @@ module.exports = Interface;
 function channelFactory(channelInfo) {
   if (!channelInfo) throw new Error('No channel information presented');
 
-  var factory = {
+  const factory = {
     directory: createDirectoryChannel,
     event: createEventChannel
   };
@@ -41,8 +42,8 @@ function channelFactory(channelInfo) {
 }
 
 function createEventChannel(channelInfo) {
-  var eventChannelPromise = createChannel(channelInfo);
-  var syncTokenPromise = AdministerCalendars.getSyncToken(channelInfo.calendarId);
+  const eventChannelPromise = createChannel(channelInfo);
+  const syncTokenPromise = AdministerCalendars.getSyncToken(channelInfo.calendarId);
 
   // We need to get the syncToken as a pointer in time
   // for calling the calendar.events.list(), thus it a
@@ -51,11 +52,11 @@ function createEventChannel(channelInfo) {
     syncTokenPromise,
     eventChannelPromise
   ])
-  .spread(function syncTokenAndChannelResolve(syncToken, eventChannel) {
-    eventChannel.syncToken = syncToken;
-    eventChannel.type = 'event';
-    return Promise.resolve(eventChannel);
-  });
+    .spread((syncToken, eventChannel) => {
+      eventChannel.syncToken = syncToken;
+      eventChannel.type = 'event';
+      return Promise.resolve(eventChannel);
+    });
 }
 
 function createDirectoryChannel(channelInfo) {
@@ -68,15 +69,16 @@ function createDirectoryChannel(channelInfo) {
  * @return {object} a promise for the channel being created
  */
 function createChannel(channelInfo) {
-  return new Promise(function createChannelPromise(resolve, reject) {
+  return new Promise((resolve, reject) => {
     // Creating a JWT in implementation,
     // as JWT can be expired on renewal
     switch (channelInfo.resourceType) {
     case 'event':
+      debug('Creating "Event" channel for %s', channelInfo.calendarId);
       createJWT(scope.calendar)
-        .then(function JwtResponse(jwtClient) {
-          var params = buildParams(jwtClient, channelInfo);
-          calendar.events.watch(params, function calWatchCallback(err, res) {
+        .then(jwtClient => {
+          const params = buildParams(jwtClient, channelInfo);
+          calendar.events.watch(params, (err, res) => {
             if (err) reject(err);
             if (res) {
               res.resourceType = 'event';
@@ -89,10 +91,11 @@ function createChannel(channelInfo) {
       break;
 
     case 'directory':
+      debug('Creating "Directory" channel for %s', channelInfo.calendarId)      
       createJWT(scope.userDirectory)
-        .then(function JwtResponse(jwtClient) {
-          var params = buildParams(jwtClient, channelInfo);
-          directory.users.watch(params, function dirWatchCallback(err, res) {
+        .then(jwtClient => {
+          const params = buildParams(jwtClient, channelInfo);
+          directory.users.watch(params, (err, res) => {
             if (err) reject(err);
             if (res) {
               res.resourceType = 'directory';
@@ -116,11 +119,11 @@ function createChannel(channelInfo) {
  * @return {object}             params for channel creation
  */
 function buildParams(jwtClient, channelInfo) {
-  var baseParams = {
+  let baseParams = {
     auth: jwtClient
   };
-  var UUID = require('node-uuid').v4();
-  var extendParams = {};
+  const UUID = require('node-uuid').v4();
+  let extendParams = {};
 
   if (channelInfo.resourceType === 'event') {
     extendParams = {
@@ -163,8 +166,8 @@ function buildParams(jwtClient, channelInfo) {
  * @return {object}         Normalized header object
  */
 function parseHeaders(request) {
-  var headers = request.headers;
-  var channelObj = {
+  const headers = request.headers;
+  const channelObj = {
     channelId: headers['x-goog-channel-id'] || null,
     expiration: headers['x-goog-channel-expiration'] || null,
     messageNumber: headers['x-goog-message-number'] || null,
@@ -183,7 +186,7 @@ function parseHeaders(request) {
 function saveChannel(channelInfo) {
   if (!channelInfo) throw new Error('Undefined channel information');
 
-  var props = {
+  const props = {
     channelId: channelInfo.id || '',
     resourceId: '',
     syncToken: '',
@@ -191,8 +194,9 @@ function saveChannel(channelInfo) {
     resourceType: channelInfo.resourceType || '',
     webhookUrl: config.receivingUrl.base
   };
-  var channelProps = _.extend(props, channelInfo);
-  var channelEntry = new Channel(channelProps);
+  
+  const channelProps = _.extend(props, channelInfo);
+  let channelEntry = new Channel(channelProps);
   channelEntry.save();
   // Returning the virtual model to allow
   // deletions / updates to db, used for renewals
@@ -200,28 +204,30 @@ function saveChannel(channelInfo) {
 }
 
 function renewChannel(existingChannel) {
-  // subtract 5 seconds (5000ms) to allow some overlap
-  var timeoutMs = getTimeoutMs(existingChannel) - 5000;
-  setTimeout(createAndDeleteChannel, timeoutMs);
-
-  function createAndDeleteChannel() {
+  const createAndDeleteChannel = () => {
     // Use the properties of the existing channel
     // for the new information
     channelFactory(existingChannel)
       .then(saveChannel)
       .then(deleteExistingAndRenew);
-  }
+  };
 
-  function deleteExistingAndRenew(newChannel) {
-    var oldChannelId = existingChannel.channelId;
+  const deleteExistingAndRenew = (newChannel) => {
+    const oldChannelId = existingChannel.channelId;
+    debug('Deleted channel from DB: %s', oldChannelId);
     Channel.remove({ channelId: oldChannelId }).exec();
-
+    debug('Renew channel in DB: %s', newChannel.channelId);
     renewChannel(newChannel);
-  }
+  };
+
+  // subtract 5 seconds (5000ms) to allow some overlap
+  const timeoutMs = getTimeoutMs(existingChannel) - 5000;
+  setTimeout(createAndDeleteChannel, timeoutMs);
 }
 
 function getTimeoutMs(channel) {
-  var timeoutMs = getDateMsDifference(channel.expiration);
+  const timeoutMs = getDateMsDifference(channel.expiration);
   if (timeoutMs < 0) return 0;
   return timeoutMs;
 }
+

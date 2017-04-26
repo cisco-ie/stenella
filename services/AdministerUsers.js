@@ -1,14 +1,15 @@
 'use strict';
 
-var google    = require('googleapis');
-var _         = require('lodash');
-var scope     = require('../constants/GoogleScopes');
-var directory = google.admin('directory_v1');
-var config    = require('../configs/config');
-var Promise   = require('bluebird');
-var AdministerJWT = require('../services/AdministerJWT');
+const google    = require('googleapis');
+const _         = require('lodash');
+const scope     = require('../constants/GoogleScopes');
+const directory = google.admin('directory_v1');
+const config    = require('../configs/config');
+const Promise   = require('bluebird');
+const AdministerJWT = require('../services/AdministerJWT');
+const debug = require('debug')('users');
 
-var Interface = {
+const Interface = {
   list: getUsers
 };
 
@@ -20,10 +21,11 @@ module.exports = Interface;
  * @return {object} a promise that resolves into a user listing response
  */
 function getUsers(overrideParams) {
+  debug('Getting users');
   return new Promise(function userPromise(resolve, reject) {
     AdministerJWT.createJWT(scope.userDirectory)
       .then(function authorizeJwtResponse(jwtClient) {
-        var params = buildParams(jwtClient, overrideParams);
+        let params = buildParams(jwtClient, overrideParams);
         requestUserList(params)
           .then(resolve)
           .catch(reject);
@@ -33,7 +35,7 @@ function getUsers(overrideParams) {
 }
 
 function requestUserList(params) {
-  var getDirectory = Promise.promisify(directory.users.list);
+  const getDirectory = Promise.promisify(directory.users.list);
 
   // Returns a user listing response in the
   // cases of pagination, the response will
@@ -42,15 +44,15 @@ function requestUserList(params) {
   return getDirectory(params)
     .then(function directoryListResponse(userResponse) {
       if (userResponse.nextPageToken) {
-        var pageToken = userResponse.nextPageToken;
+        const pageToken = userResponse.nextPageToken;
         params.pageToken = pageToken;
         // @TODO: Consider optimizing by returning
         // multiple response async
         return requestUserList(params)
           .then(function mergeResponse(paginatedResponse) {
-            var mergeUsers = _.concat(userResponse.users,
-                                      paginatedResponse.users);
-            var modifiedResponse = Object.create(userResponse);
+	    debug('Merging user responses');
+            const mergeUsers = _.concat(userResponse.users, paginatedResponse.users);
+            let modifiedResponse = Object.create(userResponse);
             modifiedResponse.users = mergeUsers;
             return modifiedResponse;
           });
@@ -63,7 +65,7 @@ function requestUserList(params) {
 }
 
 function buildParams(jwtClient, overrideParams) {
-  var defaultParams = {
+  let defaultParams = {
     auth: jwtClient,
     maxResults: 500,
     orderBy: 'email'
@@ -75,6 +77,6 @@ function buildParams(jwtClient, overrideParams) {
     defaultParams.domain = config.domain;
   }
 
-  var params = _.extend(defaultParams, overrideParams);
+  const params = _.extend(defaultParams, overrideParams);
   return params;
 }

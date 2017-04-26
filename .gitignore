@@ -5,6 +5,16 @@ logs
 *.log
 npm-debug.log*
 
+# EMACS
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
 # Runtime data
 pids
 *.pid

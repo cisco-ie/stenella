@@ -1,10 +1,10 @@
 // Connection Configs
-var mongoose = require('mongoose');
-var config   = require('../../configs/dbConfig');
+const mongoose = require('mongoose');
+const config   = require('../../configs/dbConfig');
 
 function connect(state) {
   function urlFactory() {
-    var url = {
+    const url = {
       'test': config.test_url,
       'production': config.production_url
     };
@@ -12,7 +12,7 @@ function connect(state) {
     return url[state];
   }
 
-  var dbUrl = urlFactory();
+  const dbUrl = urlFactory();
 
   mongoose.connect(dbUrl);
 

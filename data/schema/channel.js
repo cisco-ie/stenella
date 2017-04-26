@@ -1,13 +1,13 @@
 /**
- * Variable Declarations
+ * Const Declarations
  */
-var mongoose = require('mongoose');
-var Schema   = mongoose.Schema;
+const mongoose = require('mongoose');
+const Schema   = mongoose.Schema;
 
 /**
  * Channel Schema
  */
-var channelSchema = new Schema({
+const channelSchema = new Schema({
   calendarId: String,
   channelId: String,
   resourceId: String,

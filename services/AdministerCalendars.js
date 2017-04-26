@@ -1,12 +1,12 @@
 'use strict';
 
-var google    = require('googleapis');
-var calendar  = google.calendar('v3');
-var Promise   = require('bluebird');
-var AdministerJWT = require('../services/AdministerJWT');
-var scope     = require('../constants/GoogleScopes');
+const google    = require('googleapis');
+const calendar  = google.calendar('v3');
+const Promise   = require('bluebird');
+const AdministerJWT = require('../services/AdministerJWT');
+const scope     = require('../constants/GoogleScopes');
 
-var Interface = {
+const Interface = {
   fullSync: getFullSync,
   incrementalSync: getIncrementalSync,
   getSyncToken: getSyncToken,
@@ -21,7 +21,7 @@ module.exports = Interface;
  * @return {object} full sync response object
  */
 function getFullSync(calendarId) {
-  var params = {
+  const params = {
     calendarId: calendarId,
     timeMin: (new Date()).toISOString(),
     singleEvents: false
@@ -31,12 +31,12 @@ function getFullSync(calendarId) {
   // we need to keep making request to get to the last page for
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
-  var eventListRequest = function eventListRequest(listParams) {
+  const eventListRequest = (listParams) => {
     return AdministerJWT.createJWT(scope.calendar)
-      .then(function jwtResponse(jwtClient) {
+      .then((jwtClient) => {
         listParams.auth = jwtClient;
 
-        return calendar.events.list(listParams, function createEventsWatchCb(err, result) {
+        return calendar.events.list(listParams, (err, result) => {
           if (err) {
             return Promise.reject(err);
           }
@@ -64,10 +64,10 @@ function getIncrementalSync(calendarInfo) {
     throw new Error('CalendarInfo is not defined');
   }
 
-  return new Promise(function incrementalSyncPromise(resolve, reject) {
+  return new Promise((resolve, reject) => {
     AdministerJWT.createJWT(scope.calendar)
-      .then(function jwtResponse(jwtClient) {
-        var params = {
+      .then((jwtClient) => {
+        const params = {
           auth: jwtClient,
           calendarId: calendarInfo.calendarId || calendarInfo.id,
           singleEvents: false,
@@ -88,11 +88,9 @@ function getIncrementalSync(calendarInfo) {
  * @return {String}            the syncToken
  */
 function getSyncToken(calendarId) {
-  return new Promise(function syncTokenPromise(resolve, reject) {
+  return new Promise((resolve, reject) => {
     getFullSync(calendarId)
-      .then(function fullSyncResponse(response) {
-        resolve(response.nextSyncToken);
-      })
+      .then((response) => resolve(response.nextSyncToken))
       .catch(reject);
   });
 }
@@ -110,7 +108,7 @@ function getSyncToken(calendarId) {
  */
 function updateEvent(params, updateInfo) {
   if (!params) throw new Error('Missing params for update Event');
-  var requiredParams = (params.eventId && params.calendarId);
+  const requiredParams = (params.eventId && params.calendarId);
   if (!requiredParams) throw new Error('Missing required eventId or calendarId');
 
   // Return if no updates to save redundant API request
