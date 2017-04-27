@@ -1,6 +1,7 @@
 'use strict';
 
-const app = require('express')();
+const express = require('express');
+const app = express();
 const Promise = require('bluebird');
 const _ = require('lodash');
 const AdministerUsers = require('./services/AdministerUsers');
@@ -16,6 +17,9 @@ mongoose.Promise = require('bluebird');
 app.get('/', function getResponse(req, res) {
   res.send('Google Calendar Listener is running.');
 });
+
+// This is used to allow drop-in html files for Google verification
+app.use('/', express.static(__dirname + '/verify'));
 
 const serverAPI = {
   events: '/watch/events',
