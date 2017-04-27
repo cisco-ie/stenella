@@ -1,6 +1,7 @@
 'use strict';
 
-var app = require('express')();
+const express = require('express');
+const express = express();
 var Promise = require('bluebird');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
@@ -14,6 +15,9 @@ mongoose.Promise = require('bluebird');
 app.get('/', function getResponse(req, res) {
   res.send('Google integration is running.');
 });
+
+// This is used to allow drop-in html files for Google verification
+app.use('/', express.static(__dirname + '/verify'));
 
 var serverAPI = {
   events: '/watch/events',
