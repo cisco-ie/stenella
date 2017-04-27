@@ -49,4 +49,6 @@ _.forOwn(configs, function iterateConfigKeys(value, key) {
   if (!configs[key]) throwUndefined(value, key);
 });
 
+
+console.log(configs)
 module.exports = configs;

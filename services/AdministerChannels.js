@@ -78,8 +78,10 @@ function createChannel(channelInfo) {
       createJWT(scope.calendar)
         .then(jwtClient => {
           const params = buildParams(jwtClient, channelInfo);
+	  debug('%O', params);
           calendar.events.watch(params, (err, res) => {
             if (err) reject(err);
+	    debug('Sucessfully created event channel for %s %O', channelInfo.calendarId, res);
             if (res) {
               res.resourceType = 'event';
               res.calendarId = channelInfo.calendarId;

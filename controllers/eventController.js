@@ -30,11 +30,7 @@ const getChannelEntry = (channelId) => ChannelEntry.findOne({ channelId: channel
  */
 function load(channelId) {
   getChannelEntry(channelId).then(channelEntry => {
-<<<<<<< HEAD
     if (!channelEntry) return;
-=======
-    if (!channelEntry) { return; }
->>>>>>> 5346d4f25c90423726309bd7aa4b6b77adf9a497
 
     AdministerCalendars.incrementalSync(channelEntry)
       .then(persistNewSyncToken)
@@ -46,11 +42,7 @@ function load(channelId) {
 
 function parseEvents(syncResponse) {
   // Event list is order sensitive
-<<<<<<< HEAD
-  let eventList = _(syncResponse.items);
-=======
   const eventList = _(syncResponse.items);
->>>>>>> 5346d4f25c90423726309bd7aa4b6b77adf9a497
   eventList
     .map(function mapEvents(event) {
       // Used these for individual level parsing
@@ -121,6 +113,7 @@ function updateEvent(event) {
   };
 
   const updateInfo = {};
+  console.log(event)
   AdministerCalendars.updateEvent(params, updateInfo)
     .catch(console.log);
 }
