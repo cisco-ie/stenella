@@ -8,7 +8,7 @@ var bodyParser        = require('body-parser');
 var jsonParser        = bodyParser.json({type: 'application/*'});
 var mongoose          = require('mongoose');
 var Channel           = mongoose.model('Channel', require('../data/schema/channel'));
-
+const debug = require('debug')('userRoute');
 /**
  * `watch/users` POST Route
  */
@@ -43,14 +43,14 @@ router.post('/', jsonParser, function watchIndexResponse(request, response) {
 });
 
 function logSyncConfirm(channelId) {
-  console.log(channelId + ' channel has been established.');
+  debug(channelId + ' channel has been established.');
 }
 
 function createNewChannel(calendarId) {
   createEventChannel(calendarId)
     .then(AdminsterChannels.save)
     .then(AdminsterChannels.renew)
-    .catch(console.log);
+    .catch(debug);
 }
 
 function isNewUserNotification(parsedHeaders) {

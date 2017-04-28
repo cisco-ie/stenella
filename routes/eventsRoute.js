@@ -4,6 +4,7 @@ var express         = require('express');
 var router          = express.Router(); // eslint-disable-line new-cap
 var parseHeaders    = require('../services/AdministerChannels').parseHeaders;
 var eventController = require('../controllers/eventController');
+const debug = require('debug')('eventRoute');
 
 /**
  * `watch/event` POST Route
@@ -25,7 +26,7 @@ module.exports = router;
 function parseNotification(parsedHeaders) {
   var initialSyncConfirm = (parsedHeaders.resourceState === 'sync');
   if (initialSyncConfirm) {
-    console.log(parsedHeaders.channelId + ' channel has been established.');
+    debug(parsedHeaders.channelId + ' channel has been established.');
   }
 
   var eventUpdate = (parsedHeaders.resourceState === 'exists');
