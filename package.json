@@ -51,6 +51,7 @@
     "mongoose": "^4.6.4",
     "node-uuid": "^1.4.7",
     "precommit-hook-eslint": "^3.0.0",
+    "require-all": "^2.2.0",
     "rewire": "^2.5.2",
     "rx-node": "^1.0.2",
     "rxjs": "^5.3.0"

@@ -12,6 +12,8 @@ var db = require('./data/db/connection')('production'); // eslint-disable-line n
 var mongoose = require('mongoose');
 var Channel = mongoose.model('Channel', require('./data/schema/channel'));
 var calendarEvent = require('./controllers/eventController').observable;
+const debug = require('debug')('main');
+const requireAll = require('require-all');
 
 mongoose.Promise = require('bluebird');
 
@@ -36,7 +38,14 @@ function initServer() {
   removeExpiredChannels();
   setUpChannels();
   app.listen(config.port, console.log('Running on port 5000'));
-//  calendarEvent.subscribe((event) => console.log(event));
+  loadObservers()
+}
+
+function loadObservers() {
+  requireAll({
+    dirname:  __dirname + '/observers',
+    recursive: true
+  });
 }
 
 function setUpChannels() {
@@ -70,7 +79,7 @@ function createChannelsAndExtractIds(userDirResponse) {
             AdministerChannels.renew(eventChannel);
           } else {
 	    Calendars.getSyncToken(calendarId).then((token) => {
-	      console.log(token)
+	      debug('Fetched token: %s', token);
               createEventChannelAndSave(userId)
 		.then(AdministerChannels.renew);
 	    });
