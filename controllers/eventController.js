@@ -18,7 +18,7 @@ const calendarEmitter = new CalendarEmitter();
 
 var Interface = {
   load: load,
-  observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').share()
+  observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap().share()
 };
 
 module.exports = Interface;
@@ -49,7 +49,9 @@ function getChannelEntry(channelId) {
 
 function parseEvents(syncResponse) {
   // Event list is order sensitive
+  // Filter events for any duplicates and just get the latest one
   var eventList = syncResponse.items
+      .filter(filterForLatestEvent);
   var userId = parseUserIdFromEmail(syncResponse.summary);
   const updates = syncResponse.items.map(event => {
     event.calendarId = syncResponse.summary;
@@ -84,6 +86,15 @@ function parseEvents(syncResponse) {
   //     return event;
   //   })
   //   .forEach(eventFactory);
+}
+
+// Looks through the list to find any matching event
+// previously
+// _filterForLatestEvent :: (Element, Index, Array) -> Boolean
+function _filterForLatestEvent(currentEvent, currentIndex, list) {
+  const recentIndex = _.findIndex(list, (e) => e.id === currentEvent.id);
+  // If the recentIndex is smaller, then the currentIndex is an older event;
+  return (recentIndex < currentIndex) ? true : false
 }
 
 /**

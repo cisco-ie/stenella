@@ -10,3 +10,4 @@ var scopeUrls = {
 };
 
 module.exports = scopeUrls;
+

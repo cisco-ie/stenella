@@ -52,11 +52,10 @@ function createEventChannel(channelInfo) {
     eventChannelPromise
   ])
     .spread(function syncTokenAndChannelResolve(syncToken, eventChannel) {
-      console.log(syncToken);
-    eventChannel.syncToken = syncToken;
-    eventChannel.type = 'event';
-    return Promise.resolve(eventChannel);
-  });
+      eventChannel.syncToken = syncToken;
+      eventChannel.type = 'event';
+      return Promise.resolve(eventChannel);
+    });
 }
 
 function createDirectoryChannel(channelInfo) {
@@ -204,7 +203,6 @@ function saveChannel(channelInfo) {
     webhookUrl: config.receivingUrl.base
   };
   var channelProps = _.extend(props, channelInfo);
-  console.log(channelProps);
   var channelEntry = new Channel(channelProps);
   channelEntry.save();
   // Returning the virtual model to allow
