@@ -1,22 +1,42 @@
-var expect = require('chai').expect;
-var sinon = require('sinon');
-var eventsMock = require('./mocks/eventList.json');
-var rewire = require('rewire');
-var eventController = rewire('../controllers/eventController');
+const expect = require('chai').expect;
+const sinon = require('sinon');
+const eventsMock = require('./mocks/eventList.json');
+const eventController = require('../controllers/eventController');
 
 describe('Event Controller', function EventControllerTest() {
 
   it('should get the user from the email', function parseEmailTest(done) {
-    var parseUserIdFromEmail = eventController.__get__('parseUserIdFromEmail');
+    const parseUserIdFromEmail = eventController._parseUserIdFromEmail;
 
-    var testEmail1 = 'squirtle@live.com';
-    var actualEmail1 = parseUserIdFromEmail(testEmail1);
+    const testEmail1 = 'squirtle@live.com';
+    const actualEmail1 = parseUserIdFromEmail(testEmail1);
     expect(actualEmail1).to.equal('squirtle');
 
-    var testEmail2 = 'charmander@live.com';
-    var actualEmail2 = parseUserIdFromEmail(testEmail2);
+    const testEmail2 = 'charmander@live.com';
+    const actualEmail2 = parseUserIdFromEmail(testEmail2);
     expect(actualEmail2).to.equal('charmander');
 
+    done();
+  });
+
+  it('should remove any old events', (done) => {
+    const events = [
+      {
+	id: 1,
+	title: 'newest event'
+      },
+      {
+	id: 1,
+	title: 'oldest Event'
+      },
+      {
+	id: 2,
+	title: 'non relevant event'
+      }
+    ];
+
+    const filteredEvents = events.filter(eventController._filterForLatestEvents);
+    expect(filteredEvents).to.deep.equal([events[0], events[2]]);
     done();
   });
 });

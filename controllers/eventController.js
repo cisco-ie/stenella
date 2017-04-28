@@ -18,7 +18,9 @@ const calendarEmitter = new CalendarEmitter();
 
 var Interface = {
   load: load,
-  observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap().share()
+  observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap().share(),
+  _filterForLatestEvents,
+  _parseUserIdFromEmail
 };
 
 module.exports = Interface;
@@ -51,8 +53,8 @@ function parseEvents(syncResponse) {
   // Event list is order sensitive
   // Filter events for any duplicates and just get the latest one
   var eventList = syncResponse.items
-      .filter(filterForLatestEvent);
-  var userId = parseUserIdFromEmail(syncResponse.summary);
+      .filter(_filterForLatestEvents);
+  var userId = _parseUserIdFromEmail(syncResponse.summary);
   const updates = syncResponse.items.map(event => {
     event.calendarId = syncResponse.summary;
     event.userId = userId;
@@ -91,10 +93,10 @@ function parseEvents(syncResponse) {
 // Looks through the list to find any matching event
 // previously
 // _filterForLatestEvent :: (Element, Index, Array) -> Boolean
-function _filterForLatestEvent(currentEvent, currentIndex, list) {
-  const recentIndex = _.findIndex(list, (e) => e.id === currentEvent.id);
-  // If the recentIndex is smaller, then the currentIndex is an older event;
-  return (recentIndex < currentIndex) ? true : false
+function _filterForLatestEvents(currentEvent, currentIndex, list) {
+  const mostRecentIndex = _.findIndex(list, (e) => e.id === currentEvent.id);
+  // If the current item index is equal or less than the most recentIndex, keep it (true)
+  return (currentIndex <= mostRecentIndex) ? true : false;
 }
 
 /**
@@ -239,7 +241,7 @@ function persistNewSyncToken(syncResponse) {
 //   return signature;
 // }
 
-function parseUserIdFromEmail(email) {
+function _parseUserIdFromEmail(email) {
   if (typeof email !== 'string') {
     throw new Error('Email is not a string');
   }
