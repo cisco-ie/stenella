@@ -4,15 +4,21 @@ var _                   = require('lodash');
 var mongoose            = require('mongoose');
 var AdministerCalendars = require('../services/AdministerCalendars');
 var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
-
+const EventEmitter = require('events');
+const Rx = require('rxjs');
 var WEBEX_URL           = require('../configs/config').webExDomain;
 var WEBEX_PATTERN       = /@webex/i;
 var OVERRIDE_PATTERN    = /@webex:/i;
 
 mongoose.Promise = require('bluebird');
 
+class CalendarEmitter extends EventEmitter {}
+
+const calendarEmitter = new CalendarEmitter();
+
 var Interface = {
-  load: load
+  load: load,
+  observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').share()
 };
 
 module.exports = Interface;
@@ -25,7 +31,6 @@ module.exports = Interface;
 function load(channelId) {
   getChannelEntry(channelId).then(function(channelEntry) {
     if (!channelEntry) { return; }
-
     AdministerCalendars.incrementalSync(channelEntry)
       .then(persistNewSyncToken)
       .then(parseEvents)
@@ -44,16 +49,24 @@ function getChannelEntry(channelId) {
 
 function parseEvents(syncResponse) {
   // Event list is order sensitive
-  var eventList = _(syncResponse.items);
+  var eventList = syncResponse.items
   var userId = parseUserIdFromEmail(syncResponse.summary);
-  eventList
-    .map(function mapEvents(event) {
-      // Used these for individual level parsing
-      event.pmrUserId = userId;
-      event.calendarId = syncResponse.summary;
-      return event;
-    })
-    .forEach(eventFactory);
+  const updates = syncResponse.items.map(event => {
+    event.calendarId = syncResponse.summary;
+    event.userId = userId;
+    return event;
+  });
+  
+  calendarEmitter.emit('CALENDAR_UPDATE', updates);
+  // //
+  // eventList
+  //   .map(function mapEvents(event) {
+  //     // Used these for individual level parsing
+  //     event.pmrUserId = userId;
+  //     event.calendarId = syncResponse.summary;
+  //     return event;
+  //   })
+  //   .forEach(eventFactory);
 }
 
 /**
@@ -76,134 +89,126 @@ function persistNewSyncToken(syncResponse) {
     });
 }
 
-// This is logic redirect
-// based on the event status
-function eventFactory(event) {
-  if (!event) throw new Error('No event object inputted');
-  var mapFunctions = {
-    cancelled: cancelEvent,
-    confirmed: confirmEvent
-  };
-  return mapFunctions[event.status](event);
-}
+// // This is logic redirect
+// // based on the event status
+// function eventFactory(calendarEvent) {
+//   if (!calendarEvent) throw new Error('No event object inputted');
+//   var mapFunctions = {
+//     cancelled: () => calendarEmitter.event('CANCELLED_EVENT', calendarEvent),
+//     confirmed: () => calendarEmmitter.event('NEW_EVENT', calendarEvent)
+//   };
+//   return mapFunctions[event.status](event);
+//}
 
-function cancelEvent() {
-  return;
-}
+// function cancelEvent(calendarEvent) {
+//   // Emit a deleted calendar event
+//   calendarEmitter.emit('DELETE_EVENT', calendarEvent);
+//   return;
+// }
 
-/**
- * Checks the state of the event if it contains WebEx in Location
- * @param  {Object}  event Google event object
- * @return {Boolean}       true if it is; false otherwise
- */
-function isWebEx(event) {
-  return (event.location.match(WEBEX_PATTERN)) ? true : false;
-}
+// /**
+//  * Checks the state of the event if it contains WebEx in Location
+//  * @param  {Object}  event Google event object
+//  * @return {Boolean}       true if it is; false otherwise
+//  */
+// function isWebEx(event) {
+//   return (event.location.match(WEBEX_PATTERN)) ? true : false;
+// }
 
-function confirmEvent(event) {
-  if (!event.location) {
-    return;
-  }
+// function confirmEvent(event) {
+// }
 
-  var needsUpdate = requiresUpdate(event);
-  var webExEvent = isWebEx(event);
+// function requiresUpdate(event) {
+//   if (!event.description) return true;
 
-  if (needsUpdate && webExEvent) {
-    updateEvent(event);
-  }
-}
+//   var pmrUrl = createPMRUrl(event);
+//   var correctPMRUrl = event.description.indexOf(pmrUrl) > -1;
+//   if (!correctPMRUrl) return true;
 
-function requiresUpdate(event) {
-  if (!event.description) return true;
+//   return false;
+// }
 
-  var pmrUrl = createPMRUrl(event);
-  var correctPMRUrl = event.description.indexOf(pmrUrl) > -1;
-  if (!correctPMRUrl) return true;
+// function updateEvent(event) {
+//   var updateInfo = {
+//     summary: buildSummary(event.summary),
+//     location: event.location,
+//     end: event.end,
+//     start: event.start,
+//     description: buildDescription(event),
+//     attendees: event.attendees || []
+//   };
 
-  return false;
-}
+//   var params = {
+//     calendarId: event.calendarId,
+//     eventId: event.id
+//   };
 
-function updateEvent(event) {
-  var updateInfo = {
-    summary: buildSummary(event.summary),
-    location: event.location,
-    end: event.end,
-    start: event.start,
-    description: buildDescription(event),
-    attendees: event.attendees || []
-  };
+//   AdministerCalendars.updateEvent(params, updateInfo)
+//     .catch(console.log);
+// }
 
-  var params = {
-    calendarId: event.calendarId,
-    eventId: event.id
-  };
+// function buildSummary(existingSummary) {
+//   if (typeof existingSummary !== 'string') return '';
 
-  AdministerCalendars.updateEvent(params, updateInfo)
-    .catch(console.log);
-}
+//   if (existingSummary.match(/webex:/i)) {
+//     return existingSummary;
+//   }
 
-function buildSummary(existingSummary) {
-  if (typeof existingSummary !== 'string') return '';
+//   return 'WebEx: ' + existingSummary;
+// }
 
-  if (existingSummary.match(/webex:/i)) {
-    return existingSummary;
-  }
+// function createPMRUrl(event) {
+//   var pmrUserId = event.pmrUserId;
+//   var webexCMRUrl = getAltWebExCMR(event.location);
 
-  return 'WebEx: ' + existingSummary;
-}
+//   function getAltWebExCMR(location) {
+//     var overrideFlagIndex = location.search(OVERRIDE_PATTERN);
+//     // Return owner of event as the default user, if no
+//     // override flag is present
+//     if (overrideFlagIndex === -1) return WEBEX_URL;
 
-function createPMRUrl(event) {
-  var pmrUserId = event.pmrUserId;
-  var webexCMRUrl = getAltWebExCMR(event.location);
+//     var webExString = location.substring(overrideFlagIndex, location.length);
+//     // First match will always be /webex/i
+//     var newCMR = webExString.match(/\w+/g)[1];
+//     // Extract the domain and replace it with the newdomain specified in
+//     // the @webex:newdomain on the UI
+//     var cmrBase = /[^.]+/.exec(WEBEX_URL)[0].substr(7);
+//     var newCMRUrl = WEBEX_URL.replace(cmrBase, newCMR);
+//     return newCMRUrl;
+//   }
 
-  function getAltWebExCMR(location) {
-    var overrideFlagIndex = location.search(OVERRIDE_PATTERN);
-    // Return owner of event as the default user, if no
-    // override flag is present
-    if (overrideFlagIndex === -1) return WEBEX_URL;
+//   return webexCMRUrl + 'meet/' + pmrUserId;
+// }
 
-    var webExString = location.substring(overrideFlagIndex, location.length);
-    // First match will always be /webex/i
-    var newCMR = webExString.match(/\w+/g)[1];
-    // Extract the domain and replace it with the newdomain specified in
-    // the @webex:newdomain on the UI
-    var cmrBase = /[^.]+/.exec(WEBEX_URL)[0].substr(7);
-    var newCMRUrl = WEBEX_URL.replace(cmrBase, newCMR);
-    return newCMRUrl;
-  }
+// function buildDescription(event) {
+//   var pmrUrl = createPMRUrl(event);
+//   if (!event.description) {
+//     return createSignature(pmrUrl);
+//   }
 
-  return webexCMRUrl + 'meet/' + pmrUserId;
-}
+//   // While requiresUpdate prevents webex details with
+//   // correct urls from passing, we still need to
+//   // account for details that need updates
+//   var eventDetailsExist = event.description.indexOf('Generated WebEx Details') > 0;
+//   if (eventDetailsExist) {
+//     var OldDetailsStart = event.description.indexOf('=== Do not delete or change any of the following text. ===');
+//     var newDescription = event.description.substring(0, OldDetailsStart)
+//                           + createSignature(pmrUrl);
+//     return newDescription;
+//   }
 
-function buildDescription(event) {
-  var pmrUrl = createPMRUrl(event);
-  if (!event.description) {
-    return createSignature(pmrUrl);
-  }
+//   var appendedDescription = event.description + createSignature(pmrUrl);
+//   return appendedDescription;
+// }
 
-  // While requiresUpdate prevents webex details with
-  // correct urls from passing, we still need to
-  // account for details that need updates
-  var eventDetailsExist = event.description.indexOf('Generated WebEx Details') > 0;
-  if (eventDetailsExist) {
-    var OldDetailsStart = event.description.indexOf('=== Do not delete or change any of the following text. ===');
-    var newDescription = event.description.substring(0, OldDetailsStart)
-                          + createSignature(pmrUrl);
-    return newDescription;
-  }
+// function createSignature(pmrUrl) {
+//   var signature = '\n=== Do not delete or change any of the following text. ===';
+//   signature += '\n=== Generated WebEx Details ===';
+//   signature += '\nJoin the event creator\'s personal room:';
+//   signature += '\n' + pmrUrl;
 
-  var appendedDescription = event.description + createSignature(pmrUrl);
-  return appendedDescription;
-}
-
-function createSignature(pmrUrl) {
-  var signature = '\n=== Do not delete or change any of the following text. ===';
-  signature += '\n=== Generated WebEx Details ===';
-  signature += '\nJoin the event creator\'s personal room:';
-  signature += '\n' + pmrUrl;
-
-  return signature;
-}
+//   return signature;
+// }
 
 function parseUserIdFromEmail(email) {
   if (typeof email !== 'string') {

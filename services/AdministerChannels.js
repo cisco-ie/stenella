@@ -51,7 +51,8 @@ function createEventChannel(channelInfo) {
     syncTokenPromise,
     eventChannelPromise
   ])
-  .spread(function syncTokenAndChannelResolve(syncToken, eventChannel) {
+    .spread(function syncTokenAndChannelResolve(syncToken, eventChannel) {
+      console.log(syncToken);
     eventChannel.syncToken = syncToken;
     eventChannel.type = 'event';
     return Promise.resolve(eventChannel);

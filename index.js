@@ -1,7 +1,7 @@
 'use strict';
 
 const express = require('express');
-const express = express();
+const app = express();
 var Promise = require('bluebird');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
@@ -10,6 +10,8 @@ var config = require('./configs/config');
 var db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
 var mongoose = require('mongoose');
 var Channel = mongoose.model('Channel', require('./data/schema/channel'));
+var calendarEvent = require('./controllers/eventController').observable;
+
 mongoose.Promise = require('bluebird');
 
 app.get('/', function getResponse(req, res) {
@@ -33,6 +35,7 @@ function initServer() {
   removeExpiredChannels();
   setUpChannels();
   app.listen(config.port, console.log('Running on port 5000'));
+//  calendarEvent.subscribe((event) => console.log(event));
 }
 
 function setUpChannels() {
