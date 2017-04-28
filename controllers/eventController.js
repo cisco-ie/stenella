@@ -76,18 +76,7 @@ function parseEvents(syncResponse) {
     return [event, defaultPayload];
   });
 
-  
-  
   calendarEmitter.emit('CALENDAR_UPDATE', updates);
-  // //
-  // eventList
-  //   .map(function mapEvents(event) {
-  //     // Used these for individual level parsing
-  //     event.pmrUserId = userId;
-  //     event.calendarId = syncResponse.summary;
-  //     return event;
-  //   })
-  //   .forEach(eventFactory);
 }
 
 // Looks through the list to find any matching event
@@ -105,7 +94,6 @@ function _filterForLatestEvents(currentEvent, currentIndex, list) {
  * @return {Object}              Returns the response out to continue the chain
  */
 function persistNewSyncToken(syncResponse) {
-  console.log(syncResponse);
   var query = {
     calendarId: syncResponse.summary
   };
@@ -115,9 +103,7 @@ function persistNewSyncToken(syncResponse) {
 
   return ChannelEntry.update(query, update)
     .exec()
-    .then(function updateResponse() {
-      return syncResponse;
-    });
+    .then(() => syncResponse);
 }
 
 // // This is logic redirect
