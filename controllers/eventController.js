@@ -54,8 +54,25 @@ function parseEvents(syncResponse) {
   const updates = syncResponse.items.map(event => {
     event.calendarId = syncResponse.summary;
     event.userId = userId;
-    return event;
+
+    // Provide a default payload to help users
+    // update only what they need, but leave the required
+    // properties for the user
+    let defaultPayload = {
+      summary: event.summary,
+      location: event.location,
+      end: event.end,
+      start: event.start,
+      description: event.description,
+      attendees: event.attendees,
+      attachments: event.attachments,
+      reminders: event.reminders
+    };
+
+    return [event, defaultPayload];
   });
+
+  
   
   calendarEmitter.emit('CALENDAR_UPDATE', updates);
   // //
@@ -75,6 +92,7 @@ function parseEvents(syncResponse) {
  * @return {Object}              Returns the response out to continue the chain
  */
 function persistNewSyncToken(syncResponse) {
+  console.log(syncResponse);
   var query = {
     calendarId: syncResponse.summary
   };

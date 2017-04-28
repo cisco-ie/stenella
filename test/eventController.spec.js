@@ -19,20 +19,4 @@ describe('Event Controller', function EventControllerTest() {
 
     done();
   });
-  // it('should persist to the db with a new token from the response', function persistTokenTest(done) {
-  //   var mongoose = require('mongoose');
-  //   var ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
-
-  //   var updateSpy = sinon.spy(ChannelEntry, 'update');
-  //   eventController.persistNewSyncToken(eventsMock);
-  //   var query = {
-  //     calendarId: eventsMock.summary
-  //   };
-  //   var update = {
-  //     syncToken: eventsMock.nextSyncToken
-  //   };
-  //   expect(updateSpy.calledWithExactly(query, update)).to.equal(true);
-
-  //   done();
-  // });
 });

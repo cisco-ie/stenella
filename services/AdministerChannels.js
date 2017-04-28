@@ -194,7 +194,7 @@ function parseHeaders(request) {
  */
 function saveChannel(channelInfo) {
   if (!channelInfo) throw new Error('Undefined channel information');
-
+ 
   var props = {
     channelId: channelInfo.id || '',
     resourceId: '',
@@ -204,6 +204,7 @@ function saveChannel(channelInfo) {
     webhookUrl: config.receivingUrl.base
   };
   var channelProps = _.extend(props, channelInfo);
+  console.log(channelProps);
   var channelEntry = new Channel(channelProps);
   channelEntry.save();
   // Returning the virtual model to allow

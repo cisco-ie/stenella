@@ -6,6 +6,7 @@ var Promise = require('bluebird');
 var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
 var AdministerChannels = require('./services/AdministerChannels');
+const Calendars = require('./services/AdministerCalendars');
 var config = require('./configs/config');
 var db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
 var mongoose = require('mongoose');
@@ -68,8 +69,11 @@ function createChannelsAndExtractIds(userDirResponse) {
           if (eventChannel) {
             AdministerChannels.renew(eventChannel);
           } else {
-            createEventChannelAndSave(userId)
-              .then(AdministerChannels.renew);
+	    Calendars.getSyncToken(calendarId).then((token) => {
+	      console.log(token)
+              createEventChannelAndSave(userId)
+		.then(AdministerChannels.renew);
+	    });
           }
         });
     })

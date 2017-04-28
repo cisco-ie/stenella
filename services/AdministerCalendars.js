@@ -5,6 +5,9 @@ var calendar  = google.calendar('v3');
 var Promise   = require('bluebird');
 var AdministerJWT = require('../services/AdministerJWT');
 var scope     = require('../constants/GoogleScopes');
+const debug = require('debug')('calendars');
+
+const listEvents = Promise.promisify(calendar.events.list);
 
 var Interface = {
   fullSync: getFullSync,
@@ -33,21 +36,16 @@ function getFullSync(calendarId) {
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
   var eventListRequest = function eventListRequest(listParams) {
     return AdministerJWT.createJWT(scope.calendar)
-      .then(function jwtResponse(jwtClient) {
-        listParams.auth = jwtClient;
-
-        return calendar.events.list(listParams, function createEventsWatchCb(err, result) {
-          if (err) {
-            return Promise.reject(err);
-          }
-
-          if (result.nextPageToken) {
-            listParams.nextPageToken = result.nextPageToken;
-            return eventListRequest(listParams);
-          }
-
-          return Promise.resolve(result);
-        });
+      .then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
+      .then(listEvents)
+      .then((result) => {
+	debug('Get calendar events for %s', listParams.calendarId);
+        if (result.nextPageToken) {
+	  debug('Paging calendar events for %s', listParams.calendarId);
+          listParams.nextPageToken = result.nextPageToken;
+          return eventListRequest(listParams);
+        }
+	return result;
       });
   };
 
@@ -60,9 +58,8 @@ function getFullSync(calendarId) {
  * @return {Object}   Promise of calendar event list
  */
 function getIncrementalSync(calendarInfo) {
-  if (!calendarInfo) {
+  if (!calendarInfo)
     throw new Error('CalendarInfo is not defined');
-  }
 
   return new Promise(function incrementalSyncPromise(resolve, reject) {
     AdministerJWT.createJWT(scope.calendar)
@@ -75,7 +72,7 @@ function getIncrementalSync(calendarInfo) {
           showDeleted: true
         };
 
-        Promise.promisify(calendar.events.list)(params)
+        listEvents(params)
           .then(resolve)
           .catch(reject);
       });
@@ -91,7 +88,9 @@ function getSyncToken(calendarId) {
   return new Promise(function syncTokenPromise(resolve, reject) {
     getFullSync(calendarId)
       .then(function fullSyncResponse(response) {
-        resolve(response.nextSyncToken);
+	const syncToken = response.nextSyncToken;
+	if (!syncToken) throw new Error('No syncToken found in response');
+        resolve(syncToken);
       })
       .catch(reject);
   });
