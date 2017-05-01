@@ -7,19 +7,21 @@ var _ = require('lodash');
 var AdministerUsers = require('./services/AdministerUsers');
 var AdministerChannels = require('./services/AdministerChannels');
 const Calendars = require('./services/AdministerCalendars');
-var config = require('./configs/config');
+var config = require('./configs/config').APP;
 var db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
 var mongoose = require('mongoose');
 var Channel = mongoose.model('Channel', require('./data/schema/channel'));
 var calendarEvent = require('./controllers/eventController').observable;
 const debug = require('debug')('main');
 const requireAll = require('require-all');
+const EventEmitter = require('events');
+const Rx = require('rxjs');
+const eventController = require('./controllers/eventController');
+
 
 mongoose.Promise = require('bluebird');
 
-app.get('/', function getResponse(req, res) {
-  res.send('Google integration is running.');
-});
+app.get('/', (req, res) => res.send('Google integration is running.'));
 
 // This is used to allow drop-in html files for Google verification
 app.use('/', express.static(__dirname + '/verify'));
@@ -65,28 +67,46 @@ function createChannelsAndExtractIds(userDirResponse) {
       if (directoryChannel) {
         AdministerChannels.renew(directoryChannel);
       } else {
-        createDirChannelAndSave()
-          .then(AdministerChannels.renew);
+        return createDirChannelAndSave()
       }
-    });
+    })
+    .then(AdministerChannels.renew)
+    .catch(debug);
+
 
   extractUserIds(userDirResponse.users)
     .each(function iterateUserIds(userId) {
       var calendarId = userId;
-      findEventChannel(calendarId)
-        .then(function calendarChannelResponse(eventChannel) {
-          if (eventChannel) {
-            AdministerChannels.renew(eventChannel);
-          } else {
-	    Calendars.getSyncToken(calendarId).then((token) => {
-	      debug('Fetched token: %s', token);
-              createEventChannelAndSave(userId)
-		.then(AdministerChannels.renew);
-	    });
-          }
-        });
+      getEventChannelFromDB(calendarId)
+        .then(eventChannel => (eventChannel) ?
+	      renewChannelAndResync(eventChannel) :
+	      createNewEventChannel(calendarId));
     })
-    .catch(console.log);
+    .catch(debug);
+}
+
+function renewChannelAndResync(eventChannel) {
+  debug('Resyncing %s', eventChannel);
+  AdministerCalendars
+    .getIncrementalSync(eventChannel)
+    .then((r) => { debug('Incremental sync: %0 informing observers', r);return r; })
+    .then(syncResponse => eventController.emitEvents(syncResponse))
+    .catch(debug);
+
+  debug('Set renewal for %s', eventChannel);
+  AdministerChannels.renew(eventChannel);
+  return eventChannel;
+}
+
+function createNewEventChannel(calendarId) {
+  return AdministerChannels.create({
+    calendarId,
+    resourceType: 'event'
+  })
+    .then(AdministerChannels.save)
+    .then((r) => { debug('Saved event channel for %s', calendarId); return r})
+    .then(AdministerChannels.renew)
+    .catch(debug);
 }
 
 /**
@@ -101,17 +121,6 @@ function extractUserIds(users) {
   return Promise.resolve(userIds);
 }
 
-function createEventChannelAndSave(calendarId) {
-  var channelInfo = {
-    calendarId: calendarId,
-    resourceType: 'event'
-  };
-
-  return AdministerChannels.create(channelInfo)
-    .then(AdministerChannels.save)
-    .catch(console.log);
-}
-
 function createDirChannelAndSave() {
   var channelInfo = {
     resourceType: 'directory'
@@ -122,7 +131,7 @@ function createDirChannelAndSave() {
     .catch(console.log);
 }
 
-function findEventChannel(calendarId) {
+function getEventChannelFromDB(calendarId) {
   return Channel.findOne({calendarId: calendarId});
 }
 

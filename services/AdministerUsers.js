@@ -4,7 +4,7 @@ var google    = require('googleapis');
 var _         = require('lodash');
 var scope     = require('../constants/GoogleScopes');
 var directory = google.admin('directory_v1');
-var config    = require('../configs/config');
+const config    = require('../configs/config').APP;
 var Promise   = require('bluebird');
 var AdministerJWT = require('../services/AdministerJWT');
 

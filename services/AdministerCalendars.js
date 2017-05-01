@@ -61,6 +61,9 @@ function getIncrementalSync(calendarInfo) {
   if (!calendarInfo)
     throw new Error('CalendarInfo is not defined');
 
+  if (!calendarInfo.synctoken)
+    throw new Error('No synctoken found');
+
   return new Promise(function incrementalSyncPromise(resolve, reject) {
     AdministerJWT.createJWT(scope.calendar)
       .then(function jwtResponse(jwtClient) {

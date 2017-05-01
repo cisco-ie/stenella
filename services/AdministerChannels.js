@@ -3,7 +3,7 @@
 var google              = require('googleapis');
 var calendar            = google.calendar('v3');
 var directory           = google.admin('directory_v1');
-var config              = require('../configs/config');
+const config            = require('../configs/config').APP;
 var scope               = require('../constants/GoogleScopes');
 var _                   = require('lodash');
 var Promise             = require('bluebird');
@@ -193,7 +193,7 @@ function parseHeaders(request) {
  */
 function saveChannel(channelInfo) {
   if (!channelInfo) throw new Error('Undefined channel information');
- 
+  console.log('Saving channel %s', channelInfo);
   var props = {
     channelId: channelInfo.id || '',
     resourceId: '',

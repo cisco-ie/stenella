@@ -12,12 +12,13 @@ mongoose.Promise = require('bluebird');
 class CalendarEmitter extends EventEmitter {}
 const calendarEmitter = new CalendarEmitter();
 
-var Interface = {
-  load: load,
+let Interface = {
+  load,
+  emitEvent,
   // [ Event1, Event2 ] => Observable.of(Event1)-->Observable.of(Event2)
   observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
   _filterForLatestEvents,
-  _parseUserIdFromEmail
+  _parseUserIdFromEmail,
 };
 
 module.exports = Interface;
@@ -33,8 +34,18 @@ function load(channelId) {
     AdministerCalendars.incrementalSync(channelEntry)
       .then(persistNewSyncToken)
       .then(parseEvents)
+      .then(parsedUpdates => {
+	console.log(parsedUpdates);
+	calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
+      })
       .catch(console.log);
   });
+}
+
+// Emit events per a sync response
+function emitEvent(syncResponse) {
+  calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));
+  return true;
 }
 
 /**
@@ -58,7 +69,7 @@ function parseEvents(syncResponse) {
     return event;
   });
 
-  calendarEmitter.emit('CALENDAR_UPDATE', updates);
+  return updates;
 }
 
 // Looks through the list to find any matching event

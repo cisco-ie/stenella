@@ -2,7 +2,7 @@
 
 var google  = require('googleapis');
 var Promise = require('bluebird');
-var config  = require('../configs/config');
+const config  = require('../configs/config').APP;
 
 var Interface = {
   createJWT: createJWT

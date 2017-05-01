@@ -1,5 +1,5 @@
 const expect = require('chai').expect;
-const config = require('../configs/config');
+const config = require('../configs/config').APP;
 const build = config.build;
 
 describe('Configuration Test Suite', function UserServiceTest() {
