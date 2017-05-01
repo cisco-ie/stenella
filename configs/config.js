@@ -1,53 +1,70 @@
-'use strict';
+const _ = require('lodash');
+const fs = require('fs');
+const path = require('path');
+const dotenv = require('dotenv');
 
-var _ = require('lodash');
-require('dotenv').config();
+// Load the .env file into process.env
+dotenv.config();
 
-var RECEIVING_URL = normalizeUrl(process.env.RECEIVING_URL);
+function build(env) {
+  const RECEIVING_URL = _normalizeUrl(env.RECEIVING_URL);
+  
+  let config = {
+    port: Number(env.PORT) || 5000,
+    authorizeAdmin: env.ADMIN,
+    receivingUrl: {
+      base: RECEIVING_URL,
+      events: RECEIVING_URL + '/watch/events',
+      users: RECEIVING_URL + '/watch/users'
+    }
+  };
 
-var configs = {
-  port: Number(process.env.PORT) || 5000,
-  authorizeAdmin: process.env.ADMIN,
-  webExDomain: process.env.WEBEX_DOMAIN,
-  receivingUrl: {
-    base: RECEIVING_URL,
-    events: RECEIVING_URL + '/watch/events',
-    users: RECEIVING_URL + '/watch/users'
+  if (env.DOMAIN) {
+    config = Object.assign({}, config, { domain: env.DOMAIN });
   }
-};
 
-if (process.env.DOMAIN) {
-  configs.domain = process.env.DOMAIN;
-}
-
-if (process.env.CUSTOMER) {
-  configs.customer = process.env.CUSTOMER;
-}
-
-if (process.env.TTL) {
-  configs.ttl = process.env.TTL;
-}
-
-_.forOwn(configs, function iterateConfigKeys(value, key) {
-  if (!configs[key]) throwUndefined(value, key);
-});
-
-function throwUndefined(value, key) {
-  if (!value) {
-    throw new Error(key + ' is not defined in .env file');
+  if (env.CUSTOMER) {
+    config = Object.assign({}, config, { customer: env.CUSTOMER });
   }
+
+  if (env.TTL) {
+    config = Object.assign({}, config, { ttl: env.TTL });
+  }
+
+  const throwError = (message) => {
+    throw new Error(message);
+  }
+
+  _.forOwn(config, (value, key) => (!config[key]) ? throwError(`env.${key} is not defined`) : null);
+  return config;
 }
 
-function normalizeUrl(receivingUrl) {
-  if (typeof receivingUrl !== 'string') {
+// Strips the "/" from a url if it is there or not
+function _normalizeUrl(url) {
+  if (typeof url !== 'string') {
     throw new Error('Receiving URL is not defined');
   }
 
   // Check for trailing back slash
-  if (receivingUrl.charAt(receivingUrl.length - 1) === '/') {
-    return receivingUrl.substring(0, receivingUrl.length - 1);
+  if (url.charAt(url.length - 1) === '/') {
+    return url.substring(0, url.length - 1);
   }
-  return receivingUrl;
+  return url;
 }
 
-module.exports = configs;
+const _buildAppConfig = () => {
+  console.log(process.env.ENVIRONMENT === 'TEST');
+  if (process.env.ENVIRONMENT === 'TEST') {
+    const exampleBuff = fs.readFileSync(path.join(__dirname, '..', 'example.env'));
+    const parseExample = dotenv.parse(exampleBuff);
+    return build(parseExample);
+  }
+  return build(process.env);
+};
+
+module.exports = {
+  APP: _buildAppConfig(),
+  _normalizeUrl,
+  build
+};
+

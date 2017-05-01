@@ -4,7 +4,7 @@ require('dotenv').config();
  * Database Configurations
  * @type {Object}
  */
-var dbConfigs = {
+const dbConfigs = {
   production_url: process.env.DB_URL,
   test_url: process.env.DB_URL_TEST
 };
