@@ -24,7 +24,6 @@ router.post('/', function eventRouteResponse(request, response) {
 module.exports = router;
 
 function parseNotification(parsedHeaders) {
-  console.log(parsedHeaders);
   const initialSyncConfirm = (parsedHeaders.resourceState === 'sync');
   if (initialSyncConfirm) {
     debug(parsedHeaders.channelId + ' channel has been established.');

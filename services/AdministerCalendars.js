@@ -38,7 +38,7 @@ function getFullSync(calendarId) {
     return AdministerJWT.createJWT(scope.calendar)
       .then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
       .then(listEvents)
-      .then((result) => {
+      .then(result => {
 	debug('Get calendar events for %s', listParams.calendarId);
         if (result.nextPageToken) {
 	  debug('Paging calendar events for %s', listParams.calendarId);
@@ -61,8 +61,8 @@ function getIncrementalSync(calendarInfo) {
   if (!calendarInfo)
     throw new Error('CalendarInfo is not defined');
 
-  if (!calendarInfo.synctoken)
-    throw new Error('No synctoken found');
+  if (!calendarInfo.syncToken)
+    throw new Error('No calendar.syncToken found');
 
   return new Promise(function incrementalSyncPromise(resolve, reject) {
     AdministerJWT.createJWT(scope.calendar)

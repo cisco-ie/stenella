@@ -53,7 +53,6 @@ function _normalizeUrl(url) {
 }
 
 const _buildAppConfig = () => {
-  console.log(process.env.ENVIRONMENT === 'TEST');
   if (process.env.ENVIRONMENT === 'TEST') {
     const exampleBuff = fs.readFileSync(path.join(__dirname, '..', 'example.env'));
     const parseExample = dotenv.parse(exampleBuff);

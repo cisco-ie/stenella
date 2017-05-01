@@ -3,6 +3,5 @@ calendarEvents.subscribe(catchPTOs);
 
 function catchPTOs (calendarEvent) {
   console.log(calendarEvent);
-  const PTOEvent = calendarEvent.summary.match(/PTO/g).length > 0;
-  if (PTOEvent) console.log('%s is on PTO', calendarEvent.userId);
+  if (calendarEvent.summary.match(/PTO/g)) console.log('%s is on PTO', calendarEvent.userId);
 }

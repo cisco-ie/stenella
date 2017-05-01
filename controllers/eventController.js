@@ -30,12 +30,12 @@ module.exports = Interface;
  */
 function load(channelId) {
   getChannelEntry(channelId).then(function(channelEntry) {
+    // Old channel that may have existed due to overlap renewals
     if (!channelEntry) { return; }
     AdministerCalendars.incrementalSync(channelEntry)
       .then(persistNewSyncToken)
       .then(parseEvents)
       .then(parsedUpdates => {
-	console.log(parsedUpdates);
 	calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
       })
       .catch(console.log);
@@ -58,6 +58,7 @@ function getChannelEntry(channelId) {
 }
 
 function parseEvents(syncResponse) {
+  if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
   // Event list is order sensitive
   // Filter events for any duplicates and just get the latest one
   var eventList = syncResponse.items

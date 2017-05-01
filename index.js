@@ -2,16 +2,16 @@
 
 const express = require('express');
 const app = express();
-var Promise = require('bluebird');
-var _ = require('lodash');
-var AdministerUsers = require('./services/AdministerUsers');
-var AdministerChannels = require('./services/AdministerChannels');
+const Promise = require('bluebird');
+let _ = require('lodash');
+const AdministerUsers = require('./services/AdministerUsers');
+const AdministerChannels = require('./services/AdministerChannels');
 const Calendars = require('./services/AdministerCalendars');
-var config = require('./configs/config').APP;
-var db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
-var mongoose = require('mongoose');
-var Channel = mongoose.model('Channel', require('./data/schema/channel'));
-var calendarEvent = require('./controllers/eventController').observable;
+const config = require('./configs/config').APP;
+let db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
+const mongoose = require('mongoose');
+let Channel = mongoose.model('Channel', require('./data/schema/channel'));
+let calendarEvent = require('./controllers/eventController').observable;
 const debug = require('debug')('main');
 const requireAll = require('require-all');
 const EventEmitter = require('events');
@@ -39,8 +39,8 @@ initServer();
 function initServer() {
   removeExpiredChannels();
   setUpChannels();
-  app.listen(config.port, console.log('Running on port 5000'));
-  loadObservers()
+  app.listen(config.port, debug('Running on port 5000'));
+  loadObservers();
 }
 
 function loadObservers() {
@@ -53,7 +53,7 @@ function loadObservers() {
 function setUpChannels() {
   AdministerUsers.list()
     .then(createChannelsAndExtractIds)
-    .catch(console.log);
+    .catch(debug);
 }
 
 /**
@@ -63,20 +63,14 @@ function setUpChannels() {
  */
 function createChannelsAndExtractIds(userDirResponse) {
   findDirectoryChannel()
-    .then(function findDirCb(directoryChannel) {
-      if (directoryChannel) {
-        AdministerChannels.renew(directoryChannel);
-      } else {
-        return createDirChannelAndSave()
-      }
-    })
+     // If existing channel exist renew it, otherwise create new and save
+    .then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
     .then(AdministerChannels.renew)
     .catch(debug);
 
 
   extractUserIds(userDirResponse.users)
-    .each(function iterateUserIds(userId) {
-      var calendarId = userId;
+    .each((calendarId) => {
       getEventChannelFromDB(calendarId)
         .then(eventChannel => (eventChannel) ?
 	      renewChannelAndResync(eventChannel) :
@@ -89,7 +83,10 @@ function renewChannelAndResync(eventChannel) {
   debug('Resyncing %s', eventChannel);
   AdministerCalendars
     .getIncrementalSync(eventChannel)
-    .then((r) => { debug('Incremental sync: %0 informing observers', r);return r; })
+    .then(r => {
+      debug('Incremental sync: %0 informing observers', r);
+      return r;
+    })
     .then(syncResponse => eventController.emitEvents(syncResponse))
     .catch(debug);
 
@@ -99,10 +96,11 @@ function renewChannelAndResync(eventChannel) {
 }
 
 function createNewEventChannel(calendarId) {
-  return AdministerChannels.create({
-    calendarId,
-    resourceType: 'event'
-  })
+  return AdministerChannels
+    .create({
+      calendarId,
+      resourceType: 'event'
+    })
     .then(AdministerChannels.save)
     .then((r) => { debug('Saved event channel for %s', calendarId); return r})
     .then(AdministerChannels.renew)
@@ -122,13 +120,12 @@ function extractUserIds(users) {
 }
 
 function createDirChannelAndSave() {
-  var channelInfo = {
-    resourceType: 'directory'
-  };
-
-  return AdministerChannels.create(channelInfo)
+  return AdministerChannels
+    .create({
+      resourceType: 'directory'
+    })
     .then(AdministerChannels.save)
-    .catch(console.log);
+    .catch(debug);
 }
 
 function getEventChannelFromDB(calendarId) {
@@ -140,14 +137,10 @@ function findDirectoryChannel() {
 }
 
 function removeExpiredChannels() {
-  var channels = findNonMatchingExpiredChannel();
+  let channels = findNonMatchingExpiredChannel();
   channels
     .remove()
-    .then(function successExpiredRemoval(removed) {
-      if (removed.result.n > 0) {
-        console.log(removed.result.n + ' expired documents removed');
-      }
-    });
+    .then(removed => (removed.result.n > 0) ? debug('%s expired documents removed', removed.result.n) : null);
 }
 
 function findNonMatchingExpiredChannel() {

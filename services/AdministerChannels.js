@@ -193,7 +193,6 @@ function parseHeaders(request) {
  */
 function saveChannel(channelInfo) {
   if (!channelInfo) throw new Error('Undefined channel information');
-  console.log('Saving channel %s', channelInfo);
   var props = {
     channelId: channelInfo.id || '',
     resourceId: '',
