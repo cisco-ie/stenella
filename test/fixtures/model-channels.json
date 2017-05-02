@@ -1,0 +1,32 @@
+{
+    "collections": {
+        "channels": [
+            {
+                "channelId": "EVNT-e7a1ac1e-8dce-4395-848d-658077252a2f",
+                "resourceId": "wquZbeosVUDpi0X8l_Jaz_BMTdA",
+                "syncToken": "CPjG0pbUhdACEPjG0pbUhdACGAY=",
+                "expiration": "2016-11-17T22:14:24Z",
+                "resourceType": "event",
+                "calendarId": "rrawat@apidevdemo.com",
+                "__v": 0
+            },
+            {
+                "channelId": "EVNT-20a3fe60-1421-4a57-9251-6f9989556d8d",
+                "resourceId": "u1NW-VYOgV67tmEf6uADWs8QDLA",
+                "syncToken": "COj739vkr9ACEOj739vkr9ACGAY=",
+                "expiration": "2016-11-17T22:14:24Z",
+                "resourceType": "event",
+                "calendarId": "newuser2@apidevdemo.com",
+                "__v": 0
+            },
+            {
+                "channelId": "DIR-92e8d192-e049-4ea5-bce8-92b5574bf842",
+                "resourceId": "AyEL3ZFbYwKxR4aDvFUgOxc2F6E",
+                "syncToken": "",
+                "expiration": "2016-11-17T22:14:24Z",
+                "resourceType": "directory",
+                "__v": 0
+            }
+        ]
+    }
+}

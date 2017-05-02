@@ -1,0 +1,7 @@
+language: node_js
+node_js:
+    - 5.10.1
+before_script:
+  - npm install
+  - npm run pretest
+script: npm test

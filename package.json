@@ -1,0 +1,66 @@
+{
+  "name": "webex-google-calendar",
+  "version": "1.0.0",
+  "description": "webex google calendar integration",
+  "main": "index.js",
+  "scripts": {
+    "pretest": "cp ./example.env ./.env",
+    "test": "./node_modules/mocha/bin/mocha",
+    "ci-test": "npm run pretest & ./node_modules/mocha/bin/mocha",
+    "start": "node index.js",
+    "lint": "eslint .",
+    "validate": "npm ls",
+    "test-cov": "npm run pretest & istanbul cover _mocha",
+    "test-codecov": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && codecov --token=a032f333-f808-4dc6-8b1f-31e4519ebccb"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cisco-ie/webex-google-calendar.git"
+  },
+  "keywords": [
+    "cisco",
+    "webex",
+    "google",
+    "calendar"
+  ],
+  "author": "Brandon Him, Rekha Rawat",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cisco-ie/webex-google-calendar/issues"
+  },
+  "homepage": "https://github.com/cisco-ie/webex-google-calendar#readme",
+  "devDependencies": {
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-env": "^1.4.0",
+    "babel-register": "^6.24.1",
+    "chai": "^3.5.0",
+    "codecov": "^1.0.1",
+    "debug": "^2.6.6",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.1.0",
+    "nock": "^8.0.0",
+    "sinon": "^1.17.6"
+  },
+  "dependencies": {
+    "async": "^2.1.2",
+    "bluebird": "^3.4.6",
+    "body-parser": "^1.15.2",
+    "chai-as-promised": "^6.0.0",
+    "dotenv": "^2.0.0",
+    "express": "^4.14.0",
+    "googleapis": "^14.0.0",
+    "lodash": "^4.16.3",
+    "mocha-lcov-reporter": "^1.2.0",
+    "moment": "^2.15.2",
+    "mongoose": "^4.6.4",
+    "node-uuid": "^1.4.7",
+    "precommit-hook-eslint": "^3.0.0",
+    "require-all": "^2.2.0",
+    "rewire": "^2.5.2",
+    "rx-node": "^1.0.2",
+    "rxjs": "^5.3.0"
+  },
+  "pre-commit": [
+
+  ]
+}
