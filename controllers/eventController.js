@@ -6,6 +6,7 @@ var AdministerCalendars = require('../services/AdministerCalendars');
 var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
 const EventEmitter = require('events');
 const Rx = require('rxjs');
+const debug = require('debug')('eventController');
 
 mongoose.Promise = require('bluebird');
 
@@ -30,6 +31,7 @@ module.exports = Interface;
  */
 function load(channelId) {
   getChannelEntry(channelId).then(function(channelEntry) {
+    debug('Found channel entry for %s: %O', channelId, channelEntry);
     // Old channel that may have existed due to overlap renewals
     if (!channelEntry) { return; }
     AdministerCalendars.incrementalSync(channelEntry)
@@ -58,6 +60,7 @@ function getChannelEntry(channelId) {
 }
 
 function parseEvents(syncResponse) {
+  console.log(syncResponse);
   if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
   // Event list is order sensitive
   // Filter events for any duplicates and just get the latest one
