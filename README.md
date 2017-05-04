@@ -1,7 +1,7 @@
 # Google Calendar Listener
 > A reactive application for calendar events created within a [G Suite](https://gsuite.google.com/).
 
-This application responds to particular calendar events based on contextual cues found within a typical event payload *(date, subject, summary attendees, location, status, etc)*. In addition, observers (calendar event handlers) are open-ended and flexible enough to allow the developer to define appropriate actions.
+This application responds to particular calendar events based on contextual cues found within a typical event payload *(date, subject, summary, attendees, location, status, etc.)*. In addition, observers (calendar event handlers) are open-ended and flexible enough to allow the developer to define appropriate actions.
 
 ## Requirements
 - G Suite (Google Apps for Work)
@@ -28,7 +28,7 @@ This application responds to particular calendar events based on contextual cues
     10. Select the **Domain Verification** tab, click *Add Domain* and add your domain that was verified in **Step 1**
 3. Setup the [MongoDB database](https://docs.mongodb.com/manual/installation/?jmp=footer)
 4. Clone the repository: `git clone https://github.com/cisco-ie/google-calendar-listener/`
-5. Download thhe application's dependencies:    
+5. Download the application's dependencies:    
     `$ npm install`
 6. Copy the `example.env` to `.env` and set up the variables
 7. Create an [observer](#observer-usage) to respond to calendar events
