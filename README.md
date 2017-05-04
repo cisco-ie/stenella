@@ -5,7 +5,7 @@ This application responds to particular calendar events based on contextual cues
 
 ## Requirements
 - G Suite (Google Apps for Work)
-- Admin priviledges within a G Suite
+- Admin privileges within a G Suite
 - MongoDB
 - A publicly available server
 
