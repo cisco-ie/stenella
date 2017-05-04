@@ -25,10 +25,10 @@ This application responds to particular calendar events based on contextual cues
     8. Check *Furnish a new private key*: Key Type: JSON > Create
         > This will automatically download a private key to your computer. This is the only copy of the key, so store it in a secure manner and ensure that it is accessible to the application.
     9. Go to the **API Manager** view, select the **Credentials** menu
-    10. Select the Domain verification tab, click Add domain and add your domain that was verified in Step 1
+    10. Select the **Domain Verification** tab, click *Add Domain* and add your domain that was verified in **Step 1**
 3. Setup the [MongoDB database](https://docs.mongodb.com/manual/installation/?jmp=footer)
-4. Clone repository: `git clone https://github.com/cisco-ie/google-calendar-listener/`
-5. Download application dependencies:    
+4. Clone the repository: `git clone https://github.com/cisco-ie/google-calendar-listener/`
+5. Download thhe application's dependencies:    
     `$ npm install`
 6. Copy the `example.env` to `.env` and set up the variables
 7. Create an [observer](#observer-usage) to respond to calendar events
