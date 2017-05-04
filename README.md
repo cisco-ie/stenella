@@ -1,5 +1,7 @@
 # Google Calendar Listener
-Respond to events and create actions in response to calendar events created within a Google suite.
+> Respond to events and create actions in response to calendar events created within a Google suite.
+
+This primarily allows the application to respond to particular calendar events based on contextual cues found within a typical event payload *(date, subject, summary attendees, location, status, etc)*. In addition, observers, calendar event responders, are open-ended and flexible enough to allow the developer to perform whatever is necessary.
 
 ## Requirements
 - G Suite (Google Apps for Work)
