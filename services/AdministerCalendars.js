@@ -5,6 +5,8 @@ var calendar  = google.calendar('v3');
 var Promise   = require('bluebird');
 var AdministerJWT = require('../services/AdministerJWT');
 var scope     = require('../constants/GoogleScopes');
+const mongoose = require('mongoose');
+const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 const debug = require('debug')('calendars');
 
 const listEvents = Promise.promisify(calendar.events.list);
@@ -12,8 +14,9 @@ const listEvents = Promise.promisify(calendar.events.list);
 var Interface = {
   fullSync: getFullSync,
   incrementalSync: getIncrementalSync,
-  getSyncToken: getSyncToken,
-  updateEvent: updateEvent
+  getSyncToken,
+  updateEvent,
+  persistNewSyncToken
 };
 
 module.exports = Interface;
@@ -123,5 +126,29 @@ function updateEvent(params, updateInfo) {
     .then(function jwtResponse(jwtClient) {
       params.auth = jwtClient;
       return Promise.promisify(calendar.events.update)(params);
+    });
+}
+
+/**
+ * Updates the token, but also passes along the response to the chain
+ * @param  {Object} syncResponse Incremental sync JSON response
+ * @return {Object}              Returns the response out to continue the chain
+ */
+function persistNewSyncToken(syncResponse) {
+  var query = {
+    calendarId: syncResponse.summary
+  };
+  var update = {
+    syncToken: syncResponse.nextSyncToken
+  };
+
+  return ChannelEntry.update(query, update)
+    .exec()
+    .then((r) => {
+      if (r.nModified > 0) {
+	debug('Updated %s syncToken', syncResponse.calendarId);
+      }
+      
+      return syncResponse
     });
 }

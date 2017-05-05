@@ -30,13 +30,17 @@ module.exports = Interface;
  * @return {Void} None
  */
 function load(channelId) {
-  getChannelEntry(channelId).then(function(channelEntry) {
+  debug('load %s', channelId);
+  getChannelEntry(channelId).then(channelEntry => {
     debug('Found channel entry for %s: %O', channelId, channelEntry);
     // Old channel that may have existed due to overlap renewals
     if (!channelEntry) { return; }
     AdministerCalendars.incrementalSync(channelEntry)
-      .then(r => { console.log('sync for event'); return r})
-      .then(persistNewSyncToken)
+      .then(syncResp => {
+	debug('Syncing for calendar update (%s)', channelId);
+	return syncResp;
+      })
+      .then(AdministerCalendars.persistNewSyncToken)
       .then(parseEvents)
       .then(parsedUpdates => {
 	calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
@@ -87,24 +91,6 @@ function _filterForLatestEvents(currentEvent, currentIndex, list) {
   const mostRecentIndex = _.findIndex(list, (e) => e.id === currentEvent.id);
   // If the current item index is equal or less than the most recentIndex, keep it (true)
   return (currentIndex <= mostRecentIndex) ? true : false;
-}
-
-/**
- * Updates the token, but also passes along the response to the chain
- * @param  {Object} syncResponse Incremental sync JSON response
- * @return {Object}              Returns the response out to continue the chain
- */
-function persistNewSyncToken(syncResponse) {
-  var query = {
-    calendarId: syncResponse.summary
-  };
-  var update = {
-    syncToken: syncResponse.nextSyncToken
-  };
-
-  return ChannelEntry.update(query, update)
-    .exec()
-    .then(() => syncResponse);
 }
 
 function _parseUserIdFromEmail(email) {

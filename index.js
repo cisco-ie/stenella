@@ -72,10 +72,12 @@ function createChannelsAndExtractIds(userDirResponse) {
 
   extractUserIds(userDirResponse.users)
     .each((calendarId) => {
-      console.log(calendarId);
       getEventChannelFromDB(calendarId)
-        .then(r => { console.log(r); return r; })
-         .then(eventChannel => (eventChannel) ?
+        .then(channelDBEntry => {
+	  if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
+	  return channelDBEntry;
+	})
+        .then(eventChannel => (eventChannel) ?
 	      renewChannelAndResync(eventChannel) :
 	      createNewEventChannel(calendarId));
     })
@@ -88,9 +90,12 @@ function renewChannelAndResync(eventChannel) {
   // resync and inform all our observers
   AdministerCalendars
     .incrementalSync(eventChannel)
-    .then(r => {
+    .then(syncResp => {
       debug('Incremental sync: %o informing observers', r);
-      return r;
+      AdministerCalendars
+	.persistNewSyncToken(syncResp)
+	.then(() => debug('Updated syncToken during resync'));
+      return syncResp;
     })
     .then(syncResponse => eventController.emitEvents(syncResponse))
     .catch(debug);
