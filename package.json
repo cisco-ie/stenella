@@ -56,11 +56,10 @@
     "node-uuid": "^1.4.7",
     "precommit-hook-eslint": "^3.0.0",
     "require-all": "^2.2.0",
+    "retry": "^0.10.1",
     "rewire": "^2.5.2",
     "rx-node": "^1.0.2",
     "rxjs": "^5.3.0"
   },
-  "pre-commit": [
-
-  ]
+  "pre-commit": []
 }

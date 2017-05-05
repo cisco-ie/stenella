@@ -12,6 +12,8 @@ var Channel             = mongoose.model('Channel', require('../data/schema/chan
 var createJWT           = require('../services/AdministerJWT').createJWT;
 var AdministerCalendars = require('./AdministerCalendars');
 var getDateMsDifference = require('../libs/timeUtils').getDateMsDifference;
+const retry = require('retry');
+const debug = require('debug')('AdministerChannels');
 
 var Interface = {
   create: channelFactory,
@@ -74,48 +76,55 @@ function createChannel(channelInfo) {
     switch (channelInfo.resourceType) {
     case 'event':
       createJWT(scope.calendar)
-        .then(function JwtResponse(jwtClient) {
-          var params = buildParams(jwtClient, channelInfo);
-          calendar.events.watch(params, function calWatchCallback(err, res) {
-            if (err) reject(err);
-            if (res) {
-              res.resourceType = 'event';
-              res.calendarId = channelInfo.calendarId;
-              resolve(res);
-            }
-          });
+        .then((jwtClient) => {
+          let params = buildParams(jwtClient, channelInfo);
+
+	  const eventChannelOperation = retry.operation();
+	  eventChannelOperation.attempt(currentAttempt => {
+	    debug('Attempt #%s to create event channel for %s', currentAttempt, channelInfo.calendarId);
+   	    calendar.events.watch(params, (err, res) => {
+              if (eventChannelOperation.retry(err)) {
+		reject(eventChannelOperation.mainError());
+	      }
+	      
+              if (res) {
+		res.resourceType = 'event';
+		res.calendarId = channelInfo.calendarId;
+		debug('Event channel successfully created on attempt #%s', currentAttempt);
+		resolve(res);
+              }
+            });
+	  });
         })
         .catch(reject);
-
-      // Look at retry
-      // .catch(function holdOffAndRecall() {
-      //   async.retry({
-      //     times: 10,
-      //     interval: function(retryCount) {
-      //       // Exponential back-off
-      //       return 50 * Math.pow(2, retryCount);
-      //     }
-      //   }, createEventChannelsAndSave(userId));
-      // });
       break;
-
+      
     case 'directory':
       createJWT(scope.userDirectory)
-        .then(function JwtResponse(jwtClient) {
-          var params = buildParams(jwtClient, channelInfo);
-          directory.users.watch(params, function dirWatchCallback(err, res) {
-            if (err) reject(err);
-            if (res) {
-              res.resourceType = 'directory';
-              resolve(res);
-            }
-          });
+        .then(jwtClient => {
+          let params = buildParams(jwtClient, channelInfo);
+	  const dirChannelOperation = retry.operation();
+
+	  dirChannelOperation.attempt(currentAttempt => {
+	    debug('Attempt #%s to create directory channel', currentAttempt);
+            directory.users.watch(params, function dirWatchCallback(err, res) {
+              if (dirChannelOperation.retry(err)) {
+		reject(dirChannelOperation.mainError());
+	      }
+	      
+              if (res) {
+		res.resourceType = 'directory';
+		debug('Directory channel successfully created on attempt #%s', currentAttempt);
+		resolve(res);
+              }
+            });
+	  });
         })
         .catch(reject);
       break;
 
     default:
-      throw new Error('Undeclared Type');
+      throw new Error('Attempted to create channel, using a unknown type');
     }
   });
 }
@@ -225,7 +234,6 @@ function renewChannel(existingChannel) {
   function deleteExistingAndRenew(newChannel) {
     var oldChannelId = existingChannel.channelId;
     Channel.remove({ channelId: oldChannelId }).exec();
-
     renewChannel(newChannel);
   }
 }
