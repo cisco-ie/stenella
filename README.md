@@ -3,6 +3,12 @@
 
 This application responds to particular calendar events based on contextual cues found within a typical event payload *(date, subject, summary, attendees, location, status, etc.)*. In addition, observers (calendar event handlers) are open-ended and flexible enough to allow the developer to define appropriate actions.
 
+## Features
+- An easy to use, and straightforward API to hook into event notifications
+- Re-processing of any missed events during downtime as long as calendar subscriptions (env.TTL) is still valid
+- A MongoDB hooks for observers for more complicated task
+- Prune of old/stale events within a series of events -- essentially your observer will only recieve the latest event in time, so no need to handle rapid updates/cancellations within a short period of time
+
 ## Requirements
 - G Suite (Google Apps for Work)
 - Admin privileges within a G Suite
@@ -12,7 +18,7 @@ This application responds to particular calendar events based on contextual cues
 ## Set Up
 1. [Verify](https://support.google.com/webmasters/answer/35179?authuser=0) your application's domain name ownership
     
-    Verification of the application domain name with Google proves that you own/trust it. This enables the application to handle Google calendar notifications.
+    Verification of the application domain name with Google proves that you own/trust it. This enables the application to handle Google calendar notifications. `google-calendar-listener` provides a `/verify` directory where you can simply drop your `verification.html` files into it and it will be publicly available to Google verfication servers.
 
 2. Create a Google App
     1. Go to the **Google API Console**
