@@ -52,7 +52,7 @@ function load(channelId) {
 // Emit events per a sync response
 function emitEvents(syncResponse) {
   if (syncResponse.items.length === 0) {
-    debug('No new events found on sync response');
+    debug('No new events found on sync response for %s', syncResponse.calendarId);
     return false;
   }
   calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));

@@ -146,7 +146,7 @@ function persistNewSyncToken(syncResponse) {
     .exec()
     .then((r) => {
       if (r.nModified > 0) {
-	debug('Updated %s syncToken', syncResponse.calendarId);
+	debug('Updated %s\'s syncToken', calendarId);
       }
       
       return syncResponse

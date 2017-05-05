@@ -91,7 +91,7 @@ function renewChannelAndResync(eventChannel) {
   AdministerCalendars
     .incrementalSync(eventChannel)
     .then(syncResp => {
-      debug('Incremental sync: %o informing observers', r);
+      debug('Incremental sync: %o informing observers', syncResp);
       AdministerCalendars
 	.persistNewSyncToken(syncResp)
 	.then(() => debug('Updated syncToken during resync'));
