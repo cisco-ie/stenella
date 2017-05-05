@@ -15,7 +15,7 @@ const calendarEmitter = new CalendarEmitter();
 
 let Interface = {
   load,
-  emitEvent,
+  emitEvents,
   // [ Event1, Event2 ] => Observable.of(Event1)-->Observable.of(Event2)
   observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
   _filterForLatestEvents,
@@ -35,6 +35,7 @@ function load(channelId) {
     // Old channel that may have existed due to overlap renewals
     if (!channelEntry) { return; }
     AdministerCalendars.incrementalSync(channelEntry)
+      .then(r => { console.log('sync for event'); return r})
       .then(persistNewSyncToken)
       .then(parseEvents)
       .then(parsedUpdates => {
@@ -45,7 +46,11 @@ function load(channelId) {
 }
 
 // Emit events per a sync response
-function emitEvent(syncResponse) {
+function emitEvents(syncResponse) {
+  if (syncResponse.items.length === 0) {
+    debug('No new events found on sync response');
+    return false;
+  }
   calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));
   return true;
 }
@@ -60,7 +65,6 @@ function getChannelEntry(channelId) {
 }
 
 function parseEvents(syncResponse) {
-  console.log(syncResponse);
   if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
   // Event list is order sensitive
   // Filter events for any duplicates and just get the latest one

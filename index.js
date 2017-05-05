@@ -14,10 +14,8 @@ let Channel = mongoose.model('Channel', require('./data/schema/channel'));
 let calendarEvent = require('./controllers/eventController').observable;
 const debug = require('debug')('main');
 const requireAll = require('require-all');
-const EventEmitter = require('events');
 const Rx = require('rxjs');
 const eventController = require('./controllers/eventController');
-
 
 mongoose.Promise = require('bluebird');
 
@@ -38,9 +36,13 @@ initServer();
 
 function initServer() {
   removeExpiredChannels();
-  setUpChannels();
+  setUpChannels()
+    .then(() => {
+      loadObservers();
+      console.log('Listening to calendars');
+    })
+    .catch(debug);
   app.listen(config.port, debug('Running on port 5000'));
-  loadObservers();
 }
 
 function loadObservers() {
@@ -51,9 +53,8 @@ function loadObservers() {
 }
 
 function setUpChannels() {
-  AdministerUsers.list()
+  return AdministerUsers.list()
     .then(createChannelsAndExtractIds)
-    .catch(debug);
 }
 
 /**
@@ -71,8 +72,10 @@ function createChannelsAndExtractIds(userDirResponse) {
 
   extractUserIds(userDirResponse.users)
     .each((calendarId) => {
+      console.log(calendarId);
       getEventChannelFromDB(calendarId)
-        .then(eventChannel => (eventChannel) ?
+        .then(r => { console.log(r); return r; })
+         .then(eventChannel => (eventChannel) ?
 	      renewChannelAndResync(eventChannel) :
 	      createNewEventChannel(calendarId));
     })
@@ -81,10 +84,12 @@ function createChannelsAndExtractIds(userDirResponse) {
 
 function renewChannelAndResync(eventChannel) {
   debug('Resyncing %s', eventChannel);
+  // If the app has stopped, we use the previous synctoken and
+  // resync and inform all our observers
   AdministerCalendars
-    .getIncrementalSync(eventChannel)
+    .incrementalSync(eventChannel)
     .then(r => {
-      debug('Incremental sync: %0 informing observers', r);
+      debug('Incremental sync: %o informing observers', r);
       return r;
     })
     .then(syncResponse => eventController.emitEvents(syncResponse))
@@ -146,7 +151,7 @@ function removeExpiredChannels() {
 function findNonMatchingExpiredChannel() {
   // For the current being, this will remove any non matchinig configured URLs,
   // which limits the application to only handle 1 set desired URL.
-  var currentDate = new Date().getTime();
+  var currentDate = new Date();
 
   var query = {
     $or: [
@@ -157,7 +162,7 @@ function findNonMatchingExpiredChannel() {
       },
       {
         webhookUrl: {
-          $ne: config.webhookUrl
+          $ne: config.receivingUrl.base
         }
       }
     ]
