@@ -135,20 +135,18 @@ function updateEvent(params, updateInfo) {
  * @return {Object}              Returns the response out to continue the chain
  */
 function persistNewSyncToken(syncResponse) {
-  var query = {
-    calendarId: syncResponse.summary
+  const calendarId = syncResponse.summary;
+  const query = {
+    calendarId
   };
-  var update = {
+  
+  const update = {
     syncToken: syncResponse.nextSyncToken
   };
 
   return ChannelEntry.update(query, update)
     .exec()
-    .then((r) => {
-      if (r.nModified > 0) {
-	debug('Updated %s\'s syncToken', calendarId);
-      }
-      
-      return syncResponse
-    });
+    .then((r) => (r.nModified > 0) ?
+	  debug('Updated %s\'s syncToken', calendarId) :
+	  syncResponse)
 }
