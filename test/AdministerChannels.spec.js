@@ -40,12 +40,6 @@ describe('Administer Channels Service', function ChannelServiceTest() {
     done();
   });
 
-  // it('should set a renewal for channels', function renewalChannelTest(done) {
-  //   var parsedHeaders = AdministerChannels.parseHeaders();
-  //   expect(parsedHeaders).to.equal();
-  //   done();
-  // });
-
   it('should build params based on type', function buildParamsTest(done) {
     var buildParams = AdministerChannels.__get__('buildParams');
     var channelInfo = {

@@ -1,13 +1,14 @@
 const expect = require('chai').expect;
-const config = require('../configs/config').APP;
+const config = require('../configs/config');
+const APPConfig = config.APP;
 const build = config.build;
 
 describe('Configuration Test Suite', function UserServiceTest() {
   it('Should strip the url of trailing backslash', function normalizeUrlTest(done) {
-    const normalizeUrl = config._normalizeUrl;
+    const _normalizeUrl = config._normalizeUrl;
     const testUrl = 'http://example.com/';
 
-    expect(normalizeUrl(testUrl)).to.equal('http://example.com');
+    expect(_normalizeUrl(testUrl)).to.equal('http://example.com');
     expect(() => _normalizeUrl(null)).to.throw;
     done();
   });

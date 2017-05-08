@@ -1,15 +1,19 @@
 'use strict';
 
-var google    = require('googleapis');
-var _         = require('lodash');
-var scope     = require('../constants/GoogleScopes');
-var directory = google.admin('directory_v1');
-const config    = require('../configs/config').APP;
-var Promise   = require('bluebird');
-var AdministerJWT = require('../services/AdministerJWT');
+const google    = require('googleapis');
+const  _         = require('lodash');
+const scope     = require('../constants/GoogleScopes');
+const directory = google.admin('directory_v1');
+const Promise   = require('bluebird');
+
+const config  = require('../configs/config').APP;
+let { createJWT } = require('../services/AdministerJWT');
+let getDirectory = Promise.promisify(directory.users.list);
 
 var Interface = {
-  list: getUsers
+  list: getUsers,
+  buildParams,
+  requestUserList
 };
 
 module.exports = Interface;
@@ -21,31 +25,27 @@ module.exports = Interface;
  */
 function getUsers(overrideParams) {
   return new Promise(function userPromise(resolve, reject) {
-    AdministerJWT.createJWT(scope.userDirectory)
-      .then(function authorizeJwtResponse(jwtClient) {
-        var params = buildParams(jwtClient, overrideParams);
-        requestUserList(params)
-          .then(resolve)
-          .catch(reject);
-      })
-      .catch(console.log);
+    createJWT(scope.userDirectory)
+      .then(jwtClient => buildParams(jwtClient, overrideParams))
+      .then(params => requestUserList(params))
+      .then(resolve)
+      .catch(reject);
   });
 }
 
 function requestUserList(params) {
-  var getDirectory = Promise.promisify(directory.users.list);
-
   // Returns a user listing response in the
   // cases of pagination, the response will
   // paginate, and append the users into
   // a single response
   return getDirectory(params)
-    .then(function directoryListResponse(userResponse) {
+    .then(userResponse => {
       if (userResponse.nextPageToken) {
         var pageToken = userResponse.nextPageToken;
         params.pageToken = pageToken;
         // @TODO: Consider optimizing by returning
         // multiple response async
+	
         return requestUserList(params)
           .then(function mergeResponse(paginatedResponse) {
             var mergeUsers = _.concat(userResponse.users,
