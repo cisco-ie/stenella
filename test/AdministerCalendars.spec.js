@@ -8,6 +8,7 @@ var AdministerCalendars = rewire('../services/AdministerCalendars');
 describe('Administer Calendar Test', function CalendarTestSuite() {
   var calendar = AdministerCalendars.__get__('calendar');
   var listSpy = sinon.spy(AdministerCalendars.__get__('listEvents'));
+  let jwtRevert;
 
   beforeEach(function setUp(done) {
     var jwtMock = {
@@ -16,9 +17,11 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
       }
     };
 
-    AdministerCalendars.__set__('AdministerJWT', jwtMock);
+    jwtRevert = AdministerCalendars.__set__('AdministerJWT', jwtMock);
     done();
   });
+
+  afterEach(() => jwtRevert());
 
   it('should send an update to Google Calendar', function UserListParams(done) {
     var updateEvent = AdministerCalendars.__get__('updateEvent');
