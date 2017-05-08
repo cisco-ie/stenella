@@ -7,7 +7,7 @@ This application responds to particular calendar events based on contextual cues
 - An easy to use, and straightforward API to hook into event notifications
 - Re-processing of any missed events during downtime as long as calendar subscriptions (env.TTL) is still valid
 - A MongoDB hooks for observers for more complicated task
-- Prune of old/stale events within a series of events -- essentially your observer will only recieve the latest event in time, so no need to handle rapid updates/cancellations within a short period of time
+- Prune of old/stale events within a series of events -- essentially your observer will only recieve the latest event in time, so no need to handle intermediate updates/cancellations within a short period of time
 
 ## Requirements
 - G Suite (Google Apps for Work)
@@ -56,10 +56,11 @@ This application responds to particular calendar events based on contextual cues
    });
    ```
 4. Start the application, and the application will import the observer at runtime.
+5. Want to see a working example? Checkout the [`exampleObserver`](/blob/master/observers/exampleObserver.js), which logs the users who have "PTO" in their calendar title.
 
 ## Contributors
 - [Brandon Him](https://github.com/brh55/)
-- [Rekha Rawat](https://github.com/orgs/cisco-ie/people/rekharawat)
+- [Rekha Rawat](https://github.com/rekharawat)
 - [Innovation Edge Team @ Cisco](https://github.com/cisco-ie)
 
 ## License
