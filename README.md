@@ -60,10 +60,15 @@ This application responds to particular calendar events based on contextual cues
 4. Start the application, and the application will import the observer at runtime.
 5. Want to see a working example? Checkout the [`exampleObserver`](/blob/master/observers/exampleObserver.js), which logs the users who have "PTO" in their calendar title.
 
-## Contributors
+## Authors
 - [Brandon Him](https://github.com/brh55/)
 - [Rekha Rawat](https://github.com/rekharawat)
 - [Innovation Edge Team @ Cisco](https://github.com/cisco-ie)
+
+## Contributing
+:octocat: PR's are welcomed. Please, submit an issue prior to getting started to see how others can assist in determining implementation details.
+
+Prior to submitting PRs: `$ npm test`
 
 ## License
 MIT © [Innovation Edge @ Cisco](https://github.com/cisco-ie/google-calendar-listener)
