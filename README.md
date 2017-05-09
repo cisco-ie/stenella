@@ -58,7 +58,7 @@ This application responds to particular calendar events based on contextual cues
    });
    ```
 4. Start the application, and the application will import the observer at runtime.
-5. Want to see a working example? Checkout the [`exampleObserver`](/blob/master/observers/exampleObserver.js), which logs the users who have "PTO" in their calendar title.
+5. Want to see a working example? Checkout the [`exampleObserver`](/observers/exampleObserver.js), which logs the users who have "PTO" in their calendar title.
 
 ## Authors
 - [Brandon Him](https://github.com/brh55/)
