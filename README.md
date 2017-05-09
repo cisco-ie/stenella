@@ -3,7 +3,9 @@
 
 This application responds to particular calendar events based on contextual cues found within a typical event payload *(date, subject, summary, attendees, location, status, etc.)*. In addition, observers (calendar event handlers) are open-ended and flexible enough to allow the developer to define appropriate actions.
 
-> :wave: **NOTE:** The current code base is still in the process of migrating from ES5 to ES6, so please bare with us as we finish this process.
+> :warning:  **ES6 Migration**
+> 
+> The current code base is still in the process of migrating from ES5 to ES6, so please bare with us as we finish this process.
 
 ## Features
 - An easy to use, and straightforward API to hook into event notifications
