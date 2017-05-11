@@ -37,13 +37,13 @@ function load(channelId) {
     if (!channelEntry) { return; }
     AdministerCalendars.incrementalSync(channelEntry)
       .then(syncResp => {
-	debug('Syncing for calendar update (%s)', channelId);
-	return syncResp;
+        AdministerCalendars.persistNewSyncToken(channelEntry);
+	    debug('Syncing for calendar update (%s)', channelId);
+	    return syncResp;
       })
-      .then(AdministerCalendars.persistNewSyncToken)
       .then(parseEvents)
       .then(parsedUpdates => {
-	calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
+	    calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
       })
       .catch(console.log);
   });
@@ -51,12 +51,12 @@ function load(channelId) {
 
 // Emit events per a sync response
 function emitEvents(syncResponse) {
-  if (syncResponse.items.length === 0) {
-    debug('No new events found on sync response for %s', syncResponse.calendarId);
-    return false;
-  }
-  calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));
-  return true;
+    if (syncResponse.items.length === 0) {
+        debug('No new events found on sync response for %s', syncResponse.calendarId);
+        return false;
+    }
+    calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));
+    return true;
 }
 
 /**
@@ -65,23 +65,23 @@ function emitEvents(syncResponse) {
  * @return {Object}           Mongoose Virtual Model of Channel Entry
  */
 function getChannelEntry(channelId) {
-  return ChannelEntry.findOne({ channelId: channelId });
+    return ChannelEntry.findOne({ channelId: channelId });
 }
 
 function parseEvents(syncResponse) {
-  if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
-  // Event list is order sensitive
-  // Filter events for any duplicates and just get the latest one
-  var eventList = syncResponse.items
-      .filter(_filterForLatestEvents);
-  var userId = _parseUserIdFromEmail(syncResponse.summary);
-  const updates = eventList.map(event => {
-    event.calendarId = syncResponse.summary;
-    event.userId = userId;
-    return event;
-  });
+    if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
+    // Event list is order sensitive
+    // Filter events for any duplicates and just get the latest one
+    var eventList = syncResponse.items
+        .filter(_filterForLatestEvents);
+    var userId = _parseUserIdFromEmail(syncResponse.summary);
+    const updates = eventList.map(event => {
+        event.calendarId = syncResponse.summary;
+        event.userId = userId;
+        return event;
+    });
 
-  return updates;
+    return updates;
 }
 
 // Looks through the list to find any matching event
