@@ -3,6 +3,10 @@
 
 This application responds to particular calendar events based on contextual cues found within a typical event payload *(date, subject, summary, attendees, location, status, etc.)*. In addition, observers (calendar event handlers) are open-ended and flexible enough to allow the developer to define appropriate actions.
 
+> :warning:  **ES6 Migration**
+> 
+> The current code base is still in the process of migrating from ES5 to ES6, so please bare with us as we finish this process.
+
 ## Features
 - An easy to use, and straightforward API to hook into event notifications
 - Re-processing of any missed events during downtime as long as calendar subscriptions (env.TTL) is still valid
@@ -56,12 +60,17 @@ This application responds to particular calendar events based on contextual cues
    });
    ```
 4. Start the application, and the application will import the observer at runtime.
-5. Want to see a working example? Checkout the [`exampleObserver`](/blob/master/observers/exampleObserver.js), which logs the users who have "PTO" in their calendar title.
+5. Want to see a working example? Checkout the [`exampleObserver`](/observers/exampleObserver.js), which logs the users who have "PTO" in their calendar title.
 
-## Contributors
+## Authors
 - [Brandon Him](https://github.com/brh55/)
 - [Rekha Rawat](https://github.com/rekharawat)
 - [Innovation Edge Team @ Cisco](https://github.com/cisco-ie)
+
+## Contributing
+:octocat: PR's are welcomed. Please, submit an issue prior to getting started to see how others can assist in determining implementation details.
+
+Prior to submitting PRs: `$ npm test`
 
 ## License
 MIT © [Innovation Edge @ Cisco](https://github.com/cisco-ie/google-calendar-listener)
