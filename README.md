@@ -1,7 +1,9 @@
 # Google Calendar Listener
 > A reactive application for calendar events created within a [G Suite](https://gsuite.google.com/).
 
-This application responds to particular calendar events based on contextual cues found within a typical event payload *(date, subject, summary, attendees, location, status, etc.)*. In addition, observers (calendar event handlers) are open-ended and flexible enough to allow the developer to define appropriate actions.
+![Google Calendar Listener Demo](http://g.recordit.co/uBCEUMWD4N.gif)
+
+This application responds to particular calendar events based on user defined contextual cues found within a typical event payload *(date, subject, summary, attendees, location, status, etc.)*. In addition, observers *(calendar event handlers)* are open-ended and flexible enough to allow the developer to define appropriate actions.
 
 > :warning:  **ES6 Migration**
 > 
