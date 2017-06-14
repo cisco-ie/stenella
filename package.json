@@ -1,7 +1,7 @@
 {
-  "name": "webex-google-calendar",
-  "version": "1.0.0",
-  "description": "webex google calendar integration",
+  "name": "google-calendar-listener",
+  "version": "0.1.0",
+  "description": "A reactive application for calendar events created within a G Suite with easy-to-add observer hooks",
   "main": "index.js",
   "scripts": {
     "pretest": "cp ./example.env ./.env",
@@ -13,22 +13,25 @@
     "test-cov": "npm run pretest & istanbul cover _mocha",
     "test-codecov": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && codecov --token=a032f333-f808-4dc6-8b1f-31e4519ebccb"
   },
+  "engines": {
+		"node": ">=6"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cisco-ie/webex-google-calendar.git"
+    "url": "git+https://github.com/cisco-ie/google-calendar-listener.git"
   },
   "keywords": [
-    "cisco",
-    "webex",
     "google",
-    "calendar"
+    "calendar",
+    "google suite",
+    "integration"
   ],
   "author": "Brandon Him, Rekha Rawat",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/cisco-ie/webex-google-calendar/issues"
+    "url": "https://github.com/cisco-ie/google-calendar-listener/issues"
   },
-  "homepage": "https://github.com/cisco-ie/webex-google-calendar#readme",
+  "homepage": "https://github.com/cisco-ie/google-calendar-listener#readme",
   "devDependencies": {
     "babel-polyfill": "^6.23.0",
     "babel-preset-env": "^1.4.0",
