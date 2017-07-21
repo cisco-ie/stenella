@@ -7,7 +7,7 @@ This application responds to particular calendar events based on user defined co
 
 > :warning:  **ES6 Migration**
 > 
-> The current code base is still in the process of migrating from ES5 to ES6, so please bare with us as we finish this process.
+> The current code base is still in the process of migrating from ES5 to ES6, so please bear with us as we finish this process.
 
 ## Features
 - An easy to use, and straightforward API to hook into event notifications
