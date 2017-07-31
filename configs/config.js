@@ -8,7 +8,7 @@ dotenv.config();
 
 function build(env) {
   const RECEIVING_URL = _normalizeUrl(env.RECEIVING_URL);
-  
+
   let config = {
     port: Number(env.PORT) || 5000,
     authorizeAdmin: env.ADMIN,
@@ -16,7 +16,8 @@ function build(env) {
       base: RECEIVING_URL,
       events: RECEIVING_URL + '/watch/events',
       users: RECEIVING_URL + '/watch/users'
-    }
+    },
+    ssl: env.SSL || false
   };
 
   if (env.DOMAIN) {
@@ -66,4 +67,3 @@ module.exports = {
   _normalizeUrl,
   build
 };
-
