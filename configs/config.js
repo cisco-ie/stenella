@@ -17,7 +17,7 @@ function build(env) {
       events: RECEIVING_URL + '/watch/events',
       users: RECEIVING_URL + '/watch/users'
     },
-    ssl: env.SSL || false
+    ssl: false
   };
 
   if (env.DOMAIN) {
@@ -30,6 +30,14 @@ function build(env) {
 
   if (env.TTL) {
     config = Object.assign({}, config, { ttl: env.TTL });
+  }
+
+  if (env.PRIVATE_KEY_PATH && env.PRIMARY_CERT_PATH && env.INTERMEDIATE_CERT_PATH)
+	const key = fs.readFileSync(env.PRIVATE_KEY_PATH);
+    const cert = fs.readFileSync(env.PRIMARY_CERT_PATH);
+	const ca = fs.readFileSync(env.INTERMEDIATE_CERT_PATH);
+	const sslOptions = { key, cert, ca }
+	config = Object.assign({}, config, { sslOptions, ssl: true });
   }
 
   const throwError = (message) => {
