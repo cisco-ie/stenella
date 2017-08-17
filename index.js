@@ -3,18 +3,19 @@
 const express = require('express');
 const app = express();
 const Promise = require('bluebird');
-let _ = require('lodash');
+const _ = require('lodash');
+const mongoose = require('mongoose');
+const Rx = require('rxjs');
+const requireAll = require('require-all');
+
 const AdministerUsers = require('./services/AdministerUsers');
 const AdministerChannels = require('./services/AdministerChannels');
 const AdministerCalendars = require('./services/AdministerCalendars');
 const config = require('./configs/config').APP;
 let db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
-const mongoose = require('mongoose');
 let Channel = mongoose.model('Channel', require('./data/schema/channel'));
 let calendarEvent = require('./controllers/eventController').observable;
 const debug = require('debug')('main');
-const requireAll = require('require-all');
-const Rx = require('rxjs');
 const eventController = require('./controllers/eventController');
 
 mongoose.Promise = require('bluebird');
@@ -174,5 +175,3 @@ function findNonMatchingExpiredChannel() {
   };
   return Channel.find(query);
 }
-
-

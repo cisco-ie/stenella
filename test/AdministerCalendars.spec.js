@@ -8,7 +8,7 @@ var AdministerCalendars = rewire('../services/AdministerCalendars');
 describe('Administer Calendar Test', function CalendarTestSuite() {
   var calendar = AdministerCalendars.__get__('calendar');
   var listSpy = sinon.spy(AdministerCalendars.__get__('listEvents'));
-  let jwtRevert;
+  let .jwtRevert;
 
   beforeEach(function setUp(done) {
     var jwtMock = {
