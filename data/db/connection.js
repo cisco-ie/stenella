@@ -1,39 +1,26 @@
 // Connection Configs
-var mongoose = require('mongoose');
-var config   = require('../../configs/dbConfig');
+const mongoose = require('mongoose');
+const config   = require('../../configs/dbConfig');
 
 function connect(state) {
-  function urlFactory() {
-    var url = {
-      'test': config.test_url,
-      'production': config.production_url
-    };
-    if (!state) return url.production;
-    return url[state];
-  }
-
-  var dbUrl = urlFactory();
+  const dbUrl = {
+		'test': config.test_url,
+		'production': config.production_url
+	}[state || 'production'];
 
   mongoose.connect(dbUrl);
 
-  mongoose.connection.on('connected', function connectedCb() {
-    console.log('Mongoose default connection open to', state);
-  });
-
-  mongoose.connection.on('error', function errorCb(err) {
+  mongoose.connection.on('connected', () => console.log('Mongoose default connection open to', state));
+  mongoose.connection.on('error', err => {
     console.log('Mongoose default connection error: ' + err);
     throw new Error(err);
   });
+  mongoose.connection.on('disconnected', () => console.log('Mongoose default connection disconnected'));
 
-  mongoose.connection.on('disconnected', function disconnectedCb() {
-    console.log('Mongoose default connection disconnected');
-  });
-
-  // When server is terminated
-  process.on('SIGINT', function serverTerminatedCb() {
-    mongoose.connection.close(function mongoTerminatedCb() {
+  process.on('SIGINT', () => {
+    mongoose.connection.close(() => {
       throw new Error('Mongoose default connection disconnected due to server termination');
-    });
+		});
   });
 }
 

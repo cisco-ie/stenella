@@ -157,7 +157,7 @@ function findNonMatchingExpiredChannel() {
     $or: [
       {
         expiration: {
-          $lt: new Date();
+          $lt: new Date()
         }
       },
       {
