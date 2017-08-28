@@ -1,9 +1,9 @@
 'use strict';
 
-var _                   = require('lodash');
-var mongoose            = require('mongoose');
-var AdministerCalendars = require('../services/AdministerCalendars');
-var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
+const _ = require('lodash');
+const mongoose = require('mongoose');
+const AdministerCalendars = require('../services/AdministerCalendars');
+const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 const EventEmitter = require('events');
 const Rx = require('rxjs');
 const debug = require('debug')('eventController');
@@ -16,7 +16,7 @@ const calendarEmitter = new CalendarEmitter();
 let Interface = {
   load,
   emitEvents,
-  // [ Event1, Event2 ] => Observable.of(Event1)-->Observable.of(Event2)
+  // [ Event1, Event2 ] => Observable.of(Event1) --> Observable.of(Event2)
   observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
   _filterForLatestEvents,
   _parseUserIdFromEmail,
@@ -34,18 +34,20 @@ function load(channelId) {
   getChannelEntry(channelId).then(channelEntry => {
     debug('Found channel entry for %s: %O', channelId, channelEntry);
     // Old channel that may have existed due to overlap renewals
-    if (!channelEntry) { return; }
+    if (!channelEntry) {
+			debug('Channel entry not found, possibly due to overlap')
+		};
     AdministerCalendars.incrementalSync(channelEntry)
       .then(syncResp => {
         AdministerCalendars.persistNewSyncToken(channelEntry);
-	    debug('Syncing for calendar update (%s)', channelId);
-	    return syncResp;
+		    debug('Syncing for calendar update (%s)', channelId);
+		    return syncResp;
       })
       .then(parseEvents)
       .then(parsedUpdates => {
-	    calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
+	    	calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
       })
-      .catch(console.log);
+      .catch(debug);
   });
 }
 
@@ -70,27 +72,23 @@ function getChannelEntry(channelId) {
 
 function parseEvents(syncResponse) {
     if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
-    // Event list is order sensitive
     // Filter events for any duplicates and just get the latest one
-    var eventList = syncResponse.items
-        .filter(_filterForLatestEvents);
-    var userId = _parseUserIdFromEmail(syncResponse.summary);
+    const eventList = syncResponse.items.filter(_filterForLatestEvents);
+    const userId = _parseUserIdFromEmail(syncResponse.summary);
     const updates = eventList.map(event => {
         event.calendarId = syncResponse.summary;
         event.userId = userId;
         return event;
     });
-
     return updates;
 }
 
 // Looks through the list to find any matching event
-// previously
 // _filterForLatestEvent :: (Element, Index, Array) -> Boolean
 function _filterForLatestEvents(currentEvent, currentIndex, list) {
-  const mostRecentIndex = _.findIndex(list, (e) => e.id === currentEvent.id);
+  const mostRecentIndex = _.findIndex(list, e => e.id === currentEvent.id);
   // If the current item index is equal or less than the most recentIndex, keep it (true)
-  return (currentIndex <= mostRecentIndex) ? true : false;
+  return currentIndex <= mostRecentIndex ? true : false;
 }
 
 function _parseUserIdFromEmail(email) {
