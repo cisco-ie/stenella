@@ -1,19 +1,19 @@
 'use strict';
 
-var express           = require('express');
-var router            = express.Router();  // eslint-disable-line new-cap
-var AdminsterChannels = require('../services/AdministerChannels');
-var parseHeaders      = AdminsterChannels.parseHeaders;
-var bodyParser        = require('body-parser');
-var jsonParser        = bodyParser.json({type: 'application/*'});
-var mongoose          = require('mongoose');
-var Channel           = mongoose.model('Channel', require('../data/schema/channel'));
+const express = require('express');
+const router = express.Router();  // eslint-disable-line new-cap
+const AdminsterChannels = require('../services/AdministerChannels');
+const parseHeaders = AdminsterChannels.parseHeaders;
+const bodyParser = require('body-parser');
+const jsonParser = bodyParser.json({type: 'application/*'});
+const mongoose = require('mongoose');
+const Channel = mongoose.model('Channel', require('../data/schema/channel'));
 const debug = require('debug')('userRoute');
 /**
  * `watch/users` POST Route
  */
 router.post('/', jsonParser, function watchIndexResponse(request, response) {
-  var headers = parseHeaders(request);
+  const headers = parseHeaders(request);
 
   var syncNotification = (headers.resourceState === 'sync');
   if (syncNotification) {
@@ -29,7 +29,7 @@ router.post('/', jsonParser, function watchIndexResponse(request, response) {
     // occurs on a DIRECTORY channel that our current
     // application had created
     findDirectoryChannel(headers.channelId)
-      .then(function findResponse(directoryChannel) {
+      .then(directoryChannel => {
         if (directoryChannel) {
           createNewChannel(request.body.primaryEmail);
           response.sendStatus(200);
@@ -58,7 +58,7 @@ function isNewUserNotification(parsedHeaders) {
 }
 
 function createEventChannel(calendarId) {
-  var channelInfo = {
+  const channelInfo = {
     resourceType: 'event',
     calendarId: calendarId
   };
