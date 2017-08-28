@@ -86,7 +86,7 @@ function createChannel(channelInfo) {
               if (eventChannelOperation.retry(err)) {
 		reject(eventChannelOperation.mainError());
 	      }
-	      
+
               if (res) {
 		res.resourceType = 'event';
 		res.calendarId = channelInfo.calendarId;
@@ -98,7 +98,7 @@ function createChannel(channelInfo) {
         })
         .catch(reject);
       break;
-      
+
     case 'directory':
       createJWT(scope.userDirectory)
         .then(jwtClient => {
@@ -111,7 +111,7 @@ function createChannel(channelInfo) {
               if (dirChannelOperation.retry(err)) {
 		reject(dirChannelOperation.mainError());
 	      }
-	      
+
               if (res) {
 		res.resourceType = 'directory';
 		debug('Directory channel successfully created on attempt #%s', currentAttempt);
@@ -201,6 +201,7 @@ function parseHeaders(request) {
  * @return {Object}             Returns save channel
  */
 function saveChannel(channelInfo) {
+	debug('Saved event channel for %s', channelInfo.id || channelInfo.calendarId);
   if (!channelInfo) throw new Error('Undefined channel information');
   var props = {
     channelId: channelInfo.id || '',
