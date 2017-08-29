@@ -61,28 +61,24 @@ function getFullSync(calendarId) {
  * @return {Object}   Promise of calendar event list
  */
 function getIncrementalSync(calendarInfo) {
-  if (!calendarInfo)
-    throw new Error('CalendarInfo is not defined');
+	if (!calendarInfo)
+		throw new Error('CalendarInfo is not defined');
 
-  if (!calendarInfo.syncToken)
-    throw new Error('No calendar.syncToken found');
+	if (!calendarInfo.syncToken)
+		throw new Error('No calendar.syncToken found');
 
-  return new Promise(function incrementalSyncPromise(resolve, reject) {
-    AdministerJWT.createJWT(scope.calendar)
-      .then(function jwtResponse(jwtClient) {
-        const params = {
-          auth: jwtClient,
-          calendarId: calendarInfo.calendarId || calendarInfo.id,
-          singleEvents: false,
-          syncToken: calendarInfo.syncToken,
-          showDeleted: true
-        };
-
-        listEvents(params)
-          .then(resolve)
-          .catch(reject);
-      });
-  });
+	return new Promise(function incrementalSyncPromise(resolve, reject) {
+		AdministerJWT.createJWT(scope.calendar)
+			.then(jwtClient => listEvents({
+				auth: jwtClient,
+				calendarId: calendarInfo.calendarId || calendarInfo.id,
+				singleEvents: false,
+				syncToken: calendarInfo.syncToken,
+				showDeleted: true
+			}))
+			.then(resolve)
+			.catch(reject);
+	});
 }
 
 /**
@@ -91,9 +87,9 @@ function getIncrementalSync(calendarInfo) {
  * @return {String}            the syncToken
  */
 function getSyncToken(calendarId) {
-	return new Promise(function syncTokenPromise(resolve, reject) {
+	return new Promise((resolve, reject) => {
 		getFullSync(calendarId)
-			.then(function fullSyncResponse(response) {
+			.then(response => {
 				const syncToken = response.nextSyncToken;
 				if (!syncToken) throw new Error('No syncToken found in response');
 				resolve(syncToken);
@@ -123,7 +119,7 @@ function updateEvent(params, updateInfo) {
 
   params.resource = updateInfo;
   return AdministerJWT.createJWT(scope.calendar)
-    .then(function jwtResponse(jwtClient) {
+    .then(jwtClient => {
       params.auth = jwtClient;
       return Promise.promisify(calendar.events.update)(params);
     });

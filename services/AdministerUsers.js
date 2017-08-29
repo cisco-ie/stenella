@@ -24,7 +24,7 @@ module.exports = Interface;
  * @return {object} a promise that resolves into a user listing response
  */
 function getUsers(overrideParams) {
-	return new Promise(function userPromise(resolve, reject) {
+	return new Promise((resolve, reject) => {
 		createJWT(scope.userDirectory)
 			.then(jwtClient => buildParams(jwtClient, overrideParams))
 			.then(params => requestUserList(params))
