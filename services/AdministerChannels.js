@@ -140,7 +140,7 @@ function buildParams(jwtClient, channelInfo) {
     auth: jwtClient
   };
   const UUID = require('node-uuid').v4();
-  const extendParams = {};
+  let extendParams = {};
 
   if (channelInfo.resourceType === 'event') {
     extendParams = {
