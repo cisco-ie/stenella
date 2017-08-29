@@ -139,7 +139,7 @@ function persistNewSyncToken(syncResponse) {
   const query = {
     calendarId
   };
-  
+
   const update = {
     syncToken: syncResponse.nextSyncToken
   };
