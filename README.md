@@ -5,10 +5,6 @@
 
 This application responds to particular calendar events based on user defined contextual cues found within a typical event payload *(date, subject, summary, attendees, location, status, etc.)*. In addition, observers *(calendar event handlers)* are open-ended and flexible enough to allow the developer to define appropriate actions.
 
-> :warning:  **ES6 Migration**
-> 
-> The current code base is still in the process of migrating from ES5 to ES6, so please bear with us as we finish this process.
-
 ## Features
 - An easy to use, and straightforward API to hook into event notifications
 - Re-processing of any missed events during downtime as long as calendar subscriptions (env.TTL) is still valid
@@ -23,7 +19,7 @@ This application responds to particular calendar events based on user defined co
 
 ## Set Up
 1. [Verify](https://support.google.com/webmasters/answer/35179?authuser=0) your application's domain name ownership
-    
+
     Verification of the application domain name with Google proves that you own/trust it. This enables the application to handle Google calendar notifications. `google-calendar-listener` provides a `/verify` directory where you can simply drop your `verification.html` files into it and it will be publicly available to Google verfication servers.
 
 2. Create a Google App
@@ -40,18 +36,18 @@ This application responds to particular calendar events based on user defined co
     10. Select the **Domain Verification** tab, click *Add Domain* and add your domain that was verified in **Step 1**
 3. Setup the [MongoDB database](https://docs.mongodb.com/manual/installation/?jmp=footer)
 4. Clone the repository: `git clone https://github.com/cisco-ie/google-calendar-listener/`
-5. Download the application's dependencies:    
+5. Download the application's dependencies:
     `$ npm install`
 6. Copy the `example.env` to `.env` and set up the variables
 7. Create an [observer](#observer-usage) to respond to calendar events
-8. Start the application:    
+8. Start the application:
     `$ npm start`
 
 ## Observer Usage
 [Observers](http://reactivex.io/rxjs/class/es6/MiscJSDoc.js~ObserverDoc.html) respond to incoming notifications for newly created events. Since observers operate independently from each other, it's important to avoid having multiple observers manipulate or update the same event to prevent unexpected bugs.
 
 1. Create an observer file within the `/observers` directory
-2. Import the observable object from the event controller. The observable will provide notifications when new calendar events have been created.   
+2. Import the observable object from the event controller. The observable will provide notifications when new calendar events have been created.
    ```
    const calendarEvents = require('../controllers/eventController').observable;
    ```
