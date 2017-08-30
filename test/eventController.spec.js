@@ -4,8 +4,7 @@ const eventsMock = require('./mocks/eventList.json');
 const eventController = require('../controllers/eventController');
 
 describe('Event Controller', function EventControllerTest() {
-
-	it('should get the user from the email', function parseEmailTest(done) {
+	it('should get the user from the email', done => {
 		const parseUserIdFromEmail = eventController._parseUserIdFromEmail;
 
 		const testEmail1 = 'squirtle@live.com';
