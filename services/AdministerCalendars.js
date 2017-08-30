@@ -1,17 +1,16 @@
 'use strict';
 
-const google    = require('googleapis');
-const calendar  = google.calendar('v3');
-const Promise   = require('bluebird');
-const AdministerJWT = require('../services/AdministerJWT');
-const scope     = require('../constants/GoogleScopes');
+const google = require('googleapis');
+const calendar = google.calendar('v3');
+const Promise = require('bluebird');
+let AdministerJWT = require('../services/AdministerJWT');
+const scope = require('../constants/GoogleScopes');
 const mongoose = require('mongoose');
 const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 const debug = require('debug')('calendars');
-
 const listEvents = Promise.promisify(calendar.events.list);
 
-const Interface = {
+let Interface = {
   fullSync: getFullSync,
   incrementalSync: getIncrementalSync,
   getSyncToken,
@@ -23,11 +22,11 @@ module.exports = Interface;
 
 /**
  * Only performs the sync of items from Today to Future.
- * @param  {string}   calendarId Associated Email with Calendar
+ * @param  {string} calendarId Associated Email with Calendar
  * @return {object} full sync response object
  */
 function getFullSync(calendarId) {
-  const params = {
+  let params = {
     calendarId: calendarId,
     timeMin: (new Date()).toISOString(),
     singleEvents: false
@@ -37,7 +36,7 @@ function getFullSync(calendarId) {
   // we need to keep making request to get to the last page for
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
-  const eventListRequest = function eventListRequest(listParams) {
+   eventListRequest = function eventListRequest(listParams) {
     return AdministerJWT.createJWT(scope.calendar)
       .then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
       .then(listEvents)
@@ -90,7 +89,7 @@ function getSyncToken(calendarId) {
 	return new Promise((resolve, reject) => {
 		getFullSync(calendarId)
 			.then(response => {
-				const syncToken = response.nextSyncToken;
+				let syncToken = response.nextSyncToken;
 				if (!syncToken) throw new Error('No syncToken found in response');
 				resolve(syncToken);
 			})
