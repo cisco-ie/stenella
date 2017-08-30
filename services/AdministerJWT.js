@@ -1,11 +1,11 @@
 'use strict';
 
-var google  = require('googleapis');
-var Promise = require('bluebird');
+const google  = require('googleapis');
+const Promise = require('bluebird');
 const config  = require('../configs/config').APP;
 
-var Interface = {
-  createJWT: createJWT
+const Interface = {
+	createJWT: createJWT
 };
 
 module.exports = Interface;
@@ -16,21 +16,21 @@ module.exports = Interface;
  * @return {object}       promise of authorize Jwt
  */
 function createJWT(scope) {
-  return new Promise(function createJWTResponse(resolve, reject) {
-    google.auth.getApplicationDefault(function getCredentialsResponse(err, authClient) {
-      if (err) {
-        throw err;
-      }
+	return new Promise((resolve, reject) => {
+		google.auth.getApplicationDefault(function getCredentialsResponse(err, authClient) {
+			if (err) {
+				throw err;
+			}
 
-      if (authClient.createScopedRequired &&
-          authClient.createScopedRequired()) {
-        var scopedAuthClient = authClient.createScoped(scope);
-        scopedAuthClient.subject = config.authorizeAdmin;
-        scopedAuthClient.authorize(function authorizeJWTResponse(error) {
-          if (error) reject(error);
-          resolve(scopedAuthClient);
-        });
-      }
-    });
-  });
+			if (authClient.createScopedRequired &&
+				authClient.createScopedRequired()) {
+				const scopedAuthClient = authClient.createScoped(scope);
+				scopedAuthClient.subject = config.authorizeAdmin;
+				scopedAuthClient.authorize(error => {
+					if (error) reject(error);
+					resolve(scopedAuthClient);
+				});
+			}
+		});
+	});
 }

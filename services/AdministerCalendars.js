@@ -1,17 +1,16 @@
 'use strict';
 
-var google    = require('googleapis');
-var calendar  = google.calendar('v3');
-var Promise   = require('bluebird');
-var AdministerJWT = require('../services/AdministerJWT');
-var scope     = require('../constants/GoogleScopes');
+const google = require('googleapis');
+const calendar = google.calendar('v3');
+const Promise = require('bluebird');
+let AdministerJWT = require('../services/AdministerJWT');
+const scope = require('../constants/GoogleScopes');
 const mongoose = require('mongoose');
 const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 const debug = require('debug')('calendars');
-
 const listEvents = Promise.promisify(calendar.events.list);
 
-var Interface = {
+let Interface = {
   fullSync: getFullSync,
   incrementalSync: getIncrementalSync,
   getSyncToken,
@@ -23,11 +22,11 @@ module.exports = Interface;
 
 /**
  * Only performs the sync of items from Today to Future.
- * @param  {string}   calendarId Associated Email with Calendar
+ * @param  {string} calendarId Associated Email with Calendar
  * @return {object} full sync response object
  */
 function getFullSync(calendarId) {
-  var params = {
+  let params = {
     calendarId: calendarId,
     timeMin: (new Date()).toISOString(),
     singleEvents: false
@@ -37,18 +36,18 @@ function getFullSync(calendarId) {
   // we need to keep making request to get to the last page for
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
-  var eventListRequest = function eventListRequest(listParams) {
+   eventListRequest = function eventListRequest(listParams) {
     return AdministerJWT.createJWT(scope.calendar)
       .then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
       .then(listEvents)
       .then(result => {
-	debug('Get calendar events for %s', listParams.calendarId);
-        if (result.nextPageToken) {
-	  debug('Paging calendar events for %s', listParams.calendarId);
-          listParams.nextPageToken = result.nextPageToken;
-          return eventListRequest(listParams);
-        }
-	return result;
+		  debug('Get calendar events for %s', listParams.calendarId);
+          if (result.nextPageToken) {
+			  debug('Paging calendar events for %s', listParams.calendarId);
+			  listParams.nextPageToken = result.nextPageToken;
+			  return eventListRequest(listParams);
+          }
+		  return result;
       });
   };
 
@@ -61,28 +60,24 @@ function getFullSync(calendarId) {
  * @return {Object}   Promise of calendar event list
  */
 function getIncrementalSync(calendarInfo) {
-  if (!calendarInfo)
-    throw new Error('CalendarInfo is not defined');
+	if (!calendarInfo)
+		throw new Error('CalendarInfo is not defined');
 
-  if (!calendarInfo.syncToken)
-    throw new Error('No calendar.syncToken found');
+	if (!calendarInfo.syncToken)
+		throw new Error('No calendar.syncToken found');
 
-  return new Promise(function incrementalSyncPromise(resolve, reject) {
-    AdministerJWT.createJWT(scope.calendar)
-      .then(function jwtResponse(jwtClient) {
-        var params = {
-          auth: jwtClient,
-          calendarId: calendarInfo.calendarId || calendarInfo.id,
-          singleEvents: false,
-          syncToken: calendarInfo.syncToken,
-          showDeleted: true
-        };
-
-        listEvents(params)
-          .then(resolve)
-          .catch(reject);
-      });
-  });
+	return new Promise(function incrementalSyncPromise(resolve, reject) {
+		AdministerJWT.createJWT(scope.calendar)
+			.then(jwtClient => listEvents({
+				auth: jwtClient,
+				calendarId: calendarInfo.calendarId || calendarInfo.id,
+				singleEvents: false,
+				syncToken: calendarInfo.syncToken,
+				showDeleted: true
+			}))
+			.then(resolve)
+			.catch(reject);
+	});
 }
 
 /**
@@ -91,15 +86,15 @@ function getIncrementalSync(calendarInfo) {
  * @return {String}            the syncToken
  */
 function getSyncToken(calendarId) {
-  return new Promise(function syncTokenPromise(resolve, reject) {
-    getFullSync(calendarId)
-      .then(function fullSyncResponse(response) {
-	const syncToken = response.nextSyncToken;
-	if (!syncToken) throw new Error('No syncToken found in response');
-        resolve(syncToken);
-      })
-      .catch(reject);
-  });
+	return new Promise((resolve, reject) => {
+		getFullSync(calendarId)
+			.then(response => {
+				let syncToken = response.nextSyncToken;
+				if (!syncToken) throw new Error('No syncToken found in response');
+				resolve(syncToken);
+			})
+			.catch(reject);
+	});
 }
 
 /**
@@ -115,7 +110,7 @@ function getSyncToken(calendarId) {
  */
 function updateEvent(params, updateInfo) {
   if (!params) throw new Error('Missing params for update Event');
-  var requiredParams = (params.eventId && params.calendarId);
+  const requiredParams = (params.eventId && params.calendarId);
   if (!requiredParams) throw new Error('Missing required eventId or calendarId');
 
   // Return if no updates to save redundant API request
@@ -123,7 +118,7 @@ function updateEvent(params, updateInfo) {
 
   params.resource = updateInfo;
   return AdministerJWT.createJWT(scope.calendar)
-    .then(function jwtResponse(jwtClient) {
+    .then(jwtClient => {
       params.auth = jwtClient;
       return Promise.promisify(calendar.events.update)(params);
     });
@@ -135,18 +130,16 @@ function updateEvent(params, updateInfo) {
  * @return {Object}              Returns the response out to continue the chain
  */
 function persistNewSyncToken(syncResponse) {
-  const calendarId = syncResponse.summary;
-  const query = {
-    calendarId
-  };
-  
-  const update = {
-    syncToken: syncResponse.nextSyncToken
-  };
+	const calendarId = syncResponse.summary;
+	const query = {
+		calendarId
+	};
 
-  return ChannelEntry.update(query, update)
-    .exec()
-    .then((r) => (r.nModified > 0) ?
-	  debug('Updated %s\'s syncToken', calendarId) :
-	  syncResponse)
+	const update = {
+		syncToken: syncResponse.nextSyncToken
+	};
+
+	return ChannelEntry.update(query, update)
+		.exec()
+		.then(r => r.nModified > 0 ?  debug('Updated %s\'s syncToken', calendarId) : syncResponse);
 }
