@@ -1,5 +1,6 @@
 'use strict';
-
+const https = require('https');
+const fs = require('fs');
 const express = require('express');
 const app = express();
 const Promise = require('bluebird');
@@ -7,7 +8,6 @@ const _ = require('lodash');
 const mongoose = require('mongoose');
 const Rx = require('rxjs');
 const requireAll = require('require-all');
-
 const AdministerUsers = require('./services/AdministerUsers');
 const AdministerChannels = require('./services/AdministerChannels');
 const AdministerCalendars = require('./services/AdministerCalendars');
@@ -35,15 +35,23 @@ app.use(serverAPI.users, require('./routes/usersRoute'));
 initServer();
 
 function initServer() {
-  removeExpiredChannels();
-  setUpChannels()
-    .then(() => {
-      loadObservers();
-      console.log('Observers loaded, now listening to calendars');
-    })
-    .catch(debug);
-
-  app.listen(config.port, debug('Running on port 5000'));
+	removeExpiredChannels();
+	setUpChannels()
+		.then(() => {
+			loadObservers();
+			console.log('Observers loaded, now listening to calendars');
+		})
+		.catch(debug);
+	console.log(config);
+	if (config.ssl === true) {
+		debug('SSL setting detected, running HTTPS');
+		https.createServer({
+			key: fs.readFileSync(config.sslOptions.privateKey, 'ascii'),
+			cert: fs.readFileSync(config.sslOptions.cert, 'ascii')
+		}, app).listen(config.port);
+	} else {
+		app.listen(config.port, debug('Running on port 5000'));
+	}
 }
 
 // Packages any file *.js within /observers directory
