@@ -16,8 +16,7 @@ function build(env) {
 			base: RECEIVING_URL,
 			events: RECEIVING_URL + '/watch/events',
 			users: RECEIVING_URL + '/watch/users'
-		},
-		ssl: (env.SSL === 'true') ? true : false
+		}
 	};
 
 	if (env.DOMAIN) {
@@ -32,10 +31,18 @@ function build(env) {
 		config = Object.assign({}, config, { ttl: env.TTL });
 	}
 
+	if (env.USER_WHITELIST_PATH) {
+		// Set to app root
+		const listPath = path.join('../', env.USER_WHITELIST_PATH);
+		config = Object.assign({}, config, { whitelist: require(listPath) });
+	}
+
 	if (env.PRIVATE_KEY_PATH && env.FULL_CHAIN_CERT_PATH) {
-		const privateKey = fs.readFileSync(env.PRIVATE_KEY_PATH);
-		const cert = fs.readFileSync(env.FULL_CHAIN_CERT_PATH);
-		const sslOptions = { privateKey, cert };
+		const privateKey = env.PRIVATE_KEY_PATH;
+		const cert = env.FULL_CHAIN_CERT_PATH;
+		const sslOptions = (env.CERT_PASSPHRASE) ?
+			  { privateKey, cert, passphrase: env.CERT_PASSPHRASE } :
+			  { privateKey, cert };
 		config = Object.assign({}, config, { sslOptions, ssl: true });
 	}
 

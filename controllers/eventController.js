@@ -14,12 +14,12 @@ class CalendarEmitter extends EventEmitter {}
 const calendarEmitter = new CalendarEmitter();
 
 let Interface = {
-  load,
-  emitEvents,
-  // [ Event1, Event2 ] => Observable.of(Event1) --> Observable.of(Event2)
-  observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
-  _filterForLatestEvents,
-  _parseUserIdFromEmail,
+	load,
+	emitEvents,
+	// [ Event1, Event2 ] => Observable.of(Event1) --> Observable.of(Event2)
+	observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
+	_filterForLatestEvents,
+	_parseUserIdFromEmail,
 };
 
 module.exports = Interface;
@@ -30,25 +30,26 @@ module.exports = Interface;
  * @return {Void} None
  */
 function load(channelId) {
-  debug('load %s', channelId);
-  getChannelEntry(channelId).then(channelEntry => {
-    debug('Found channel entry for %s: %O', channelId, channelEntry);
-    // Old channel that may have existed due to overlap renewals
-    if (!channelEntry) {
-			debug('Channel entry not found, possibly due to overlap')
+	debug('load %s', channelId);
+	getChannelEntry(channelId).then(channelEntry => {
+		debug('Found channel entry for %s: %O', channelId, channelEntry);
+		// Old channel that may have existed due to overlap renewals
+		if (!channelEntry) {
+			debug('Channel entry not found, possibly due to overlap');
+			return;
 		};
-    AdministerCalendars.incrementalSync(channelEntry)
-      .then(syncResp => {
-        AdministerCalendars.persistNewSyncToken(channelEntry);
-		    debug('Syncing for calendar update (%s)', channelId);
-		    return syncResp;
-      })
-      .then(parseEvents)
-      .then(parsedUpdates => {
-	    	calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
-      })
-      .catch(debug);
-  });
+		AdministerCalendars.incrementalSync(channelEntry)
+			.then(syncResp => {
+				AdministerCalendars.persistNewSyncToken(channelEntry);
+				debug('Syncing for calendar update (%s)', channelId);
+				return syncResp;
+			})
+			.then(parseEvents)
+			.then(parsedUpdates => {
+	    		calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
+			})
+			.catch(debug);
+	});
 }
 
 // Emit events per a sync response
@@ -86,15 +87,15 @@ function parseEvents(syncResponse) {
 // Looks through the list to find any matching event
 // _filterForLatestEvent :: (Element, Index, Array) -> Boolean
 function _filterForLatestEvents(currentEvent, currentIndex, list) {
-  const mostRecentIndex = _.findIndex(list, e => e.id === currentEvent.id);
-  // If the current item index is equal or less than the most recentIndex, keep it (true)
-  return currentIndex <= mostRecentIndex ? true : false;
+	const mostRecentIndex = _.findIndex(list, e => e.id === currentEvent.id);
+	// If the current item index is equal or less than the most recentIndex, keep it (true)
+	return currentIndex <= mostRecentIndex ? true : false;
 }
 
 function _parseUserIdFromEmail(email) {
-  if (typeof email !== 'string') {
-    throw new Error('Email is not a string');
-  }
+	if (typeof email !== 'string') {
+		throw new Error('Email is not a string');
+	}
 
-  return email.match(/.+?(?=@)/g)[0];
+	return email.match(/.+?(?=@)/g)[0];
 }
