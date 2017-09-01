@@ -1,31 +1,32 @@
 'use strict';
-
+const https = require('https');
+const fs = require('fs');
 const express = require('express');
 const app = express();
 const Promise = require('bluebird');
-let _ = require('lodash');
+const _ = require('lodash');
+const mongoose = require('mongoose');
+const Rx = require('rxjs');
+const requireAll = require('require-all');
 const AdministerUsers = require('./services/AdministerUsers');
 const AdministerChannels = require('./services/AdministerChannels');
 const AdministerCalendars = require('./services/AdministerCalendars');
 const config = require('./configs/config').APP;
 let db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
-const mongoose = require('mongoose');
 let Channel = mongoose.model('Channel', require('./data/schema/channel'));
 let calendarEvent = require('./controllers/eventController').observable;
 const debug = require('debug')('main');
-const requireAll = require('require-all');
-const Rx = require('rxjs');
 const eventController = require('./controllers/eventController');
 
 mongoose.Promise = require('bluebird');
 
-app.get('/', (req, res) => res.send('Google integration is running.'));
+app.get('/', (req, res) => res.send('It works!'));
 // This is used to allow drop-in html files for Google verification
 app.use('/', express.static(__dirname + '/verify'));
 
 const serverAPI = {
-  events: '/watch/events',
-  users: '/watch/users'
+	events: '/watch/events',
+	users: '/watch/users'
 };
 
 app.use(serverAPI.events, require('./routes/eventsRoute'));
@@ -34,28 +35,54 @@ app.use(serverAPI.users, require('./routes/usersRoute'));
 initServer();
 
 function initServer() {
-  removeExpiredChannels();
-  setUpChannels()
-    .then(() => {
-      loadObservers();
-      console.log('Observers loaded, now listening to calendars');
-    })
-    .catch(debug);
+	removeExpiredChannels();
+	let userList;
+	if (config.whitelist) {
+		userList = config.whitelist;
+	}
 
-  app.listen(config.port, debug('Running on port 5000'));
+	setUpChannels(userList)
+		.then(() => {
+			loadObservers();
+			console.log('Observers loaded, now listening to calendars');
+		})
+		.catch(debug);
+
+	if (config.ssl === true) {
+		debug('SSL setting detected, running HTTPS');
+		if (config.port !== '443') {
+			debug(`Server is running on port, ${config.port}. Are you sure you don't want to run on 443?`);
+		}
+		https
+			.createServer({
+				key: fs.readFileSync(config.sslOptions.privateKey, 'ascii'),
+				cert: fs.readFileSync(config.sslOptions.cert, 'ascii'),
+				passphrase: config.sslOptions.passphrase || ''
+			}, app)
+			.listen(config.port, console.log(`HTTPS server running on ${config.port}`));
+	} else {
+		app.listen(config.port, console.log(`HTTP server running on ${config.port}`));
+	}
 }
 
 // Packages any file *.js within /observers directory
 function loadObservers() {
-  requireAll({
-    dirname:  __dirname + '/observers',
-    recursive: true
-  });
+	requireAll({
+		dirname:  __dirname + '/observers',
+		recursive: true
+	});
 }
 
-function setUpChannels() {
-  return AdministerUsers.list()
-    .then(createChannelsAndExtractIds)
+function setUpChannels(whitelist) {
+	if (whitelist) {
+		debug(`Whitelist detected, only the following emails will be authorized: ${whitelist}`);
+		const userlist = whitelist.map(email => ({ primaryEmail: email }));
+		return Promise.resolve(userlist)
+			.then(createChannelsAndExtractIds);
+	}
+	return AdministerUsers.list()
+		.then(resp => resp.users)
+		.then(createChannelsAndExtractIds);
 }
 
 /**
@@ -63,109 +90,108 @@ function setUpChannels() {
  * @param  {Object} userDirResponse JSON response for user directory response
  * @return {Void} n/a
  */
-function createChannelsAndExtractIds(userDirResponse) {
-  findDirectoryChannel()
-     // If existing channel exist renew it, otherwise create new and save
-    .then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
-    .then(AdministerChannels.renew)
-    .catch(debug);
+function createChannelsAndExtractIds(users) {
+	findDirectoryChannel()
+        // If existing channel exist renew it, otherwise create new and save
+		.then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
+		.then(AdministerChannels.renew)
+		.catch(debug);
 
-
-  extractUserIds(userDirResponse.users)
-    .each(calendarId => {
-      getEventChannelFromDB(calendarId)
-        .then(channelDBEntry => {
-				  if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
-				  return channelDBEntry;
+	extractUserIds(users)
+		.each(calendarId => {
+			getEventChannelFromDB(calendarId)
+				.then(channelDBEntry => {
+					if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
+					return channelDBEntry;
 				})
-				// If event channel exist, renew, otherwise create new channel
-        .then(eventChannel => eventChannel ?
-					renewChannelAndResync(eventChannel) :
-	      	createNewEventChannel(calendarId));
-    })
-    .catch(debug);
+			    // If event channel exist, renew, otherwise create new channel
+				.then(eventChannel => eventChannel ?
+					  renewChannelAndResync(eventChannel) :
+	      			  createNewEventChannel(calendarId));
+		})
+		.catch(debug);
 }
 
 function renewChannelAndResync(eventChannel) {
-  debug('Resyncing %s', eventChannel);
-  // If the app has stopped, we use the previous synctoken and
-  // resync and inform all our observers
-  AdministerCalendars
-    .incrementalSync(eventChannel)
-    .then(syncResp => {
-      debug('Incremental sync: %o informing observers', syncResp);
-		  AdministerCalendars
+	debug('Resyncing %s', eventChannel);
+	// If the app has stopped, we use the previous synctoken and
+	// resync and inform all our observers
+	AdministerCalendars
+		.incrementalSync(eventChannel)
+		.then(syncResp => {
+			debug('Incremental sync: %o informing observers', syncResp);
+			AdministerCalendars
 				.persistNewSyncToken(syncResp)
 				.then(() => debug('Updated syncToken during resync'));
 
 			return syncResp;
 		})
-    .then(eventController.emitEvents)
-    .catch(debug);
+		.then(eventController.emitEvents)
+		.catch(debug);
 
-  debug('Set renewal for %s', eventChannel);
-  AdministerChannels.renew(eventChannel);
-  return eventChannel;
+	debug('Set renewal for %s', eventChannel);
+	AdministerChannels.renew(eventChannel);
+	return eventChannel;
 }
 
 function createNewEventChannel(calendarId) {
-  return AdministerChannels.create({ calendarId, resourceType: 'event' })
-    .then(AdministerChannels.save)
-    .then(AdministerChannels.renew)
-    .catch(debug);
+	return AdministerChannels.create({ calendarId, resourceType: 'event' })
+		.then(AdministerChannels.save)
+		.then(AdministerChannels.renew)
+		.catch(debug);
 }
 
 /**
-* Get list of user ids from user records
-* @param  {Array} users an array of users from the Google directory response
-* @return {Object}       returns an extracted list of Google user ids
-*/
+ * Get list of user ids from user records
+ * @param  {Array} users an array of users from the Google directory response
+ * @return {Object}       returns an extracted list of Google user ids
+ */
 function extractUserIds(users) {
-  const userIds = _.map(users, user => user.primaryEmail);
-  return Promise.resolve(userIds);
+	const userIds = _.map(users, user => user.primaryEmail);
+	return Promise.resolve(userIds);
 }
 
 function createDirChannelAndSave() {
-  return AdministerChannels
-    .create({
-      resourceType: 'directory'
-    })
-    .then(AdministerChannels.save)
-    .catch(debug);
+	return AdministerChannels
+		.create({
+			resourceType: 'directory'
+		})
+		.then(AdministerChannels.save)
+		.catch(debug);
 }
 
 function getEventChannelFromDB(calendarId) {
-  return Channel.findOne({ calendarId });
+	return Channel.findOne({ calendarId });
 }
 
 function findDirectoryChannel() {
-  return Channel.findOne({ resourceType: 'directory' });
+	return Channel.findOne({ resourceType: 'directory' });
 }
 
 function removeExpiredChannels() {
-  let channels = findNonMatchingExpiredChannel();
-  channels.remove()
-    .then(removed => removed.result.n > 0 ?
-      debug('%s expired documents removed', removed.result.n) :
-      null);
+	let channels = findNonMatchingExpiredChannel();
+	channels.remove()
+		.then(removed => removed.result.n > 0 ?
+			  debug('%s expired documents removed', removed.result.n) :
+			  null);
 }
 
 function findNonMatchingExpiredChannel() {
-  // For the current being, this will remove any non matchinig configured URLs,
-  // which limits the application to only handle 1 set desired URL.
-  const query = {
-    $or: [
-      {
-        expiration: {
-          $lt: new Date()
-        }
-      },
-      {
-        webhookUrl: {
-          $ne: config.receivingUrl.base
-        }
-      }
-    ]
-  };
-  return Channel.find(query);
+	// For the current being, this will remove any non matchinig configured URLs,
+	// which limits the application to only handle 1 set desired URL.
+	const query = {
+		$or: [
+			{
+				expiration: {
+					$lt: new Date()
+				}
+			},
+			{
+				webhookUrl: {
+					$ne: config.receivingUrl.base
+				}
+			}
+		]
+	};
+	return Channel.find(query);
 }

@@ -36,7 +36,7 @@ function getFullSync(calendarId) {
   // we need to keep making request to get to the last page for
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
-   eventListRequest = function eventListRequest(listParams) {
+  let eventListRequest = function eventListRequest(listParams) {
     return AdministerJWT.createJWT(scope.calendar)
       .then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
       .then(listEvents)
