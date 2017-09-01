@@ -1,68 +1,66 @@
-var expect = require('chai').expect;
-var rewire = require('rewire');
-var sinon  = require('sinon');
-var mockEventList = require('./mocks/eventList.json');
-var Promise = require('bluebird');
-var AdministerCalendars = rewire('../services/AdministerCalendars');
+const expect = require('chai').expect;
+const rewire = require('rewire');
+const sinon  = require('sinon');
+const mockEventList = require('./mocks/eventList.json');
+const Promise = require('bluebird');
+const AdministerCalendars = rewire('../services/AdministerCalendars');
 
 describe('Administer Calendar Test', function CalendarTestSuite() {
-  var calendar = AdministerCalendars.__get__('calendar');
-  var listSpy = sinon.spy(AdministerCalendars.__get__('listEvents'));
-  let .jwtRevert;
+	const calendar = AdministerCalendars.__get__('calendar');
+	const listSpy = sinon.spy(AdministerCalendars.__get__('listEvents'));
+	let jwtRevert;
 
-  beforeEach(function setUp(done) {
-    var jwtMock = {
-      createJWT: function jwtFake() {
-        return Promise.resolve('a secured client');
-      }
-    };
+	beforeEach(function setUp(done) {
+		let jwtMock = {
+			createJWT: () => Promise.resolve('a secured client')
+		};
 
-    jwtRevert = AdministerCalendars.__set__('AdministerJWT', jwtMock);
-    done();
-  });
+		jwtRevert = AdministerCalendars.__set__('AdministerJWT', jwtMock);
+		done();
+	});
 
-  afterEach(() => jwtRevert());
+	afterEach(() => jwtRevert());
 
-  it('should send an update to Google Calendar', function UserListParams(done) {
-    var updateEvent = AdministerCalendars.__get__('updateEvent');
-    var updateSpy = sinon.spy(calendar.events, 'update');
-    var fakeResourceBody = {
-      summary: 'testing',
-      foo: 'bar'
-    };
+	it('should send an update to Google Calendar', done => {
+		const updateEvent = AdministerCalendars.__get__('updateEvent');
+		const updateSpy = sinon.spy(calendar.events, 'update');
+		const fakeResourceBody = {
+			summary: 'testing',
+			foo: 'bar'
+		};
 
-    // Since it will fail as this isn't an actual event
-    updateEvent({ eventId: 'event1', calendarId: 'calendar1' }, fakeResourceBody)
-      .catch(function updateError() {
-        var expectedParams = {
-          eventId: 'event1',
-          calendarId: 'calendar1',
-          resource: fakeResourceBody,
-          auth: 'a secured client'
-        };
+		// Since it will fail as this isn't an actual event
+		updateEvent({ eventId: 'event1', calendarId: 'calendar1' }, fakeResourceBody)
+			.catch(() => {
+				const expectedParams = {
+					eventId: 'event1',
+					calendarId: 'calendar1',
+					resource: fakeResourceBody,
+					auth: 'a secured client'
+				};
 
-        expect(updateSpy.calledWith(expectedParams)).to.be.true;
-        done();
-      });
-  });
+				expect(updateSpy.calledWith(expectedParams)).to.be.true;
+				done();
+			});
+	});
 
-  it('should return a sync token', function syncTokenTest(done) {
-    var mockFullSync = function sync() {
-      return Promise.resolve(mockEventList);
-    };
-    var revert = AdministerCalendars.__set__('getFullSync', mockFullSync);
+	it('should return a sync token', done => {
+		const mockFullSync = () => Promise.resolve(mockEventList);
+		let revert = AdministerCalendars.__set__('getFullSync', mockFullSync);
+		const getSyncToken = AdministerCalendars.__get__('getSyncToken');
 
-    var getSyncToken = AdministerCalendars.__get__('getSyncToken');
-    getSyncToken().then(function syncTokenResponse(syncToken) {
-      expect(syncToken).to.equal('CPiw4dWUu84CEPiw4dWUu84CGAU=');
-      revert();
-      done();
-    });
+		getSyncToken()
+			.then(syncToken => {
+				expect(syncToken).to.equal('CPiw4dWUu84CEPiw4dWUu84CGAU=');
+				revert();
+				done();
+			});
+>>>>>>> 4132438f56b31c921dd606b65d01bf9d41b5cf3e
   });
 
   // it('should perform a full sync', function fullSyncTest(done) {
   //   var getFullSync = AdministerCalendars.__get__('getFullSync');
-    
+
   //   getFullSync('brhim@apidevdemo.com')
   //     .then(function fullSyncResponse() {
   //       // @TODO: Add nextPageToken test and rewrite

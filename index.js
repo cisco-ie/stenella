@@ -21,11 +21,10 @@ const eventController = require('./controllers/eventController');
 mongoose.Promise = require('bluebird');
 
 app.get('/', (req, res) => res.send('Google integration is running.'));
-
 // This is used to allow drop-in html files for Google verification
 app.use('/', express.static(__dirname + '/verify'));
 
-var serverAPI = {
+const serverAPI = {
   events: '/watch/events',
   users: '/watch/users'
 };
@@ -40,12 +39,14 @@ function initServer() {
   setUpChannels()
     .then(() => {
       loadObservers();
-      console.log('Listening to calendars');
+      console.log('Observers loaded, now listening to calendars');
     })
     .catch(debug);
+
   app.listen(config.port, debug('Running on port 5000'));
 }
 
+// Packages any file *.js within /observers directory
 function loadObservers() {
   requireAll({
     dirname:  __dirname + '/observers',
@@ -72,15 +73,16 @@ function createChannelsAndExtractIds(userDirResponse) {
 
 
   extractUserIds(userDirResponse.users)
-    .each((calendarId) => {
+    .each(calendarId => {
       getEventChannelFromDB(calendarId)
         .then(channelDBEntry => {
-	  if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
-	  return channelDBEntry;
-	})
-        .then(eventChannel => (eventChannel) ?
-	      renewChannelAndResync(eventChannel) :
-	      createNewEventChannel(calendarId));
+				  if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
+				  return channelDBEntry;
+				})
+				// If event channel exist, renew, otherwise create new channel
+        .then(eventChannel => eventChannel ?
+					renewChannelAndResync(eventChannel) :
+	      	createNewEventChannel(calendarId));
     })
     .catch(debug);
 }
@@ -93,12 +95,13 @@ function renewChannelAndResync(eventChannel) {
     .incrementalSync(eventChannel)
     .then(syncResp => {
       debug('Incremental sync: %o informing observers', syncResp);
-      AdministerCalendars
-	.persistNewSyncToken(syncResp)
-	.then(() => debug('Updated syncToken during resync'));
-      return syncResp;
-    })
-    .then(syncResponse => eventController.emitEvents(syncResponse))
+		  AdministerCalendars
+				.persistNewSyncToken(syncResp)
+				.then(() => debug('Updated syncToken during resync'));
+
+			return syncResp;
+		})
+    .then(eventController.emitEvents)
     .catch(debug);
 
   debug('Set renewal for %s', eventChannel);
@@ -107,13 +110,8 @@ function renewChannelAndResync(eventChannel) {
 }
 
 function createNewEventChannel(calendarId) {
-  return AdministerChannels
-    .create({
-      calendarId,
-      resourceType: 'event'
-    })
+  return AdministerChannels.create({ calendarId, resourceType: 'event' })
     .then(AdministerChannels.save)
-    .then((r) => { debug('Saved event channel for %s', calendarId); return r})
     .then(AdministerChannels.renew)
     .catch(debug);
 }
@@ -124,9 +122,7 @@ function createNewEventChannel(calendarId) {
 * @return {Object}       returns an extracted list of Google user ids
 */
 function extractUserIds(users) {
-  var userIds = _.map(users, function extractEmail(user) {
-    return user.primaryEmail;
-  });
+  const userIds = _.map(users, user => user.primaryEmail);
   return Promise.resolve(userIds);
 }
 
@@ -140,30 +136,29 @@ function createDirChannelAndSave() {
 }
 
 function getEventChannelFromDB(calendarId) {
-  return Channel.findOne({calendarId: calendarId});
+  return Channel.findOne({ calendarId });
 }
 
 function findDirectoryChannel() {
-  return Channel.findOne({resourceType: 'directory'});
+  return Channel.findOne({ resourceType: 'directory' });
 }
 
 function removeExpiredChannels() {
   let channels = findNonMatchingExpiredChannel();
-  channels
-    .remove()
-    .then(removed => (removed.result.n > 0) ? debug('%s expired documents removed', removed.result.n) : null);
+  channels.remove()
+    .then(removed => removed.result.n > 0 ?
+      debug('%s expired documents removed', removed.result.n) :
+      null);
 }
 
 function findNonMatchingExpiredChannel() {
   // For the current being, this will remove any non matchinig configured URLs,
   // which limits the application to only handle 1 set desired URL.
-  var currentDate = new Date();
-
-  var query = {
+  const query = {
     $or: [
       {
         expiration: {
-          $lt: currentDate
+          $lt: new Date()
         }
       },
       {
