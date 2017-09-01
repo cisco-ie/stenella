@@ -55,7 +55,6 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
 				revert();
 				done();
 			});
->>>>>>> 4132438f56b31c921dd606b65d01bf9d41b5cf3e
   });
 
   // it('should perform a full sync', function fullSyncTest(done) {
