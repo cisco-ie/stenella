@@ -37,13 +37,13 @@ function load(channelId) {
     if (!channelEntry) { return; }
     AdministerCalendars.incrementalSync(channelEntry)
       .then(syncResp => {
-        AdministerCalendars.persistNewSyncToken(channelEntry);
-	    debug('Syncing for calendar update (%s)', channelId);
-	    return syncResp;
+        AdministerCalendars.persistNewSyncToken(syncResp);
+	      debug('Syncing for calendar update (%s)', channelId);
+	      return syncResp;
       })
       .then(parseEvents)
       .then(parsedUpdates => {
-	    calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
+	      calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
       })
       .catch(console.log);
   });
@@ -51,9 +51,10 @@ function load(channelId) {
 
 // Emit events per a sync response
 function emitEvents(syncResponse) {
+    if (!syncResponse) return;
     if (syncResponse.items.length === 0) {
-        debug('No new events found on sync response for %s', syncResponse.calendarId);
-        return false;
+        debug('No new events found on sync response for %s', syncResponse.summary);
+        return;
     }
     calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));
     return true;
@@ -69,7 +70,6 @@ function getChannelEntry(channelId) {
 }
 
 function parseEvents(syncResponse) {
-    if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
     // Event list is order sensitive
     // Filter events for any duplicates and just get the latest one
     var eventList = syncResponse.items
@@ -80,7 +80,6 @@ function parseEvents(syncResponse) {
         event.userId = userId;
         return event;
     });
-
     return updates;
 }
 

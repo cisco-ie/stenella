@@ -1,34 +1,48 @@
-const calendarEvents = require('../controllers/eventController').observable;
+const calendar = require('../controllers/eventController').observable;
 const AdministerCalendars = require('../services/AdministerCalendars');
+const debug = require('debug')('PMR Observer');
+const CMR = 'airbnb';
 
-calendarEvents.subscribe(PMRUrls);
+calendar.subscribe(addPMRUrl);
 
-// Find a way to implement exit logic of updating existing event
-function PMRUrls (calendarEvent) {
+function addPMRUrl(calendarEvent) {
 	if (!calendarEvent.summary) return;
-	if (calendarEvent.summary.match(/@webex/i)) {
-		if (calendarEvent.status === 'confirmed') {
-			if (calendarEvent.description) {
-				if (calendarEvent.description.indexOf('WebEx Details: Do Not Touch') > 0) return;
-			}
-
-			const existingDescription = (calendarEvent.description) ? calendarEvent.description : '';
-			const updateInfo = {
-				description: `${existingDescription}
-===WebEx Details: Do Not Touch===
-http://cisco.webex.com/meet/${calendarEvent.userId}
-`,
-				colorId: 9
-			};
-			const updatedEvent = Object.assign({}, calendarEvent, updateInfo);
-			AdministerCalendars.updateEvent({
-				calendarId: calendarEvent.calendarId,
-				eventId: calendarEvent.id
-			}, updatedEvent)
-				.then(() => console.log('updated'))
-				.catch(console.log);
+	const summaryContainsWebex = calendarEvent.summary.match(/@webex/i);
+	if (summaryContainsWebex) {
+		const newlyCreatedMeeting = (calendarEvent.status === 'confirmed');
+		if (newlyCreatedMeeting) {
+			handleConfirmMeeting(calendarEvent);
 		}
 	}
+}
+
+function handleConfirmMeeting(calendarEvent) {
+	const descriptionExist = calendarEvent.description;
+	if (descriptionExist) {
+		if (calendarEvent.description.indexOf('WebEx Details') > 0) {
+			return;
+		}
+	}
+
+	const existingDescription = (calendarEvent.description) ? calendarEvent.description : '';
+	const updateInfo = {
+		description: buildDescription(existingDescription, CMR, calendarEvent.userId),
+		colorId: 9
+	};
+
+	const updatedEvent = Object.assign({}, calendarEvent, updateInfo);
+	AdministerCalendars.updateEvent({
+		calendarId: calendarEvent.calendarId,
+		eventId: calendarEvent.id
+	}, updatedEvent)
+	.then(() => debug("Sucessfully update event."))
+	.catch(debug);
+}
+
+function buildDescription(existingDescription, cmrSite, userId) {
+	return `${existingDescription}
+==== WebEx Details: Do Not Touch ====
+http://${cmrSite}.webex.com/meet/${userId}`;
 }
 
 // /**
