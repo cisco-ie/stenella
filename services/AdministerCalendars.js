@@ -41,13 +41,13 @@ function getFullSync(calendarId) {
       .then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
       .then(listEvents)
       .then(result => {
-		  debug('Get calendar events for %s', listParams.calendarId);
-          if (result.nextPageToken) {
-			  debug('Paging calendar events for %s', listParams.calendarId);
-			  listParams.nextPageToken = result.nextPageToken;
-			  return eventListRequest(listParams);
-          }
-		  return result;
+        debug('Get calendar events for %s', listParams.calendarId);
+        if (result.nextPageToken) {
+          debug('Paging calendar events for %s', listParams.calendarId);
+          listParams.nextPageToken = result.nextPageToken;
+          return eventListRequest(listParams);
+        }
+        return result;
       });
   };
 
@@ -141,5 +141,5 @@ function persistNewSyncToken(syncResponse) {
 
 	return ChannelEntry.update(query, update)
 		.exec()
-		.then(r => r.nModified > 0 ?  debug('Updated %s\'s syncToken', calendarId) : syncResponse);
+		.then(r => r.nModified > 0 ? debug('Updated %s\'s syncToken', calendarId) : syncResponse);
 }

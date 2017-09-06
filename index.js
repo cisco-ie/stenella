@@ -90,48 +90,67 @@ function setUpChannels(whitelist) {
  * @param  {Object} userDirResponse JSON response for user directory response
  * @return {Void} n/a
  */
-function createChannelsAndExtractIds(users) {
-	findDirectoryChannel()
-        // If existing channel exist renew it, otherwise create new and save
-		.then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
-		.then(AdministerChannels.renew)
-		.catch(debug);
+function createChannelsAndExtractIds(userDirResponse) {
+  findDirectoryChannel()
+     // If existing channel exist renew it, otherwise create new and save
+    .then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
+    .then(AdministerChannels.renew)
+    .catch(debug);
 
-	extractUserIds(users)
-		.each(calendarId => {
-			getEventChannelFromDB(calendarId)
-				.then(channelDBEntry => {
-					if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
-					return channelDBEntry;
-				})
-			    // If event channel exist, renew, otherwise create new channel
-				.then(eventChannel => eventChannel ?
-					  renewChannelAndResync(eventChannel) :
-	      			  createNewEventChannel(calendarId));
-		})
-		.catch(debug);
+
+  extractUserIds(userDirResponse.users)
+    .each(calendarId => {
+      getEventChannelFromDB(calendarId)
+        .then(channelDBEntry => {
+          if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
+          return channelDBEntry;
+        })
+        .then(eventChannel => (eventChannel) ? renewChannelAndResync(eventChannel) : createNewEventChannel(calendarId));
+      })
+      .catch(debug);
 }
 
 function renewChannelAndResync(eventChannel) {
-	debug('Resyncing %s', eventChannel);
-	// If the app has stopped, we use the previous synctoken and
-	// resync and inform all our observers
-	AdministerCalendars
-		.incrementalSync(eventChannel)
-		.then(syncResp => {
-			debug('Incremental sync: %o informing observers', syncResp);
-			AdministerCalendars
-				.persistNewSyncToken(syncResp)
-				.then(() => debug('Updated syncToken during resync'));
+  debug('Resyncing %s', eventChannel);
+  // If the app has stopped, we use the previous syncToken and
+  // resync and inform all our observers
+  AdministerCalendars
+    .incrementalSync(eventChannel)
+    .then(syncResp => {
+      debug('Incremental sync: %o informing observers', syncResp);
+      AdministerCalendars
+        .persistNewSyncToken(syncResp)
+        .then(() => debug('Updated syncToken during resync'));
 
-			return syncResp;
-		})
-		.then(eventController.emitEvents)
-		.catch(debug);
+      return syncResp;
+    })
+    .then(syncResponse => eventController.emitEvents(syncResponse))
+    .catch((err) => handleInvaldTokenError(err, eventChannel));
 
-	debug('Set renewal for %s', eventChannel);
-	AdministerChannels.renew(eventChannel);
-	return eventChannel;
+  debug('Set renewal for %s', eventChannel);
+  AdministerChannels.renew(eventChannel);
+  return eventChannel;
+}
+
+function handleInvaldTokenError(err, eventChannel) {
+  if (err.code === 410) {
+    // Perform a full sync and update the syncToken in database
+    // and emite any recent events
+    debug(err.message);
+    const calendarId = eventChannel.calendarId;
+    AdministerCalendars
+      .fullSync(calendarId)
+      .then(AdministerCalendars.persistNewSyncToken)
+      .then(syncResp => {
+        // Update previous channel with new token and set future renewal and perform resync
+        const updatedChannel = Object.assign({}, eventChannel, { nextSyncToken: syncResp.nextSyncToken });
+        AdministerChannels.renew(updatedChannel);
+        return syncResp;
+      })
+      .then(syncResponse => eventController.emitEvents(syncResponse));
+  } else {
+    debug(err.message);
+  }
 }
 
 function createNewEventChannel(calendarId) {

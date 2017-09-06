@@ -14,7 +14,7 @@
     "test-codecov": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && codecov --token=a032f333-f808-4dc6-8b1f-31e4519ebccb"
   },
   "engines": {
-		"node": ">=6"
+    "node": ">=6"
   },
   "repository": {
     "type": "git",
@@ -63,7 +63,8 @@
     "retry": "^0.10.1",
     "rewire": "^2.5.2",
     "rx-node": "^1.0.2",
-    "rxjs": "^5.3.0"
+    "rxjs": "^5.3.0",
+    "spotify-web-api-node": "^2.4.0"
   },
   "pre-commit": []
 }

@@ -30,33 +30,31 @@ module.exports = Interface;
  * @return {Void} None
  */
 function load(channelId) {
-	debug('load %s', channelId);
-	getChannelEntry(channelId).then(channelEntry => {
-		debug('Found channel entry for %s: %O', channelId, channelEntry);
-		// Old channel that may have existed due to overlap renewals
-		if (!channelEntry) {
-			debug('Channel entry not found, possibly due to overlap');
-			return;
-		};
-		AdministerCalendars.incrementalSync(channelEntry)
-			.then(syncResp => {
-				AdministerCalendars.persistNewSyncToken(channelEntry);
-				debug('Syncing for calendar update (%s)', channelId);
-				return syncResp;
-			})
-			.then(parseEvents)
-			.then(parsedUpdates => {
-	    		calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
-			})
-			.catch(debug);
-	});
+  debug('load %s', channelId);
+  getChannelEntry(channelId).then(channelEntry => {
+    debug('Found channel entry for %s: %O', channelId, channelEntry);
+    // Old channel that may have existed due to overlap renewals
+    if (!channelEntry) { return; }
+    AdministerCalendars.incrementalSync(channelEntry)
+      .then(syncResp => {
+        AdministerCalendars.persistNewSyncToken(syncResp);
+	      debug('Syncing for calendar update (%s)', channelId);
+	      return syncResp;
+      })
+      .then(parseEvents)
+      .then(parsedUpdates => {
+	      calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
+      })
+      .catch(console.log);
+  });
 }
 
 // Emit events per a sync response
 function emitEvents(syncResponse) {
+    if (!syncResponse) return;
     if (syncResponse.items.length === 0) {
-        debug('No new events found on sync response for %s', syncResponse.calendarId);
-        return false;
+        debug('No new events found on sync response for %s', syncResponse.summary);
+        return;
     }
     calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));
     return true;
@@ -72,7 +70,7 @@ function getChannelEntry(channelId) {
 }
 
 function parseEvents(syncResponse) {
-    if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
+    // Event list is order sensitive
     // Filter events for any duplicates and just get the latest one
     const eventList = syncResponse.items.filter(_filterForLatestEvents);
     const userId = _parseUserIdFromEmail(syncResponse.summary);
