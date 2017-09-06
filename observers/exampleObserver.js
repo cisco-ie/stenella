@@ -6,6 +6,7 @@ const CMR = 'airbnb';
 calendar.subscribe(addPMRUrl);
 
 function addPMRUrl(calendarEvent) {
+	console.log(calendarEvent);
 	if (!calendarEvent.summary) return;
 	const summaryContainsWebex = calendarEvent.summary.match(/@webex/i);
 	if (summaryContainsWebex) {

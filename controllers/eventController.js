@@ -1,9 +1,9 @@
 'use strict';
 
-var _                   = require('lodash');
-var mongoose            = require('mongoose');
-var AdministerCalendars = require('../services/AdministerCalendars');
-var ChannelEntry        = mongoose.model('Channel', require('../data/schema/channel'));
+const _ = require('lodash');
+const mongoose = require('mongoose');
+const AdministerCalendars = require('../services/AdministerCalendars');
+const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 const EventEmitter = require('events');
 const Rx = require('rxjs');
 const debug = require('debug')('eventController');
@@ -14,12 +14,12 @@ class CalendarEmitter extends EventEmitter {}
 const calendarEmitter = new CalendarEmitter();
 
 let Interface = {
-  load,
-  emitEvents,
-  // [ Event1, Event2 ] => Observable.of(Event1)-->Observable.of(Event2)
-  observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
-  _filterForLatestEvents,
-  _parseUserIdFromEmail,
+	load,
+	emitEvents,
+	// [ Event1, Event2 ] => Observable.of(Event1) --> Observable.of(Event2)
+	observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
+	_filterForLatestEvents,
+	_parseUserIdFromEmail,
 };
 
 module.exports = Interface;
@@ -72,9 +72,8 @@ function getChannelEntry(channelId) {
 function parseEvents(syncResponse) {
     // Event list is order sensitive
     // Filter events for any duplicates and just get the latest one
-    var eventList = syncResponse.items
-        .filter(_filterForLatestEvents);
-    var userId = _parseUserIdFromEmail(syncResponse.summary);
+    const eventList = syncResponse.items.filter(_filterForLatestEvents);
+    const userId = _parseUserIdFromEmail(syncResponse.summary);
     const updates = eventList.map(event => {
         event.calendarId = syncResponse.summary;
         event.userId = userId;
@@ -84,18 +83,17 @@ function parseEvents(syncResponse) {
 }
 
 // Looks through the list to find any matching event
-// previously
 // _filterForLatestEvent :: (Element, Index, Array) -> Boolean
 function _filterForLatestEvents(currentEvent, currentIndex, list) {
-  const mostRecentIndex = _.findIndex(list, (e) => e.id === currentEvent.id);
-  // If the current item index is equal or less than the most recentIndex, keep it (true)
-  return (currentIndex <= mostRecentIndex) ? true : false;
+	const mostRecentIndex = _.findIndex(list, e => e.id === currentEvent.id);
+	// If the current item index is equal or less than the most recentIndex, keep it (true)
+	return currentIndex <= mostRecentIndex ? true : false;
 }
 
 function _parseUserIdFromEmail(email) {
-  if (typeof email !== 'string') {
-    throw new Error('Email is not a string');
-  }
+	if (typeof email !== 'string') {
+		throw new Error('Email is not a string');
+	}
 
-  return email.match(/.+?(?=@)/g)[0];
+	return email.match(/.+?(?=@)/g)[0];
 }
