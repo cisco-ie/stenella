@@ -38,4 +38,35 @@ describe('Event Controller', function EventControllerTest() {
 		expect(filteredEvents).to.deep.equal([events[0], events[2]]);
 		done();
 	});
+
+	it('should remove attendees without modifying abilities', done => {
+		const updatedItems = eventController._removeNonCapableAttendees(eventsMock).items;
+
+		expect(updatedItems.length).to.equal(2);
+		expect(updatedItems[0].id).to.equal('event-1');
+		expect(updatedItems[1].id).to.equal('event-3');
+
+		const none = eventController._removeNonCapableAttendees({});
+		expect(none).to.deep.equal({});
+		done();
+	});
+
+	// it('should not call the same event', done => {
+	// 	sinon.stub(eventController, "emitEvents");
+	// 	sinon.stub(eventController, "_getChannelEntry").return(Promise.resolve())
+	// 	eventController.load();
+	// 	asset(eventController.emitEvents.calledWithMatch({}));
+	// });
 });
+
+const mockChannelEntry = {
+	_id: "59b07027c463f671f096de92",
+	channelId: 'EVNT-ce6d5e90-d1bb-4332-867d-8bfaa30d1608',
+	resourceId: 'Ot03kc_DoEu1bzaySAzuFxAFUH8',
+	syncToken: 'CPjQ6a3MkdYCEPjQ6a3MkdYCGAU=',
+	expiration: "2017-09-06T22:26:08.000Z",
+	resourceType: 'event',
+	webhookUrl: 'https://brandonhim.ngrok.io',
+	calendarId: 'brhim@apidevdemo.com',
+	__v: 0
+}
