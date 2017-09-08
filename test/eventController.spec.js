@@ -1,7 +1,11 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const eventsMock = require('./mocks/eventList.json');
 const eventController = require('../controllers/eventController');
+
+const eventsMock = require('./mocks/eventList.json');
+const eventsMock2 = require('./mocks/eventList2.json');
+const eventsMock3 = require('./mocks/eventList3.json');
+const eventsMock4 = require('./mocks/eventList4.json');
 
 describe('Event Controller', function EventControllerTest() {
 	it('should get the user from the email', done => {
@@ -39,8 +43,9 @@ describe('Event Controller', function EventControllerTest() {
 		done();
 	});
 
+	const events = eventController._parseEvents(eventsMock);	
+
 	it('should remove attendees without modifying abilities', done => {
-		const events = eventController._parseEvents(eventsMock);
 		const updatedEvents = eventController._removeNonCapableAttendees(events);
 
 		expect(updatedEvents.length).to.equal(2);
@@ -52,22 +57,21 @@ describe('Event Controller', function EventControllerTest() {
 		done();
 	});
 
-	it('should check against cache', done => {
-	   sinon.stub(eventController, "emitEvents");
-	// 	sinon.stub(eventController, "_getChannelEntry").return(Promise.resolve())
-	// 	eventController.load();
-	// 	asset(eventController.emitEvents.calledWithMatch({}));
+	it('should check against existing cache', done => {
+		// Pass it through the initial parser as this is used within the load event
+		const events2 = eventController._parseEvents(eventsMock2);
+		eventController._checkAgainstCache(eventsMock2.items);
+		// In the mock we have a identical event to eventsMock1
+		const duplicatedEvents = eventController._checkAgainstCache(events2);
+		expect(duplicatedEvents.length).to.equal(0);
+
+		const mock3 = eventController._parseEvents(eventsMock3);
+		const newerEvents = eventController._checkAgainstCache(mock3);
+		expect(newerEvents.length).to.equal(1);
+		expect(newerEvents[0].summary).to.equal('Newer Event Should Pass Filter');
+
+		const mock4 = eventController._parseEvents(eventsMock4);
+		const olderEvents = eventController._checkAgainstCache(mock4);
+		done();
 	});
 });
-
-const mockChannelEntry = {
-	_id: "59b07027c463f671f096de92",
-	channelId: 'EVNT-ce6d5e90-d1bb-4332-867d-8bfaa30d1608',
-	resourceId: 'Ot03kc_DoEu1bzaySAzuFxAFUH8',
-	syncToken: 'CPjQ6a3MkdYCEPjQ6a3MkdYCGAU=',
-	expiration: "2017-09-06T22:26:08.000Z",
-	resourceType: 'event',
-	webhookUrl: 'https://brandonhim.ngrok.io',
-	calendarId: 'brhim@apidevdemo.com',
-	__v: 0
-}

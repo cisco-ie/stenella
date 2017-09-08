@@ -42,7 +42,6 @@ function load(channelId) {
 
   _getChannelEntry(channelId)
     .then(channelEntry => {
-      console.log(channelEntry);
       // Old channel that may have existed due to overlap renewals
       if (!channelEntry) {
         debug('Channel entry not found, possibly due to overlap');
@@ -114,23 +113,19 @@ function _removeNonCapableAttendees(events) {
   });
 }
 
-function _checkAgainstCache(syncResp) {
-  if (!syncResp.items) return syncResp;
 
-  const updatedList = syncResp.items.filter((calendarEvent, index) => {
-    eventCache.get(calendarEvent.id, (err, currentEvent) => {
-      if (!err) {
-        if (!cachedEvent) {
-          return _handleNewEvent(currentEvent);
-        }
+// Check
+function _checkAgainstCache(events) {
+  if (!events) return events;
+  if (!Array.isArray(events)) return events;
 
-        return _handleExistingEvent(currentEvent, cachedEvent);
-      }
-    });
+  return events.filter((currentEvent, index) => {
+    const cachedEvent = eventCache.get(currentEvent.id);
+    return (!cachedEvent) ? _handleNewEvent(currentEvent) : _handleExistingEvent(currentEvent, cachedEvent);
   });
 }
 
-// Set a counter to attendees, if counter hits 0 delete to indicate new event updates
+// Add event to temporary cache, and allow it to pass filter
 function _handleNewEvent(calendarEvent) {
   const val = _buildValue(calendarEvent);
 
@@ -144,24 +139,22 @@ function _handleNewEvent(calendarEvent) {
 // If the guest can edit or this is the creators calendar
 // check against current cache to see if this is completely a new event
 // or not
-function _handleExistingEvent(currentEvent, cachedEvent) {
-  const currentEventString = JSON.stringify(currentEvent);
-
-  // Regardless of time this has been processed previously,
-  // remove it from response
-  if (currentEventString === cachedEvent) {
+function _handleExistingEvent(currentEvent, cachedEvent) {  
+  const currentTimeStamp = new Date(currentEvent.updated).getTime();
+  const oldEvent = currentTimeStamp < cachedEvent.timeStamp;
+  if (oldEvent) {
     return false;
   }
 
-  // Indicates an older event from what is cached, remove
-  const currentTimeStamp = new Date(crrentEvent.updated).getTime();  
-  if (currentTimeStamp < cachedEvent.timeStamp) {
+  // Going to remove some additional meta data used by _parseEvents
+  const cleanedEvent = Object.assign({}, currentEvent, { userId: '', calendarId: ''});  
+  const currentEventString = JSON.stringify(cleanedEvent);  
+  if (currentEventString === cachedEvent.eventString) {
     return false;
   }
 
-  // Indicates a newly updated event
-  // Cache current event
-  eventCache.set(crrentEvent.id, _buildValue(calendarEvent), 30, (err, value) => {
+  const val = _buildValue(currentEvent);
+  eventCache.set(currentEvent.id, val, 30, (err, value) => {
       if (err) debug(err);
   });
 
@@ -169,9 +162,10 @@ function _handleExistingEvent(currentEvent, cachedEvent) {
 }
 
 function _buildValue(calendarEvent) {
+  const details = Object.assign({}, calendarEvent, { userId: '', calendarId: ''});
   return {
-    calendarString: JSON.stringify(calendarEvent),
-    timeStamp: new Date(calendarEvent.updated)
+    eventString: JSON.stringify(details),
+    timeStamp: new Date(calendarEvent.updated).getTime()
   };
 }
 

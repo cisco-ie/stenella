@@ -20,7 +20,7 @@
          "status":"confirmed",
          "htmlLink":"https://www.google.com/calendar/event?eid=NWh1cmRtajY0a3VpbGIzbDM1MDZ1MjVqOHMgYnJoaW1AYXBpZGV2ZGVtby5jb20",
          "created":"2016-08-03T21:19:36.000Z",
-         "updated":"2016-08-03T21:21:03.057Z",
+         "updated":"2016-08-04T21:21:03.057Z",
          "summary":"Testing",
          "description": "meet up online",
          "location":"@Webex",
@@ -61,8 +61,7 @@
          "hangoutLink":"https://plus.google.com/hangouts/_/apidevdemo.com/brhim-damyers2?hceid=YnJoaW1AYXBpZGV2ZGVtby5jb20.5hurdmj64kuilb3l3506u25j8s",
          "reminders": {
             "useDefault": true
-         },
-         "pmrUserId": "squirtle"
+         }
       },
       {
          "kind":"calendar#event",
@@ -91,8 +90,7 @@
          "sequence":0,
          "reminders": {
             "useDefault": true
-         },
-         "pmrUserId": "ashketchum"
+         }
       },
       {
          "kind":"calendar#event",
