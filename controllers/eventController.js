@@ -1,11 +1,14 @@
 'use strict';
 
+const EventEmitter = require('events');
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const AdministerCalendars = require('../services/AdministerCalendars');
-const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
-const EventEmitter = require('events');
 const Rx = require('rxjs');
+const NodeCache = require('node-cache');
+
+const eventCache = new NodeCache();
+const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 const debug = require('debug')('eventController');
 
 mongoose.Promise = require('bluebird');
@@ -14,12 +17,17 @@ class CalendarEmitter extends EventEmitter {}
 const calendarEmitter = new CalendarEmitter();
 
 let Interface = {
-	load,
-	emitEvents,
-	// [ Event1, Event2 ] => Observable.of(Event1) --> Observable.of(Event2)
-	observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
-	_filterForLatestEvents,
-	_parseUserIdFromEmail,
+  load,
+  emitEvents,
+  // [ Event1, Event2 ] => Observable.of(Event1) --> Observable.of(Event2)
+  observable: Rx.Observable.fromEvent(calendarEmitter, 'CALENDAR_UPDATE').flatMap(x => x).share(),
+  _filterForLatestEvents,
+  _parseUserIdFromEmail,
+  _syncAndEmit,
+  _getChannelEntry,
+  _removeNonCapableAttendees,
+  _checkAgainstCache,
+  _parseEvents,
 };
 
 module.exports = Interface;
@@ -31,22 +39,33 @@ module.exports = Interface;
  */
 function load(channelId) {
   debug('load %s', channelId);
-  getChannelEntry(channelId).then(channelEntry => {
-    debug('Found channel entry for %s: %O', channelId, channelEntry);
-    // Old channel that may have existed due to overlap renewals
-    if (!channelEntry) { return; }
-    AdministerCalendars.incrementalSync(channelEntry)
-      .then(syncResp => {
-        AdministerCalendars.persistNewSyncToken(syncResp);
-	      debug('Syncing for calendar update (%s)', channelId);
-	      return syncResp;
-      })
-      .then(parseEvents)
-      .then(parsedUpdates => {
-	      calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
-      })
-      .catch(console.log);
-  });
+
+  _getChannelEntry(channelId)
+    .then(channelEntry => {
+      // Old channel that may have existed due to overlap renewals
+      if (!channelEntry) {
+        debug('Channel entry not found, possibly due to overlap');
+        return;
+      };
+      _syncAndEmit(channelEntry);
+    })
+    .catch(debug);
+}
+
+function _syncAndEmit(channelEntry) {
+  AdministerCalendars.incrementalSync(channelEntry)
+    .then(syncResp => {
+      AdministerCalendars.persistNewSyncToken(channelEntry);
+      debug('Syncing for calendar update (%s)', channelEntry.channelId);
+      return syncResp;
+    })
+    .then(_parseEvents)
+    .then(_removeNonCapableAttendees)
+    .then(_checkAgainstCache)
+    .then(parsedUpdates => {
+      calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
+    })
+    .catch(debug);
 }
 
 // Emit events per a sync response
@@ -56,7 +75,13 @@ function emitEvents(syncResponse) {
         debug('No new events found on sync response for %s', syncResponse.summary);
         return;
     }
-    calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));
+
+    // @TODO: add better flow control here
+    let updatedEvents = _parseEvents(syncResponse);
+    updatedEvents = _removeNonCapableAttendees(updatedEvents);
+    updatedEvents = _checkAgainstCache(updatedEvents);
+
+    calendarEmitter.emit('CALENDAR_UPDATE', updatedEvents);
     return true;
 }
 
@@ -65,12 +90,86 @@ function emitEvents(syncResponse) {
  * @param  {String} channelId string of channel entry
  * @return {Object}           Mongoose Virtual Model of Channel Entry
  */
-function getChannelEntry(channelId) {
+function _getChannelEntry(channelId) {
     return ChannelEntry.findOne({ channelId: channelId });
 }
 
-function parseEvents(syncResponse) {
-    // Event list is order sensitive
+// Remove any attendees that don't have modifying abilities
+// Are intentions are to only perform logic against users who can update the event
+function _removeNonCapableAttendees(events) {
+  if (!events) return events;
+  if (!Array.isArray(events)) return events;
+
+  return events.filter(calendarEvent => {
+    const calendarOwner = calendarEvent.calendarId;
+    if (calendarEvent.guestsCanModify === true) {
+      return true;
+    }
+
+    if (calendarEvent.creator.email === calendarOwner) {
+      return true;
+    }
+
+    return false;
+  });
+}
+
+
+// Check
+function _checkAgainstCache(events) {
+  if (!events) return events;
+  if (!Array.isArray(events)) return events;
+
+  return events.filter((currentEvent, index) => {
+    const cachedEvent = eventCache.get(currentEvent.id);
+    return (!cachedEvent) ? _handleNewEvent(currentEvent) : _handleExistingEvent(currentEvent, cachedEvent);
+  });
+}
+
+// Add event to temporary cache, and allow it to pass filter
+function _handleNewEvent(calendarEvent) {
+  const val = _buildValue(calendarEvent);
+  const success = eventCache.set(calendarEvent.id, val, 30);
+  return true;
+}
+
+// If the guest can edit or this is the creators calendar
+// check against current cache to see if this is completely a new event
+// or not
+function _handleExistingEvent(currentEvent, cachedEvent) {  
+  const currentTimeStamp = new Date(currentEvent.updated).getTime();
+  const oldEvent = currentTimeStamp < cachedEvent.timeStamp;
+  if (oldEvent) {
+    return false;
+  }
+
+  // Going to remove some additional meta data used by _parseEvents
+  // and google specific changes per calendar
+  const cleanedEvent = Object.assign({}, 
+    currentEvent, 
+    { userId: '', calendarId: '', htmlLink: '', attendees: currentEvent.attendees.length });  
+  const currentEventString = JSON.stringify(cleanedEvent);  
+  if (currentEventString === cachedEvent.eventString) {
+    return false;
+  }
+
+  const val = _buildValue(currentEvent);
+  const success = eventCache.set(currentEvent.id, val, 30);
+  return true;
+}
+
+function _buildValue(calendarEvent) {
+  const details = Object.assign({}, 
+    calendarEvent,
+    { userId: '', calendarId: '', htmlLink: '', attendees: calendarEvent.attendees.length });  
+  return {
+    eventString: JSON.stringify(details),
+    timeStamp: new Date(calendarEvent.updated).getTime()
+  };
+}
+
+function _parseEvents(syncResponse) {
+    if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
     // Filter events for any duplicates and just get the latest one
     const eventList = syncResponse.items.filter(_filterForLatestEvents);
     const userId = _parseUserIdFromEmail(syncResponse.summary);

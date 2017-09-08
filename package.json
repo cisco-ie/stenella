@@ -57,6 +57,7 @@
     "moment": "^2.15.2",
     "mongoose": "^4.6.4",
     "nock": "^8.2.1",
+    "node-cache": "^4.1.1",
     "node-uuid": "^1.4.7",
     "precommit-hook-eslint": "^3.0.0",
     "require-all": "^2.2.0",
