@@ -25,7 +25,9 @@ let Interface = {
   _parseUserIdFromEmail,
   _syncAndEmit,
   _getChannelEntry,
-  _removeNonCapableAttendees
+  _removeNonCapableAttendees,
+  _checkAgainstCache,
+  _parseEvents,
 };
 
 module.exports = Interface;
@@ -58,7 +60,9 @@ function _syncAndEmit(channelEntry) {
       debug('Syncing for calendar update (%s)', channelEntry.channelId);
       return syncResp;
     })
-    .then(parseEvents)
+    .then(_parseEvents)
+    .then(_removeNonCapableAttendees)
+    .then(_checkAgainstCache)
     .then(parsedUpdates => {
       calendarEmitter.emit('CALENDAR_UPDATE', parsedUpdates);
     })
@@ -71,7 +75,13 @@ function emitEvents(syncResponse) {
         debug('No new events found on sync response for %s', syncResponse.calendarId);
         return false;
     }
-    calendarEmitter.emit('CALENDAR_UPDATE', parseEvents(syncResponse));
+
+    // @TODO: add better flow control here
+    let updatedEvents = _parseEvents(syncResponse);
+    updatedEvents = _removeNonCapableAttendees(updatedEvents);
+    updatedEvents = _checkAgainstCache(updatedEvents);
+
+    calendarEmitter.emit('CALENDAR_UPDATE', updatedEvents);
     return true;
 }
 
@@ -84,38 +94,88 @@ function _getChannelEntry(channelId) {
     return ChannelEntry.findOne({ channelId: channelId });
 }
 
-// Compare the owner and the id
-// This will cache new events into a temporary cache (1 m) 
-// and check to see if the following event needs to be added or not
-// Returns modified response
-// function _cacheAndRemoveAttendees(syncResp) {
-//   eventCache.
-// }
-
 // Remove any attendees that don't have modifying abilities
 // Are intentions are to only perform logic against users who can update the event
-function _removeNonCapableAttendees(syncResp) {
-  const calendarOwner = syncResp.summary;
-  if (syncResp.items) {
-    const updatedList = syncResp.items.filter(calendarEvent => {
-      if (calendarEvent.guestsCanModify === true) {
-        return true;
-      }
+function _removeNonCapableAttendees(events) {
+  if (!events) return events;
+  if (!Array.isArray(events)) return events;
 
-      if (calendarEvent.creator.email === calendarOwner) {
-        return true;
-      }
+  return events.filter(calendarEvent => {
+    const calendarOwner = calendarEvent.calendarId;
+    if (calendarEvent.guestsCanModify === true) {
+      return true;
+    }
 
-      return false;
-    });
+    if (calendarEvent.creator.email === calendarOwner) {
+      return true;
+    }
 
-    return Object.assign({}, syncResp, { items: updatedList });
-  }
-
-  return syncResp;
+    return false;
+  });
 }
 
-function parseEvents(syncResponse) {
+function _checkAgainstCache(syncResp) {
+  if (!syncResp.items) return syncResp;
+
+  const updatedList = syncResp.items.filter((calendarEvent, index) => {
+    eventCache.get(calendarEvent.id, (err, currentEvent) => {
+      if (!err) {
+        if (!cachedEvent) {
+          return _handleNewEvent(currentEvent);
+        }
+
+        return _handleExistingEvent(currentEvent, cachedEvent);
+      }
+    });
+  });
+}
+
+// Set a counter to attendees, if counter hits 0 delete to indicate new event updates
+function _handleNewEvent(calendarEvent) {
+  const val = _buildValue(calendarEvent);
+
+  eventCache.set(calendarEvent.id, val, 30, (err, value) => {
+    if (err) debug(err);
+  });
+
+  return true;
+}
+
+// If the guest can edit or this is the creators calendar
+// check against current cache to see if this is completely a new event
+// or not
+function _handleExistingEvent(currentEvent, cachedEvent) {
+  const currentEventString = JSON.stringify(currentEvent);
+
+  // Regardless of time this has been processed previously,
+  // remove it from response
+  if (currentEventString === cachedEvent) {
+    return false;
+  }
+
+  // Indicates an older event from what is cached, remove
+  const currentTimeStamp = new Date(crrentEvent.updated).getTime();  
+  if (currentTimeStamp < cachedEvent.timeStamp) {
+    return false;
+  }
+
+  // Indicates a newly updated event
+  // Cache current event
+  eventCache.set(crrentEvent.id, _buildValue(calendarEvent), 30, (err, value) => {
+      if (err) debug(err);
+  });
+
+  return true;
+}
+
+function _buildValue(calendarEvent) {
+  return {
+    calendarString: JSON.stringify(calendarEvent),
+    timeStamp: new Date(calendarEvent.updated)
+  };
+}
+
+function _parseEvents(syncResponse) {
     if (!syncResponse.items || syncResponse.items.length === 0) return syncResponse;
     // Filter events for any duplicates and just get the latest one
     const eventList = syncResponse.items.filter(_filterForLatestEvents);

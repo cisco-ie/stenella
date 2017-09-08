@@ -40,23 +40,24 @@ describe('Event Controller', function EventControllerTest() {
 	});
 
 	it('should remove attendees without modifying abilities', done => {
-		const updatedItems = eventController._removeNonCapableAttendees(eventsMock).items;
+		const events = eventController._parseEvents(eventsMock);
+		const updatedEvents = eventController._removeNonCapableAttendees(events);
 
-		expect(updatedItems.length).to.equal(2);
-		expect(updatedItems[0].id).to.equal('event-1');
-		expect(updatedItems[1].id).to.equal('event-3');
+		expect(updatedEvents.length).to.equal(2);
+		expect(updatedEvents[0].id).to.equal('event-1');
+		expect(updatedEvents[1].id).to.equal('event-3');
 
 		const none = eventController._removeNonCapableAttendees({});
 		expect(none).to.deep.equal({});
 		done();
 	});
 
-	// it('should not call the same event', done => {
-	// 	sinon.stub(eventController, "emitEvents");
+	it('should check against cache', done => {
+	   sinon.stub(eventController, "emitEvents");
 	// 	sinon.stub(eventController, "_getChannelEntry").return(Promise.resolve())
 	// 	eventController.load();
 	// 	asset(eventController.emitEvents.calledWithMatch({}));
-	// });
+	});
 });
 
 const mockChannelEntry = {
