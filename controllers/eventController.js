@@ -128,11 +128,7 @@ function _checkAgainstCache(events) {
 // Add event to temporary cache, and allow it to pass filter
 function _handleNewEvent(calendarEvent) {
   const val = _buildValue(calendarEvent);
-
-  eventCache.set(calendarEvent.id, val, 30, (err, value) => {
-    if (err) debug(err);
-  });
-
+  const success = eventCache.set(calendarEvent.id, val, 30);
   return true;
 }
 
@@ -147,22 +143,24 @@ function _handleExistingEvent(currentEvent, cachedEvent) {
   }
 
   // Going to remove some additional meta data used by _parseEvents
-  const cleanedEvent = Object.assign({}, currentEvent, { userId: '', calendarId: ''});  
+  // and google specific changes per calendar
+  const cleanedEvent = Object.assign({}, 
+    currentEvent, 
+    { userId: '', calendarId: '', htmlLink: '', attendees: currentEvent.attendees.length });  
   const currentEventString = JSON.stringify(cleanedEvent);  
   if (currentEventString === cachedEvent.eventString) {
     return false;
   }
 
   const val = _buildValue(currentEvent);
-  eventCache.set(currentEvent.id, val, 30, (err, value) => {
-      if (err) debug(err);
-  });
-
+  const success = eventCache.set(currentEvent.id, val, 30);
   return true;
 }
 
 function _buildValue(calendarEvent) {
-  const details = Object.assign({}, calendarEvent, { userId: '', calendarId: ''});
+  const details = Object.assign({}, 
+    calendarEvent,
+    { userId: '', calendarId: '', htmlLink: '', attendees: calendarEvent.attendees.length });  
   return {
     eventString: JSON.stringify(details),
     timeStamp: new Date(calendarEvent.updated).getTime()
