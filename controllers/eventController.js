@@ -70,9 +70,10 @@ function _syncAndEmit(channelEntry) {
 
 // Emit events per a sync response
 function emitEvents(syncResponse) {
+    if (!syncResponse) return;
     if (syncResponse.items.length === 0) {
-        debug('No new events found on sync response for %s', syncResponse.calendarId);
-        return false;
+        debug('No new events found on sync response for %s', syncResponse.summary);
+        return;
     }
 
     // @TODO: add better flow control here
@@ -183,15 +184,15 @@ function _parseEvents(syncResponse) {
 // Looks through the list to find any matching event
 // _filterForLatestEvent :: (Element, Index, Array) -> Boolean
 function _filterForLatestEvents(currentEvent, currentIndex, list) {
-  const mostRecentIndex = _.findIndex(list, e => e.id === currentEvent.id);
-  // If the current item index is equal or less than the most recentIndex, keep it (true)
-  return currentIndex <= mostRecentIndex ? true : false;
+	const mostRecentIndex = _.findIndex(list, e => e.id === currentEvent.id);
+	// If the current item index is equal or less than the most recentIndex, keep it (true)
+	return currentIndex <= mostRecentIndex ? true : false;
 }
 
 function _parseUserIdFromEmail(email) {
-  if (typeof email !== 'string') {
-    throw new Error('Email is not a string');
-  }
+	if (typeof email !== 'string') {
+		throw new Error('Email is not a string');
+	}
 
-  return email.match(/.+?(?=@)/g)[0];
+	return email.match(/.+?(?=@)/g)[0];
 }

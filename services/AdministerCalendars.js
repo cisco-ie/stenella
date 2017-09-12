@@ -36,18 +36,18 @@ function getFullSync(calendarId) {
   // we need to keep making request to get to the last page for
   // the syncToken.
   // REF: https://developers.google.com/google-apps/calendar/v3/pagination
-  const eventListRequest = function eventListRequest(listParams) {
+  let eventListRequest = function eventListRequest(listParams) {
     return AdministerJWT.createJWT(scope.calendar)
       .then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
       .then(listEvents)
       .then(result => {
-		  debug('Get calendar events for %s', listParams.calendarId);
-          if (result.nextPageToken) {
-			  debug('Paging calendar events for %s', listParams.calendarId);
-			  listParams.nextPageToken = result.nextPageToken;
-			  return eventListRequest(listParams);
-          }
-		  return result;
+        debug('Get calendar events for %s', listParams.calendarId);
+        if (result.nextPageToken) {
+          debug('Paging calendar events for %s', listParams.calendarId);
+          listParams.nextPageToken = result.nextPageToken;
+          return eventListRequest(listParams);
+        }
+        return result;
       });
   };
 
@@ -141,5 +141,5 @@ function persistNewSyncToken(syncResponse) {
 
 	return ChannelEntry.update(query, update)
 		.exec()
-		.then(r => r.nModified > 0 ?  debug('Updated %s\'s syncToken', calendarId) : syncResponse);
+		.then(r => r.nModified > 0 ? debug('Updated %s\'s syncToken', calendarId) : syncResponse);
 }
