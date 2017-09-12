@@ -8,6 +8,7 @@
     "test": "./node_modules/mocha/bin/mocha",
     "ci-test": "npm run pretest & ./node_modules/mocha/bin/mocha",
     "start": "node index.js",
+    "debug": "DEBUG=* npm start",
     "lint": "eslint .",
     "validate": "npm ls",
     "test-cov": "npm run pretest & istanbul cover _mocha",

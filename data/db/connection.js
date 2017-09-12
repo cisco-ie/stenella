@@ -8,7 +8,13 @@ function connect(state) {
 		'production': config.production_url
 	}[state || 'production'];
 
-  mongoose.connect(dbUrl);
+  const options = {
+    server: {
+      auto_reconnect: true 
+    }
+  };
+
+  mongoose.connect(dbUrl, options);
 
   mongoose.connection.on('connected', () => console.log('Mongoose default connection open to', state));
   mongoose.connection.on('error', err => {
