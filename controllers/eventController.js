@@ -145,9 +145,10 @@ function _handleExistingEvent(currentEvent, cachedEvent) {
 
   // Going to remove some additional meta data used by _parseEvents
   // and google specific changes per calendar
+  const attendees = currentEvent.attendees || [];
   const cleanedEvent = Object.assign({}, 
     currentEvent, 
-    { userId: '', calendarId: '', htmlLink: '', attendees: currentEvent.attendees.length });  
+    { userId: '', calendarId: '', htmlLink: '', attendees: attendees.length });  
   const currentEventString = JSON.stringify(cleanedEvent);  
   if (currentEventString === cachedEvent.eventString) {
     return false;
@@ -159,9 +160,10 @@ function _handleExistingEvent(currentEvent, cachedEvent) {
 }
 
 function _buildValue(calendarEvent) {
+  const attendees = calendarEvent.attendees || [];
   const details = Object.assign({}, 
     calendarEvent,
-    { userId: '', calendarId: '', htmlLink: '', attendees: calendarEvent.attendees.length });  
+    { userId: '', calendarId: '', htmlLink: '', attendees: attendees.length });  
   return {
     eventString: JSON.stringify(details),
     timeStamp: new Date(calendarEvent.updated).getTime()
