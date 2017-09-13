@@ -3,11 +3,12 @@ services:
   mongodb:
     image: mongo
   calendarapp:
-    build: .
+    build: ../.
     ports:
       - "5000:5000"
     depends_on:
       - "mongodb"
     command: [ "npm", "start"]
-    env_file: .env
-  
+    env_file: ../.env
+    volumes:
+      - ../secret/:/app/secret

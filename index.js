@@ -20,7 +20,7 @@ const eventController = require('./controllers/eventController');
 
 mongoose.Promise = require('bluebird');
 
-app.get('/', (req, res) => res.send('It works!'));
+app.get('/', (req, res) => res.send('Calender Listener Works!'));
 // This is used to allow drop-in html files for Google verification
 app.use('/', express.static(__dirname + '/verify'));
 
