@@ -20,7 +20,7 @@ const eventController = require('./controllers/eventController');
 
 mongoose.Promise = require('bluebird');
 
-app.get('/', (req, res) => res.send('It works!'));
+app.get('/', (req, res) => res.send('Calender Listener Works!'));
 // This is used to allow drop-in html files for Google verification
 app.use('/', express.static(__dirname + '/verify'));
 
@@ -87,25 +87,24 @@ function setUpChannels(whitelist) {
 
 /**
  * Create User Directory Channel and extract User ids
- * @param  {Object} userDirResponse JSON response for user directory response
+ * @param  {Object} users JSON response for user directory response
  * @return {Void} n/a
  */
-function createChannelsAndExtractIds(userDirResponse) {
+function createChannelsAndExtractIds(users) {
   findDirectoryChannel()
      // If existing channel exist renew it, otherwise create new and save
     .then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
     .then(AdministerChannels.renew)
     .catch(debug);
 
-
-  extractUserIds(userDirResponse.users)
-    .each(calendarId => {
-      getEventChannelFromDB(calendarId)
+	const userIds = extractUserIds(users);
+	userIds.each(userId => {
+      getEventChannelFromDB(userId)
         .then(channelDBEntry => {
-          if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
+					if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
           return channelDBEntry;
         })
-        .then(eventChannel => (eventChannel) ? renewChannelAndResync(eventChannel) : createNewEventChannel(calendarId));
+        .then(eventChannel => (eventChannel) ? renewChannelAndResync(eventChannel) : createNewEventChannel(userId));
       })
       .catch(debug);
 }
