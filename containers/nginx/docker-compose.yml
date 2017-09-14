@@ -1,11 +1,11 @@
 version: "3"
 services:
-  mongodb:
+  database:
     image: mongo
   calendarapp:
     build: ../../.
     depends_on:
-      - "mongodb"
+      - "database"
     command: ["npm", "start"]
     # Include the env file to load to the app
     env_file: ../../.env
