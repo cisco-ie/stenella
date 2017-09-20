@@ -1,21 +1,31 @@
 # Google Calendar Listener
-> A reactive application for calendar events created within a [G Suite](https://gsuite.google.com/).
+> A reactive application that listens on Google calendars within a [G Suite](https://gsuite.google.com/)
+
+`google-calendaer-listener` is a server-to-server, Node.js application that listens to Google calendars and are notified of events being created, deleted, or updated. With each event, developers can define and execute business logic in regards to contextual cues found within a calenader event payload *(date, subject, summary, attendees, location, status, etc.)*. These are known as "observers" *(calendar event handlers)*, which are flexible, open-ended, and easy to create.
 
 ![Google Calendar Listener Demo](http://g.recordit.co/uBCEUMWD4N.gif)
 
-This application responds to particular calendar events based on user defined contextual cues found within a typical event payload *(date, subject, summary, attendees, location, status, etc.)*. In addition, observers *(calendar event handlers)* are open-ended and flexible enough to allow the developer to define appropriate actions.
+> 🌟
+> 
+> The demo above displays the application receiving a calendar event being created, which is logged to the console in real-time
 
 ## Features
-- An easy to use, and straightforward API to hook into event notifications
-- Re-processing of any missed events during downtime as long as calendar subscriptions (env.TTL) is still valid
-- A MongoDB hooks for observers for more complicated task
-- Prune of old/stale events within a series of events -- essentially your observer will only recieve the latest event in time, so no need to handle intermediate updates/cancellations within a short period of time
+Along with listening to a Google calendar, `google-calendar-listener` provides the following features and performs additional heavy work:
+- Ability to manually set users to listen
+- An easy to use, and straightforward way to implement observers
+- Re-process any missed events during downtime *(env.TTL)*
+- Handles the complexities of processing events to `observers`:
+    - Events created, deleted, or updated within a short period of time will cause the application to only process the most recent change
+    - The application will prevent any duplicated events being processed twice within a cached time
+    - An event with "Guests Can Modify" will only process the most recent event received, and will only process new changes
+    - Events with multiple guests will only be regarded as one unique event for `observers`
+- Includes a `Dockerfile`, along with `docker-compose` files for easier deployment examples
 
 ## Requirements
 - G Suite (Google Apps for Work)
 - Admin privileges within a G Suite
 - MongoDB
-- A publicly available server
+- A publicly available server with a domain
 
 ## Set Up
 1. [Verify](https://support.google.com/webmasters/answer/35179?authuser=0) your application's domain name ownership
@@ -43,22 +53,31 @@ This application responds to particular calendar events based on user defined co
 8. Start the application:
     `$ npm start`
 
-## Observer Usage
-[Observers](http://reactivex.io/rxjs/class/es6/MiscJSDoc.js~ObserverDoc.html) respond to incoming notifications for newly created events. Since observers operate independently from each other, it's important to avoid having multiple observers manipulate or update the same event to prevent unexpected bugs.
+## Observers
+> If you are not familar with `observers`, please check out the rx.js documentation on [`observers`](http://reactivex.io/rxjs/class/es6/MiscJSDoc.js~ObserverDoc.html)
 
-1. Create an observer file within the `/observers` directory
-2. Import the observable object from the event controller. The observable will provide notifications when new calendar events have been created.
+`Observers` give you the flexibility to create your own set of business logic in respose to events. Within `google-calendar-listener`, `observers` are simply functions that receieve the event payload.
+
+### Creating an Observer
+1. Create a new file within the `/observers` directory
+
+    > 💡 All observers are loaded from the `/observers` directory, no configuration needed.
+
+2. Within your file, import the observable object from the event controller to allow the observer to subscribe to new calendar events.
    ```
    const calendarEvents = require('../controllers/eventController').observable;
    ```
-3. Once you have access to an observable, you need to subscribe a handler to the observable for event notifications.
+3. Now subscribe to events, and write your own handler to perform any logic
    ```
    calendarEvents.subscribe((event) => {
-      // Do work based on event notifications
+      // Do work based on particular clauses and event information
    });
    ```
-4. Start the application, and the application will import the observer at runtime.
-5. Want to see a working example? Checkout the [`exampleObserver`](/observers/exampleObserver.js), which logs the users who have "PTO" in their calendar title.
+4. Start the listener and your `Observer` will now be invoked upon calendar event notifications
+
+### Observer Caveats and Tips
+- Avoid multiple observers processing for the same clause
+- Include a means to indicate a change was caused by your observer as `google-calendar-listener` is unaware of any events created, deleted, or updated by observers.
 
 ## Authors
 - [Brandon Him](https://github.com/brh55/)
