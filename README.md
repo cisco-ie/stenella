@@ -12,6 +12,7 @@
 ## Features
 Along with listening to a Google calendar, `stenella` provides the following features and performs additional heavy work:
 - Ability to manually set users to listen
+- Automatically renew listening channels with Google
 - An easy to use, and straightforward way to implement observers
 - Re-process any missed events during downtime *(env.TTL)*
 - Handles the complexities of processing events to `observers`:
@@ -20,7 +21,8 @@ Along with listening to a Google calendar, `stenella` provides the following fea
     - An event with "Guests Can Modify" will only process the most recent event received, and will only process new changes
     - Events with multiple guests will only be regarded as one unique event for `observers`
 - Includes a `Dockerfile`, along with `docker-compose` files for easier deployment examples
-- Automatically listens to newly created users within a organizaiton
+- Automatically listens to newly created users within a organization
+- A means to verify domains with Google and to remain verified throughout the life of the application
 
 ## Requirements
 - G Suite *(Previously known as Google Apps for Work)*
@@ -54,6 +56,17 @@ Along with listening to a Google calendar, `stenella` provides the following fea
 8. Start the application:
     `$ npm start`
 
+## Google API Usage
+While `stenella` is using several Google APIs, it heavily relies on Google Calendar API. In most scenarios, we don't believe this will exceed the **1,000,000 / day** quota, but large organizations *(> 10,000)* with significant amount of users should account for additional cost associated with [API usage](https://developers.google.com/google-apps/calendar/pricing).
+
+#### API Calls Breakdown
+| Action                            | # of API Request              |
+| --------------------------------- | ----------------------------- |
+| Start Up                          | ***1** / User*                |
+| Updated, Cancelled, Created Event | ***1** / Attendee & Creator*  |
+| Renewing Calendar Subscription    | ***1** / User*                |
+
+
 ## Observers
 > If you are not familar with `observers`, please check out the rx.js documentation on [`observers`](http://reactivex.io/rxjs/class/es6/MiscJSDoc.js~ObserverDoc.html)
 
@@ -79,6 +92,7 @@ Along with listening to a Google calendar, `stenella` provides the following fea
 ### Observer Caveats and Tips
 - Avoid multiple observers processing for the same condition
 - Include a means to indicate a change was caused by your observer as `stenella` is unaware of any events created, deleted, or updated by observers
+- For every update done on an event, this will count as 1 API call and + (1 * `X` # Attendees) since this will count as a theoretical new event
 
 ## Authors
 - [Brandon Him](https://github.com/brh55/)
@@ -86,7 +100,7 @@ Along with listening to a Google calendar, `stenella` provides the following fea
 - [Innovation Edge Team @ Cisco](https://github.com/cisco-ie)
 
 ## Contributing
-We know `Stenella` is far from perfect, so we are excited to build upon our existing work with other community members. With that said, please submit an issue prior to getting started to see how others can assist in determining implementation details.
+We know `Stenella` is far from perfect, so we are excited to build upon our existing work with other community members. With that said, please submit an issue prior to getting started to avoid duplicated effort.
 
 ## License
 Apache License 2.0 © [Innovation Edge @ Cisco](https://github.com/cisco-ie/stenella)
