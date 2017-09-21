@@ -1,7 +1,7 @@
-# Google Calendar Listener
-> A reactive application that listens on Google calendars within a [G Suite](https://gsuite.google.com/)
+# Stenella 🐬✨
+> Reactive application that listens on Google calendars within a [G Suite](https://gsuite.google.com/) with the ability to process business logic
 
-`google-calendaer-listener` is a server-to-server, Node.js application that listens to Google calendars and are notified of events being created, deleted, or updated. With each event, developers can define and execute business logic in regards to contextual cues found within a calenader event payload *(date, subject, summary, attendees, location, status, etc.)*. These are known as "observers" *(calendar event handlers)*, which are flexible, open-ended, and easy to create.
+`stenella` is an unofficial, server-to-server, Node.js application that listens to Google calendars events that are created, deleted, or updated. With each event, developers can define and execute their own business logic in regards to contextual cues found within a calenader event payload *(date, subject, summary, attendees, location, status, etc.)*. These are known as "observers" *(calendar event handlers)*, which are flexible, open-ended, and simple to write.
 
 ![Google Calendar Listener Demo](http://g.recordit.co/uBCEUMWD4N.gif)
 
@@ -10,7 +10,7 @@
 > The demo above displays the application receiving a calendar event being created, which is logged to the console in real-time
 
 ## Features
-Along with listening to a Google calendar, `google-calendar-listener` provides the following features and performs additional heavy work:
+Along with listening to a Google calendar, `stenella` provides the following features and performs additional heavy work:
 - Ability to manually set users to listen
 - An easy to use, and straightforward way to implement observers
 - Re-process any missed events during downtime *(env.TTL)*
@@ -20,17 +20,18 @@ Along with listening to a Google calendar, `google-calendar-listener` provides t
     - An event with "Guests Can Modify" will only process the most recent event received, and will only process new changes
     - Events with multiple guests will only be regarded as one unique event for `observers`
 - Includes a `Dockerfile`, along with `docker-compose` files for easier deployment examples
+- Automatically listens to newly created users within a organizaiton
 
 ## Requirements
-- G Suite (Google Apps for Work)
+- G Suite *(Previously known as Google Apps for Work)*
 - Admin privileges within a G Suite
 - MongoDB
 - A publicly available server with a domain
 
-## Set Up
+## Getting Started
 1. [Verify](https://support.google.com/webmasters/answer/35179?authuser=0) your application's domain name ownership
 
-    Verification of the application domain name with Google proves that you own/trust it. This enables the application to handle Google calendar notifications. `google-calendar-listener` provides a `/verify` directory where you can simply drop your `verification.html` files into it and it will be publicly available to Google verfication servers.
+    Verification of the application domain name with Google proves that you own/trust it. This enables the application to handle Google calendar notifications. `stenella` provides a `/verify` directory where you can simply drop your `verification.html` files into it and it will be publicly available to Google verfication servers.
 
 2. Create a Google App
     1. Go to the **Google API Console**
@@ -45,18 +46,18 @@ Along with listening to a Google calendar, `google-calendar-listener` provides t
     9. Go to the **API Manager** view, select the **Credentials** menu
     10. Select the **Domain Verification** tab, click *Add Domain* and add your domain that was verified in **Step 1**
 3. Setup the [MongoDB database](https://docs.mongodb.com/manual/installation/?jmp=footer)
-4. Clone the repository: `git clone https://github.com/cisco-ie/google-calendar-listener/`
+4. Clone the repository: `git clone https://github.com/cisco-ie/stenella/`
 5. Download the application's dependencies:
     `$ npm install`
 6. Copy the `example.env` to `.env` and set up the variables
-7. Create an [observer](#observer-usage) to respond to calendar events
+7. Create an [observer](#observers) to respond to calendar events
 8. Start the application:
     `$ npm start`
 
 ## Observers
 > If you are not familar with `observers`, please check out the rx.js documentation on [`observers`](http://reactivex.io/rxjs/class/es6/MiscJSDoc.js~ObserverDoc.html)
 
-`Observers` give you the flexibility to create your own set of business logic in respose to events. Within `google-calendar-listener`, `observers` are simply functions that receieve the event payload.
+`Observers` give you the flexibility to create your own set of business logic in respose to events. Within `stenella`, `observers` are simply functions that receieve the event payload.
 
 ### Creating an Observer
 1. Create a new file within the `/observers` directory
@@ -70,14 +71,14 @@ Along with listening to a Google calendar, `google-calendar-listener` provides t
 3. Now subscribe to events, and write your own handler to perform any logic
    ```
    calendarEvents.subscribe((event) => {
-      // Do work based on particular clauses and event information
+      // Do work based on particular conditions
    });
    ```
 4. Start the listener and your `Observer` will now be invoked upon calendar event notifications
 
 ### Observer Caveats and Tips
-- Avoid multiple observers processing for the same clause
-- Include a means to indicate a change was caused by your observer as `google-calendar-listener` is unaware of any events created, deleted, or updated by observers.
+- Avoid multiple observers processing for the same condition
+- Include a means to indicate a change was caused by your observer as `stenella` is unaware of any events created, deleted, or updated by observers
 
 ## Authors
 - [Brandon Him](https://github.com/brh55/)
@@ -85,9 +86,7 @@ Along with listening to a Google calendar, `google-calendar-listener` provides t
 - [Innovation Edge Team @ Cisco](https://github.com/cisco-ie)
 
 ## Contributing
-:octocat: PR's are welcomed. Please, submit an issue prior to getting started to see how others can assist in determining implementation details.
-
-Prior to submitting PRs: `$ npm test`
+We know `Stenella` is far from perfect, so we are excited to build upon our existing work with other community members. With that said, please submit an issue prior to getting started to see how others can assist in determining implementation details.
 
 ## License
-MIT © [Innovation Edge @ Cisco](https://github.com/cisco-ie/google-calendar-listener)
+Apache License 2.0 © [Innovation Edge @ Cisco](https://github.com/cisco-ie/stenella)
