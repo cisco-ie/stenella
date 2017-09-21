@@ -1,4 +1,6 @@
 ![Stenella](https://user-images.githubusercontent.com/6020066/30722146-5f734936-9ee4-11e7-8f6b-111661b91f34.jpg)
+- - -
+[![Build Status](https://travis-ci.org/cisco-ie/stenella.svg?branch=master)](https://travis-ci.org/cisco-ie/stenella) [![license](https://img.shields.io/github/license/cisco-ie/stenella.svg?style=flat-square)]()
 
 > Reactive application that listens on Google calendars within a [G Suite](https://gsuite.google.com/) with the ability to process business logic
 
