@@ -58,6 +58,31 @@ Along with listening to a Google calendar, `stenella` provides the following fea
 7. Create an [observer](#observers) to respond to calendar events
 8. Start the application:
     `$ npm start`
+    
+## Configuration
+Stenella includes various configurations that are managed within the `.env` file of the application or environment variables set within shell of the application instance. Please refer to the table below, or the [`example.env`](/master/example.env) file.
+
+| **ENV Variable**               | **Required** | **Description**                                                                                                        |
+|--------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------|
+| ADMIN                          | ✅            | A G Suite admin for the application to act as proxy for                                                                |
+| DOMAIN                         | ✅            | The domain associated with the Google organization                                                                     |
+| CUSTOMER                       | ✅            | A `customerId` for organizations with multiple domains, the application will only run across that customerId           |
+| RECEIVING_URL                  | ✅            | The public server url for Google to send notifications, and authorize API calls from                                   |
+| DB_URL                         | ✅            | The primary mongodb location of where stenella will store information regarding calendar subscriptions                 |
+| DB_URL_TEST                    | 🚫           | This is an mongodb location where the test suite would run it's associated file. It should be different from `DB_URL`  |
+| GOOGLE_APPLICATION_CREDENTIALS | ✅            | The path containing the Google service JSON web token, this should also be granted delegated permissions               |
+| PRIVATE_KEY_PATH               | 🚫           | If you want to run SSL on the application server, this path should point to the private key (.pem).                    |
+| FULL_CHAIN_CERT_PATH           | 🚫           | To run SSL on the application server, this path should point to the full chain certificate (.pem).                     |
+| CERT_PASSPHRASE                | 🚫           | Required if the cert was generated using a passphrase, insert the passphrase here.                                     |
+| USER_WHITELIST_PATH            | 🚫           | A JavaScript file containing an array of emails for the application to listen on                                       |
+
+## Deployment
+### Docker
+> ℹ️  Before running docker-compose, ensure an `.env` file is properly populated with correct configurations
+
+The `/containers` directory contain different deployment examples, simply `cd` into their respectable directories and run `docker-compose up`.
+- **/containers/** - A base deployment which includes mongodb, stenella
+- **/containers/nginx** - A advance deployment which includes a mongodb, stenella, and nginx as a load-balancer
 
 ## Google API Usage
 While `stenella` is using several Google APIs, it heavily relies on Google Calendar API. In most scenarios, we don't believe this will exceed the **1,000,000 / day** quota, but large organizations *(> 10,000)* with significant amount of users should account for additional cost associated with [API usage](https://developers.google.com/google-apps/calendar/pricing).
@@ -68,7 +93,6 @@ While `stenella` is using several Google APIs, it heavily relies on Google Calen
 | Start Up                          | ***1** / User*                |
 | Updated, Cancelled, Created Event | ***1** / Attendee & Creator*  |
 | Renewing Calendar Subscription    | ***1** / User*                |
-
 
 ## Observers
 > If you are not familar with `observers`, please check out the rx.js documentation on [`observers`](http://reactivex.io/rxjs/class/es6/MiscJSDoc.js~ObserverDoc.html)
