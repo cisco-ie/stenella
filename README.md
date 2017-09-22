@@ -38,7 +38,6 @@ Along with listening to a Google calendar, `stenella` provides the following fea
 - Ability to manually set users to listen
 - Automatically renew listening channels with Google
 - An easy to use, and straightforward way to implement observers
-- Re-process any missed events during downtime *(env.TTL)*
 - Handles the complexities of processing events to `observers`:
     - Events created, deleted, or updated within a short period of time will cause the application to only process the most recent change
     - The application will prevent any duplicated events being processed twice within a cached time
@@ -121,19 +120,20 @@ Validate that the application is exposed and running by checking the localhost, 
 ## Configuration
 Stenella includes various configurations that are managed within the `.env` file of the application or environment variables set within shell of the application instance. Please refer to the table below, or the [`example.env`](/master/example.env) file.
 
-| **ENV Variable**               | **Required** | **Description**                                                                                                        |
-|--------------------------------|--------------|------------------------------------------------------------------------------------------------------------------------|
-| ADMIN                          | ✅            | A G Suite admin for the application to act as proxy for                                                                |
-| DOMAIN                         | ✅            | The domain associated with the Google organization                                                                     |
-| CUSTOMER                       | ✅            | A `customerId` for organizations with multiple domains, the application will only run across that customerId           |
-| RECEIVING_URL                  | ✅            | The public server url for Google to send notifications, and authorize API calls from                                   |
-| DB_URL                         | ✅            | The primary mongodb location of where stenella will store information regarding calendar subscriptions                 |
-| DB_URL_TEST                    | 🚫           | This is an mongodb location where the test suite would run it's associated file. It should be different from `DB_URL`  |
-| GOOGLE_APPLICATION_CREDENTIALS | ✅            | The path containing the Google service JSON web token, this should also be granted delegated permissions               |
-| PRIVATE_KEY_PATH               | 🚫           | If you want to run SSL on the application server, this path should point to the private key (.pem).                    |
-| FULL_CHAIN_CERT_PATH           | 🚫           | To run SSL on the application server, this path should point to the full chain certificate (.pem).                     |
-| CERT_PASSPHRASE                | 🚫           | Required if the cert was generated using a passphrase, insert the passphrase here.                                     |
-| USER_WHITELIST_PATH            | 🚫           | A JavaScript file containing an array of emails for the application to listen on                                       |
+| **ENV Variable**               | **Required** | **Description**                                                                                                                                 |
+|--------------------------------|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| ADMIN                          | ✅            | A G Suite admin for the application to act as proxy for                                                                                         |
+| DOMAIN                         | ✅            | The domain associated with the Google organization                                                                                              |
+| CUSTOMER                       | ✅            | A `customerId` for organizations with multiple domains, the application will only run across that customerId                                    |
+| RECEIVING_URL                  | ✅            | The public server url for Google to send notifications, and authorize API calls from                                                            |
+| DB_URL                         | ✅            | The primary mongodb location of where stenella will store information regarding calendar subscriptions                                          |
+| DB_URL_TEST                    | 🚫           | This is an mongodb location where the test suite would run it's associated file. It should be different from `DB_URL`                           |
+| GOOGLE_APPLICATION_CREDENTIALS | ✅            | The path containing the Google service JSON web token, this should also be granted delegated permissions                                        |
+| PRIVATE_KEY_PATH               | 🚫           | If you want to run SSL on the application server, this path should point to the private key (.pem).                                             |
+| FULL_CHAIN_CERT_PATH           | 🚫           | To run SSL on the application server, this path should point to the full chain certificate (.pem).                                              |
+| CERT_PASSPHRASE                | 🚫           | Required if the cert was generated using a passphrase, insert the passphrase here.                                                              |
+| USER_WHITELIST_PATH            | 🚫           | A JavaScript file containing an array of emails for the application to listen on                                                                |
+| TTL                            | 🚫           | A "time-to-live" in ms for user subscriptions -- how long to keep the subscription open with google before renewing. Default: 1500 ms (25 mins) |
 
 ## Google API Usage
 While `stenella` is using several Google APIs, it heavily relies on Google Calendar API. In most scenarios, we don't believe this will exceed the **1,000,000 / day** quota, but large organizations *(> 10,000)* with significant amount of users should account for additional cost associated with [API usage](https://developers.google.com/google-apps/calendar/pricing).
