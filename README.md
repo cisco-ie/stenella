@@ -22,6 +22,8 @@
   * [Deployment](#deployment)
       * [Standard](#standard)
       * [Docker](#docker)
+          * [Configure Docker](#configure)
+          * [Start Docker](#start)
   * [Configuration](#configuration)
   * [Google API Usage](#google-api-usage)
   * [Observers](#observers)
@@ -92,21 +94,30 @@ Along with listening to a Google calendar, `stenella` provides the following fea
 4. Go to `https://<YOUR_DOMAIN>:<?PORT>` *(localhost if you have not pointed the domain)* and you should see a `Calendar Listener Works!`
 
 ### Docker
-> ℹ️  Before running docker-compose, ensure an `.env` file is properly populated with correct configurations
->
-> ⚠️  `DB_URL` should be set to `mongodb://database/<databaseName>`
-
-The `/containers` directory contain different deployment examples:
+Before running docker-compose, ensure an `.env` file is properly populated with correct configurations. The `/containers` directory contain different deployment examples:
 - **/containers/** - A base deployment which includes mongodb, stenella
 - **/containers/nginx** - An advance deployment which includes a mongodb, stenella, and nginx
 
+#### Configure
+- `DB_URL` should be set to `mongodb://database/<databaseName>`
+-  Within the compose file, `volumes` should mount the location of your service token. 
+    *e.g.*
+    ```yaml
+    volumes:
+      - ../path/to/token:/app/secret
+    ```
+
+#### Start
 To bring up docker containers:
 ```bash
 $ cd [containers or containers/nginx]
 $ docker-compose up
 ```
 
-####
+Validate that the application is exposed and running by checking the localhost, it should respond with `Google Listener Works!`
+- **Base depoyment:** https://localhost:5000
+- **With Nginx** https://localhost:5001
+
 ## Configuration
 Stenella includes various configurations that are managed within the `.env` file of the application or environment variables set within shell of the application instance. Please refer to the table below, or the [`example.env`](/master/example.env) file.
 
