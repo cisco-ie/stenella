@@ -12,6 +12,25 @@
 > 
 > The demo above displays the application receiving a calendar event being created, which is logged to the console in real-time
 
+## Contents
+
+  * [Features](#features)
+  * [Requirements](#requirements)
+  * [Installation](#installation)
+      * [Setting Up A Google Developer App](#setting-up-a-google-developer-app)
+      * [Setting Up Stenella](#setting-up-stenella)
+  * [Deployment](#deployment)
+      * [Standard](#standard)
+      * [Docker](#docker)
+  * [Configuration](#configuration)
+  * [Google API Usage](#google-api-usage)
+  * [Observers](#observers)
+      * [Create an Observer](#create-an-observer)
+      * [Best Practices](#best-practices)
+  * [Authors](#authors)
+  * [Contributing](#contributing)
+  * [License](#license)
+
 ## Features
 Along with listening to a Google calendar, `stenella` provides the following features and performs additional heavy work:
 - Ability to manually set users to listen
@@ -33,7 +52,8 @@ Along with listening to a Google calendar, `stenella` provides the following fea
 - MongoDB
 - A publicly available server with a domain
 
-## Getting Started
+## Installation
+### Setting Up a Google Developer App
 1. [Verify](https://support.google.com/webmasters/answer/35179?authuser=0) your application's domain name ownership
 
     Verification of the application domain name with Google proves that you own/trust it. This enables the application to handle Google calendar notifications. `stenella` provides a `/verify` directory where you can simply drop your `verification.html` files into it and it will be publicly available to Google verfication servers.
@@ -50,15 +70,43 @@ Along with listening to a Google calendar, `stenella` provides the following fea
         > This will automatically download a private key to your computer. This is the only copy of the key, so store it in a secure manner and ensure that it is accessible to the application.
     9. Go to the **API Manager** view, select the **Credentials** menu
     10. Select the **Domain Verification** tab, click *Add Domain* and add your domain that was verified in **Step 1**
-3. Setup the [MongoDB database](https://docs.mongodb.com/manual/installation/?jmp=footer)
-4. Clone the repository: `git clone https://github.com/cisco-ie/stenella/`
-5. Download the application's dependencies:
-    `$ npm install`
-6. Copy the `example.env` to `.env` and set up the variables
-7. Create an [observer](#observers) to respond to calendar events
-8. Start the application:
-    `$ npm start`
-    
+
+### Setting Up Stenella
+> ⚠️  Please complete the appropriate Google permissions and steps before moving on with Stenella
+
+1. Download repository and install dependencies
+    ```sh
+    $ git clone https://github.com/cisco-ie/stenella.git && cd stenella
+    $ npm install
+    ```
+2. Configure environment variables, refer to [configuration](#configuration) for more details
+    ```
+    $ cp example.env .env
+    ```
+
+## Deployment
+### Standard
+1. Setup the [MongoDB database](https://docs.mongodb.com/manual/installation/?jmp=footer)
+2. Initiate Mongodb, `mongod`
+3. Start up application, `$ npm start`
+4. Go to `https://<YOUR_DOMAIN>:<?PORT>` *(localhost if you have not pointed the domain)* and you should see a `Calendar Listener Works!`
+
+### Docker
+> ℹ️  Before running docker-compose, ensure an `.env` file is properly populated with correct configurations
+>
+> ⚠️  `DB_URL` should be set to `mongodb://database/<databaseName>`
+
+The `/containers` directory contain different deployment examples:
+- **/containers/** - A base deployment which includes mongodb, stenella
+- **/containers/nginx** - An advance deployment which includes a mongodb, stenella, and nginx
+
+To bring up docker containers:
+```bash
+$ cd [containers or containers/nginx]
+$ docker-compose up
+```
+
+####
 ## Configuration
 Stenella includes various configurations that are managed within the `.env` file of the application or environment variables set within shell of the application instance. Please refer to the table below, or the [`example.env`](/master/example.env) file.
 
@@ -76,14 +124,6 @@ Stenella includes various configurations that are managed within the `.env` file
 | CERT_PASSPHRASE                | 🚫           | Required if the cert was generated using a passphrase, insert the passphrase here.                                     |
 | USER_WHITELIST_PATH            | 🚫           | A JavaScript file containing an array of emails for the application to listen on                                       |
 
-## Deployment
-### Docker
-> ℹ️  Before running docker-compose, ensure an `.env` file is properly populated with correct configurations
-
-The `/containers` directory contain different deployment examples, simply `cd` into their respectable directories and run `docker-compose up`.
-- **/containers/** - A base deployment which includes mongodb, stenella
-- **/containers/nginx** - A advance deployment which includes a mongodb, stenella, and nginx as a load-balancer
-
 ## Google API Usage
 While `stenella` is using several Google APIs, it heavily relies on Google Calendar API. In most scenarios, we don't believe this will exceed the **1,000,000 / day** quota, but large organizations *(> 10,000)* with significant amount of users should account for additional cost associated with [API usage](https://developers.google.com/google-apps/calendar/pricing).
 
@@ -99,7 +139,7 @@ While `stenella` is using several Google APIs, it heavily relies on Google Calen
 
 `Observers` give you the flexibility to create your own set of business logic in respose to events. Within `stenella`, `observers` are simply functions that receieve the event payload.
 
-### Creating an Observer
+### Create an Observer
 1. Create a new file within the `/observers` directory
 
     > 💡 All observers are loaded from the `/observers` directory, no configuration needed.
@@ -116,7 +156,7 @@ While `stenella` is using several Google APIs, it heavily relies on Google Calen
    ```
 4. Start the listener and your `Observer` will now be invoked upon calendar event notifications
 
-### Observer Caveats and Tips
+### Best Practices
 - Avoid multiple observers processing for the same condition
 - Include a means to indicate a change was caused by your observer as `stenella` is unaware of any events created, deleted, or updated by observers
 - For every update done on an event, this will count as 1 API call and + (1 * `X` # Attendees) since this will count as a theoretical new event
