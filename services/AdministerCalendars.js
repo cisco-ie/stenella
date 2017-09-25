@@ -11,11 +11,11 @@ const debug = require('debug')('calendars');
 const listEvents = Promise.promisify(calendar.events.list);
 
 let Interface = {
-  fullSync: getFullSync,
-  incrementalSync: getIncrementalSync,
-  getSyncToken,
-  updateEvent,
-  persistNewSyncToken
+	fullSync: getFullSync,
+	incrementalSync: getIncrementalSync,
+	getSyncToken,
+	updateEvent,
+	persistNewSyncToken
 };
 
 module.exports = Interface;
@@ -26,32 +26,32 @@ module.exports = Interface;
  * @return {object} full sync response object
  */
 function getFullSync(calendarId) {
-  let params = {
-    calendarId: calendarId,
-    timeMin: (new Date()).toISOString(),
-    singleEvents: false
-  };
+	let params = {
+		calendarId: calendarId,
+		timeMin: (new Date()).toISOString(),
+		singleEvents: false
+	};
 
-  // In the rare off cases where pagination is significantly large,
-  // we need to keep making request to get to the last page for
-  // the syncToken.
-  // REF: https://developers.google.com/google-apps/calendar/v3/pagination
-  let eventListRequest = function eventListRequest(listParams) {
-    return AdministerJWT.createJWT(scope.calendar)
-      .then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
-      .then(listEvents)
-      .then(result => {
-        debug('Get calendar events for %s', listParams.calendarId);
-        if (result.nextPageToken) {
-          debug('Paging calendar events for %s', listParams.calendarId);
-          listParams.nextPageToken = result.nextPageToken;
-          return eventListRequest(listParams);
-        }
-        return result;
-      });
-  };
+	// In the rare off cases where pagination is significantly large,
+	// we need to keep making request to get to the last page for
+	// the syncToken.
+	// REF: https://developers.google.com/google-apps/calendar/v3/pagination
+	let eventListRequest = function eventListRequest(listParams) {
+		return AdministerJWT.createJWT(scope.calendar)
+			.then(jwtClient => Object.assign({}, listParams, { auth: jwtClient}))
+			.then(listEvents)
+			.then(result => {
+				debug('Get calendar events for %s', listParams.calendarId);
+				if (result.nextPageToken) {
+					debug('Paging calendar events for %s', listParams.calendarId);
+					listParams.nextPageToken = result.nextPageToken;
+					return eventListRequest(listParams);
+				}
+				return result;
+			});
+	};
 
-  return eventListRequest(params);
+	return eventListRequest(params);
 }
 
 /**
@@ -109,19 +109,19 @@ function getSyncToken(calendarId) {
  * @return {Object} promise thenable promise
  */
 function updateEvent(params, updateInfo) {
-  if (!params) throw new Error('Missing params for update Event');
-  const requiredParams = (params.eventId && params.calendarId);
-  if (!requiredParams) throw new Error('Missing required eventId or calendarId');
+	if (!params) throw new Error('Missing params for update Event');
+	const requiredParams = (params.eventId && params.calendarId);
+	if (!requiredParams) throw new Error('Missing required eventId or calendarId');
 
-  // Return if no updates to save redundant API request
-  if (!updateInfo) throw new Error('No update information passed');
+	// Return if no updates to save redundant API request
+	if (!updateInfo) throw new Error('No update information passed');
 
-  params.resource = updateInfo;
-  return AdministerJWT.createJWT(scope.calendar)
-    .then(jwtClient => {
-      params.auth = jwtClient;
-      return Promise.promisify(calendar.events.update)(params);
-    });
+	params.resource = updateInfo;
+	return AdministerJWT.createJWT(scope.calendar)
+		.then(jwtClient => {
+			params.auth = jwtClient;
+			return Promise.promisify(calendar.events.update)(params);
+		});
 }
 
 /**

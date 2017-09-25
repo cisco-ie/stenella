@@ -92,21 +92,21 @@ function setUpChannels(whitelist) {
  */
 function createChannelsAndExtractIds(users) {
   findDirectoryChannel()
-     // If existing channel exist renew it, otherwise create new and save
-    .then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
-    .then(AdministerChannels.renew)
-    .catch(debug);
+	 // If existing channel exist renew it, otherwise create new and save
+	.then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
+	.then(AdministerChannels.renew)
+	.catch(debug);
 
 	const userIds = extractUserIds(users);
 	userIds.each(userId => {
-      getEventChannelFromDB(userId)
-        .then(channelDBEntry => {
+	  getEventChannelFromDB(userId)
+		.then(channelDBEntry => {
 					if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
-          return channelDBEntry;
-        })
-        .then(eventChannel => (eventChannel) ? renewChannelAndResync(eventChannel) : createNewEventChannel(userId));
-      })
-      .catch(debug);
+		  return channelDBEntry;
+		})
+		.then(eventChannel => (eventChannel) ? renewChannelAndResync(eventChannel) : createNewEventChannel(userId));
+	  })
+	  .catch(debug);
 }
 
 function renewChannelAndResync(eventChannel) {
@@ -114,17 +114,17 @@ function renewChannelAndResync(eventChannel) {
   // If the app has stopped, we use the previous syncToken and
   // resync and inform all our observers
   AdministerCalendars
-    .incrementalSync(eventChannel)
-    .then(syncResp => {
-      debug('Incremental sync: %o informing observers', syncResp);
-      AdministerCalendars
-        .persistNewSyncToken(syncResp)
-        .then(() => debug('Updated syncToken during resync'));
+	.incrementalSync(eventChannel)
+	.then(syncResp => {
+	  debug('Incremental sync: %o informing observers', syncResp);
+	  AdministerCalendars
+		.persistNewSyncToken(syncResp)
+		.then(() => debug('Updated syncToken during resync'));
 
-      return syncResp;
-    })
-    .then(syncResponse => eventController.emitEvents(syncResponse))
-    .catch((err) => handleInvaldTokenError(err, eventChannel));
+	  return syncResp;
+	})
+	.then(syncResponse => eventController.emitEvents(syncResponse))
+	.catch((err) => handleInvaldTokenError(err, eventChannel));
 
   debug('Set renewal for %s', eventChannel);
   AdministerChannels.renew(eventChannel);
@@ -133,22 +133,22 @@ function renewChannelAndResync(eventChannel) {
 
 function handleInvaldTokenError(err, eventChannel) {
   if (err.code === 410) {
-    // Perform a full sync and update the syncToken in database
-    // and emite any recent events
-    debug(err.message);
-    const calendarId = eventChannel.calendarId;
-    AdministerCalendars
-      .fullSync(calendarId)
-      .then(AdministerCalendars.persistNewSyncToken)
-      .then(syncResp => {
-        // Update previous channel with new token and set future renewal and perform resync
-        const updatedChannel = Object.assign({}, eventChannel, { nextSyncToken: syncResp.nextSyncToken });
-        AdministerChannels.renew(updatedChannel);
-        return syncResp;
-      })
-      .then(syncResponse => eventController.emitEvents(syncResponse));
+	// Perform a full sync and update the syncToken in database
+	// and emite any recent events
+	debug(err.message);
+	const calendarId = eventChannel.calendarId;
+	AdministerCalendars
+	  .fullSync(calendarId)
+	  .then(AdministerCalendars.persistNewSyncToken)
+	  .then(syncResp => {
+		// Update previous channel with new token and set future renewal and perform resync
+		const updatedChannel = Object.assign({}, eventChannel, { nextSyncToken: syncResp.nextSyncToken });
+		AdministerChannels.renew(updatedChannel);
+		return syncResp;
+	  })
+	  .then(syncResponse => eventController.emitEvents(syncResponse));
   } else {
-    debug(err.message);
+	debug(err.message);
   }
 }
 
@@ -190,8 +190,8 @@ function removeExpiredChannels() {
 	let channels = findNonMatchingExpiredChannel();
 	channels.remove()
 		.then(removed => removed.result.n > 0 ?
-			  debug('%s expired documents removed', removed.result.n) :
-			  null);
+			debug('%s expired documents removed', removed.result.n) :
+			null);
 }
 
 function findNonMatchingExpiredChannel() {
