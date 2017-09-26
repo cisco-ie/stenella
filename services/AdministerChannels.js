@@ -1,23 +1,24 @@
 'use strict';
 
 const google = require('googleapis');
-const calendar = google.calendar('v3');
-const directory = google.admin('directory_v1');
-const config = require('../configs/config').APP;
-const scope = require('../constants/GoogleScopes');
 const _ = require('lodash');
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
-const Channel = mongoose.model('Channel', require('../data/schema/channel'));
+const retry = require('retry');
+const debug = require('debug')('AdministerChannels');
+const config = require('../configs/config').APP;
+const scope = require('../constants/GoogleScopes');
 const createJWT = require('../services/AdministerJWT').createJWT;
 const AdministerCalendars = require('./AdministerCalendars');
 const getDateMsDifference = require('../libs/timeUtils').getDateMsDifference;
-const retry = require('retry');
-const debug = require('debug')('AdministerChannels');
+
+const calendar = google.calendar('v3');
+const directory = google.admin('directory_v1');
+const Channel = mongoose.model('Channel', require('../data/schema/channel'));
 
 const Interface = {
 	create: channelFactory,
-	parseHeaders: parseHeaders,
+	parseHeaders,
 	save: saveChannel,
 	renew: renewChannel
 };
@@ -32,7 +33,9 @@ module.exports = Interface;
  * @return {object}             Promise which is resolved to the channel information
  */
 function channelFactory(channelInfo) {
-	if (!channelInfo) throw new Error('No channel information presented');
+	if (!channelInfo) {
+		throw new Error('No channel information presented');
+	}
 
 	const factory = {
 		directory: createDirectoryChannel,
@@ -53,11 +56,11 @@ function createEventChannel(channelInfo) {
 		syncTokenPromise,
 		eventChannelPromise
 	])
-		.spread(function syncTokenAndChannelResolve(syncToken, eventChannel) {
-			eventChannel.syncToken = syncToken;
-			eventChannel.type = 'event';
-			return Promise.resolve(eventChannel);
-		});
+	.spread((syncToken, eventChannel) => {
+		eventChannel.syncToken = syncToken;
+		eventChannel.type = 'event';
+		return Promise.resolve(eventChannel);
+	});
 }
 
 function createDirectoryChannel(channelInfo) {
@@ -82,7 +85,7 @@ function createChannel(channelInfo) {
 					const eventChannelOperation = retry.operation();
 					eventChannelOperation.attempt(currentAttempt => {
 						debug('Attempt #%s to create event channel for %s', currentAttempt, channelInfo.calendarId);
-   						calendar.events.watch(params, (err, res) => {
+						calendar.events.watch(params, (err, res) => {
 							if (eventChannelOperation.retry(err)) {
 								reject(eventChannelOperation.mainError());
 							}
@@ -107,7 +110,7 @@ function createChannel(channelInfo) {
 
 					dirChannelOperation.attempt(currentAttempt => {
 						debug('Attempt #%s to create directory channel', currentAttempt);
-						directory.users.watch(params, function dirWatchCallback(err, res) {
+						directory.users.watch(params, (err, res) => {
 							if (dirChannelOperation.retry(err)) {
 								reject(dirChannelOperation.mainError());
 							}
@@ -234,7 +237,7 @@ function renewChannel(existingChannel) {
 
 	function deleteExistingAndRenew(newChannel) {
 		const oldChannelId = existingChannel.channelId;
-		Channel.remove({ channelId: oldChannelId }).exec();
+		Channel.remove({channelId: oldChannelId}).exec();
 		renewChannel(newChannel);
 	}
 }

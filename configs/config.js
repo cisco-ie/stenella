@@ -1,6 +1,6 @@
-const _ = require('lodash');
 const fs = require('fs');
 const path = require('path');
+const _ = require('lodash');
 const dotenv = require('dotenv');
 
 // Load the .env file into process.env
@@ -20,37 +20,37 @@ function build(env) {
 	};
 
 	if (env.DOMAIN) {
-		config = Object.assign({}, config, { domain: env.DOMAIN });
+		config = Object.assign({}, config, {domain: env.DOMAIN});
 	}
 
 	if (env.CUSTOMER) {
-		config = Object.assign({}, config, { customer: env.CUSTOMER });
+		config = Object.assign({}, config, {customer: env.CUSTOMER});
 	}
 
 	if (env.TTL) {
-		config = Object.assign({}, config, { ttl: env.TTL });
+		config = Object.assign({}, config, {ttl: env.TTL});
 	}
 
 	if (env.USER_WHITELIST_PATH) {
 		// Set to app root
 		const listPath = path.join('../', env.USER_WHITELIST_PATH);
-		config = Object.assign({}, config, { whitelist: require(listPath) });
+		config = Object.assign({}, config, {whitelist: require(listPath)});
 	}
 
 	if (env.PRIVATE_KEY_PATH && env.FULL_CHAIN_CERT_PATH) {
 		const privateKey = env.PRIVATE_KEY_PATH;
 		const cert = env.FULL_CHAIN_CERT_PATH;
 		const sslOptions = (env.CERT_PASSPHRASE) ?
-			  { privateKey, cert, passphrase: env.CERT_PASSPHRASE } :
-			  { privateKey, cert };
-		config = Object.assign({}, config, { sslOptions, ssl: true });
+			{privateKey, cert, passphrase: env.CERT_PASSPHRASE} :
+			{privateKey, cert};
+		config = Object.assign({}, config, {sslOptions, ssl: true});
 	}
 
-	const throwError = (message) => {
+	const throwError = message => {
 		throw new Error(message);
 	}
 
-	_.forOwn(config, (value, key) => (!config[key]) ? throwError(`env.${key} is not defined`) : null);
+	_.forOwn(config, (value, key) => (config[key]) ? null : throwError(`env.${key} is not defined`));
 	return config;
 }
 
