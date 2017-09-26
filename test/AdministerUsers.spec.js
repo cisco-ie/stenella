@@ -7,7 +7,7 @@ const sinon = require('sinon');
 
 const AdministerUsers = rewire('../services/AdministerUsers');
 const userListMock = require('./mocks/userList.json');
-const scope     = require('../constants/GoogleScopes');
+const scope = require('../constants/GoogleScopes');
 
 describe('Administer User Service', () => {
 	let revert;

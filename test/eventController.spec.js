@@ -1,5 +1,4 @@
 const expect = require('chai').expect;
-const sinon = require('sinon');
 const eventController = require('../controllers/eventController');
 
 const eventsMock = require('./mocks/eventList.json');
@@ -7,7 +6,7 @@ const eventsMock2 = require('./mocks/eventList2.json');
 const eventsMock3 = require('./mocks/eventList3.json');
 const eventsMock4 = require('./mocks/eventList4.json');
 
-describe('Event Controller', function EventControllerTest() {
+describe('Event Controller', () => {
 	it('should get the user from the email', done => {
 		const parseUserIdFromEmail = eventController._parseUserIdFromEmail;
 
@@ -22,7 +21,7 @@ describe('Event Controller', function EventControllerTest() {
 		done();
 	});
 
-	it('should remove any old events', (done) => {
+	it('should remove any old events', done => {
 		const events = [
 			{
 				id: 1,

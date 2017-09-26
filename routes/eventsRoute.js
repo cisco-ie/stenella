@@ -1,23 +1,21 @@
-'use strict';
-
-const express         = require('express');
-const router          = express.Router(); // eslint-disable-line new-cap
-const parseHeaders    = require('../services/AdministerChannels').parseHeaders;
-const eventController = require('../controllers/eventController');
+const express = require('express');
 const debug = require('debug')('eventRoute');
+const parseHeaders = require('../services/AdministerChannels').parseHeaders;
+const eventController = require('../controllers/eventController');
+const router = express.Router(); // eslint-disable-line new-cap
 
 /**
  * `watch/event` POST Route
  */
-router.post('/', function eventRouteResponse(request, response) {
+router.post('/', (request, response) => {
 	const headers = parseHeaders(request);
 
 	// More information: https://developers.google.com/google-apps/calendar/v3/push
-	if (!isWatchNotification(headers)) {
-		response.sendStatus(400);
-	} else {
+	if (isWatchNotification(headers)) {
 		parseNotification(headers);
 		response.sendStatus(200);
+	} else {
+		response.sendStatus(400);
 	}
 });
 
@@ -34,8 +32,8 @@ function parseNotification(parsedHeaders) {
 		debug('Event channel (%s) update detected, loading to controller', parsedHeaders.channelId)
 		eventController.load(parsedHeaders.channelId);
 	}
-}
+};
 
 function isWatchNotification(parsedHeaders) {
-	return (parsedHeaders.channelId && parsedHeaders.resourceId) ? true : false;
-}
+	return (parsedHeaders.channelId && parsedHeaders.resourceId);
+};

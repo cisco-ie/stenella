@@ -5,12 +5,14 @@ require('dotenv').config();
  * @type {Object}
  */
 const dbConfigs = {
-  production_url: process.env.DB_URL,
-  test_url: process.env.DB_URL_TEST
+	// eslint-disable-next-line camelcase
+	production_url: process.env.DB_URL,
+	// eslint-disable-next-line camelcase
+	test_url: process.env.DB_URL_TEST
 };
 
 if (!dbConfigs.production_url) {
-  throw new Error('DB_URL is not defined');
+	throw new Error('DB_URL is not defined');
 }
 
 module.exports = dbConfigs;

@@ -1,13 +1,14 @@
 'use strict';
 
 const google = require('googleapis');
-const  _  = require('lodash');
+const  _ = require('lodash');
 const scope = require('../constants/GoogleScopes');
-const directory = google.admin('directory_v1');
 const Promise = require('bluebird');
 const config = require('../configs/config').APP;
-let { createJWT } = require('../services/AdministerJWT');
-let getDirectory = Promise.promisify(directory.users.list);
+const { createJWT } = require('../services/AdministerJWT');
+
+const directory = google.admin('directory_v1');
+const getDirectory = Promise.promisify(directory.users.list);
 
 const Interface = {
 	list: getUsers,
@@ -46,7 +47,7 @@ function requestUserList(params) {
 				// multiple response async
 
 				return requestUserList(params)
-					.then(function mergeResponse(paginatedResponse) {
+					.then(paginatedResponse => {
 						const mergeUsers = _.concat(userResponse.users, paginatedResponse.users);
 						let modifiedResponse = Object.create(userResponse);
 						modifiedResponse.users = mergeUsers;
@@ -55,13 +56,13 @@ function requestUserList(params) {
 			}
 			return userResponse;
 		})
-		.catch(function handleListError(error) {
-			throw error;
+		.catch(err => {
+			throw err;
 		});
 }
 
 function buildParams(jwtClient, overrideParams) {
-	let defaultParams = {
+	const defaultParams = {
 		auth: jwtClient,
 		maxResults: 500,
 		orderBy: 'email'
