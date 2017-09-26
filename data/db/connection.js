@@ -1,16 +1,16 @@
-// Connection Configs
 const mongoose = require('mongoose');
-const config   = require('../../configs/dbConfig');
+const config = require('../../configs/dbConfig');
 
 function connect(state) {
 	const dbUrl = {
-		'test': config.test_url,
-		'production': config.production_url
+		test: config.test_url,
+		production: config.production_url
 	}[state || 'production'];
 
 	const options = {
 		server: {
-			auto_reconnect: true 
+			// eslint-disable-next-line camelcase
+			auto_reconnect: true
 		}
 	};
 

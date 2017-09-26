@@ -95,7 +95,7 @@ function emitEvents(syncResponse) {
  * @return {Object}           Mongoose Virtual Model of Channel Entry
  */
 function _getChannelEntry(channelId) {
-	return ChannelEntry.findOne({channelId: channelId});
+	return ChannelEntry.findOne({channelId});
 }
 
 // Remove any attendees that don't have modifying abilities
