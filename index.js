@@ -1,28 +1,28 @@
 'use strict';
 const https = require('https');
 const fs = require('fs');
+const path = require('path');
 const express = require('express');
 const app = express();
 const Promise = require('bluebird');
 const _ = require('lodash');
 const mongoose = require('mongoose');
-const Rx = require('rxjs');
 const requireAll = require('require-all');
 const AdministerUsers = require('./services/AdministerUsers');
 const AdministerChannels = require('./services/AdministerChannels');
 const AdministerCalendars = require('./services/AdministerCalendars');
 const config = require('./configs/config').APP;
-let db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
-let Channel = mongoose.model('Channel', require('./data/schema/channel'));
+const db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
 let calendarEvent = require('./controllers/eventController').observable;
 const debug = require('debug')('main');
 const eventController = require('./controllers/eventController');
-
 mongoose.Promise = require('bluebird');
+
+const Channel = mongoose.model('Channel', require('./data/schema/channel'));
 
 app.get('/', (req, res) => res.send('Calender Listener Works!'));
 // This is used to allow drop-in html files for Google verification
-app.use('/', express.static(__dirname + '/verify'));
+app.use('/', express.static(path.join(__dirname, '/verify')));
 
 const serverAPI = {
 	events: '/watch/events',
@@ -68,7 +68,7 @@ function initServer() {
 // Packages any file *.js within /observers directory
 function loadObservers() {
 	requireAll({
-		dirname:  __dirname + '/observers',
+		dirname: path.join(__dirname, '/observers'),
 		recursive: true
 	});
 }
@@ -76,7 +76,7 @@ function loadObservers() {
 function setUpChannels(whitelist) {
 	if (whitelist) {
 		debug(`Whitelist detected, only the following emails will be authorized: ${whitelist}`);
-		const userlist = whitelist.map(email => ({ primaryEmail: email }));
+		const userlist = whitelist.map(email => ({primaryEmail: email}));
 		return Promise.resolve(userlist)
 			.then(createChannelsAndExtractIds);
 	}
@@ -93,7 +93,7 @@ function setUpChannels(whitelist) {
 function createChannelsAndExtractIds(users) {
   findDirectoryChannel()
 	 // If existing channel exist renew it, otherwise create new and save
-	.then(directoryChannel => (directoryChannel) ? directoryChannel : createDirChannelAndSave())
+	.then(directoryChannel => directoryChannel ? directoryChannel : createDirChannelAndSave())
 	.then(AdministerChannels.renew)
 	.catch(debug);
 
@@ -101,59 +101,62 @@ function createChannelsAndExtractIds(users) {
 	userIds.each(userId => {
 	  getEventChannelFromDB(userId)
 		.then(channelDBEntry => {
-					if (channelDBEntry) debug('Found entry for %s', channelDBEntry.calendarId);
-		  return channelDBEntry;
+			if (channelDBEntry) {
+				debug('Found entry for %s', channelDBEntry.calendarId);
+			}
+			return channelDBEntry;
 		})
 		.then(eventChannel => (eventChannel) ? renewChannelAndResync(eventChannel) : createNewEventChannel(userId));
-	  })
-	  .catch(debug);
+		})
+		.catch(debug);
 }
 
 function renewChannelAndResync(eventChannel) {
-  debug('Resyncing %s', eventChannel);
-  // If the app has stopped, we use the previous syncToken and
-  // resync and inform all our observers
-  AdministerCalendars
-	.incrementalSync(eventChannel)
-	.then(syncResp => {
-	  debug('Incremental sync: %o informing observers', syncResp);
-	  AdministerCalendars
-		.persistNewSyncToken(syncResp)
-		.then(() => debug('Updated syncToken during resync'));
+	debug('Resyncing %s', eventChannel);
+	// If the app has stopped, we use the previous syncToken and
+	// resync and inform all our observers
+	AdministerCalendars
+		.incrementalSync(eventChannel)
+		.then(syncResp => {
+			debug('Incremental sync: %o informing observers', syncResp);
+			AdministerCalendars
+				.persistNewSyncToken(syncResp)
+				.then(() => debug('Updated syncToken during resync'));
 
-	  return syncResp;
-	})
-	.then(syncResponse => eventController.emitEvents(syncResponse))
-	.catch((err) => handleInvaldTokenError(err, eventChannel));
+			return syncResp;
+		})
+		.then(syncResponse => eventController.emitEvents(syncResponse))
+		.catch((err) => handleInvaldTokenError(err, eventChannel));
 
-  debug('Set renewal for %s', eventChannel);
-  AdministerChannels.renew(eventChannel);
-  return eventChannel;
+	debug('Set renewal for %s', eventChannel);
+	AdministerChannels.renew(eventChannel);
+	return eventChannel;
 }
 
 function handleInvaldTokenError(err, eventChannel) {
-  if (err.code === 410) {
-	// Perform a full sync and update the syncToken in database
-	// and emite any recent events
-	debug(err.message);
-	const calendarId = eventChannel.calendarId;
-	AdministerCalendars
-	  .fullSync(calendarId)
-	  .then(AdministerCalendars.persistNewSyncToken)
-	  .then(syncResp => {
-		// Update previous channel with new token and set future renewal and perform resync
-		const updatedChannel = Object.assign({}, eventChannel, { nextSyncToken: syncResp.nextSyncToken });
-		AdministerChannels.renew(updatedChannel);
-		return syncResp;
-	  })
-	  .then(syncResponse => eventController.emitEvents(syncResponse));
-  } else {
-	debug(err.message);
-  }
+	if (err.code === 410) {
+		// Perform a full sync and update the syncToken in database
+		// and emite any recent events
+		debug(err.message);
+		const calendarId = eventChannel.calendarId;
+
+		AdministerCalendars
+			.fullSync(calendarId)
+			.then(AdministerCalendars.persistNewSyncToken)
+			.then(syncResp => {
+				// Update previous channel with new token and set future renewal and perform resync
+				const updatedChannel = Object.assign({}, eventChannel, {nextSyncToken: syncResp.nextSyncToken});
+				AdministerChannels.renew(updatedChannel);
+				return syncResp;
+			})
+			.then(syncResponse => eventController.emitEvents(syncResponse));
+	} else {
+		debug(err.message);
+	}
 }
 
 function createNewEventChannel(calendarId) {
-	return AdministerChannels.create({ calendarId, resourceType: 'event' })
+	return AdministerChannels.create({calendarId, resourceType: 'event'})
 		.then(AdministerChannels.save)
 		.then(AdministerChannels.renew)
 		.catch(debug);
@@ -179,19 +182,20 @@ function createDirChannelAndSave() {
 }
 
 function getEventChannelFromDB(calendarId) {
-	return Channel.findOne({ calendarId });
+	return Channel.findOne({calendarId});
 }
 
 function findDirectoryChannel() {
-	return Channel.findOne({ resourceType: 'directory' });
+	return Channel.findOne({resourceType: 'directory'});
 }
 
 function removeExpiredChannels() {
-	let channels = findNonMatchingExpiredChannel();
+	const channels = findNonMatchingExpiredChannel();
 	channels.remove()
 		.then(removed => removed.result.n > 0 ?
 			debug('%s expired documents removed', removed.result.n) :
-			null);
+			null
+		);
 }
 
 function findNonMatchingExpiredChannel() {
