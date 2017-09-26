@@ -6,9 +6,10 @@ const mongoose = require('mongoose');
 const debug = require('debug')('calendars');
 const AdministerJWT = require('../services/AdministerJWT');
 const scope = require('../constants/GoogleScopes');
-
 const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
+
 const calendar = google.calendar('v3');
+// eslint-disable-next-line no-use-extend-native/no-use-extend-native
 const listEvents = Promise.promisify(calendar.events.list);
 
 const Interface = {
@@ -62,11 +63,11 @@ function getFullSync(calendarId) {
  */
 function getIncrementalSync(calendarInfo) {
 	if (!calendarInfo) {
-		throw new Error('CalendarInfo is not defined');		
+		throw new Error('CalendarInfo is not defined');
 	}
 
 	if (!calendarInfo.syncToken) {
-		throw new Error('No calendar.syncToken found');		
+		throw new Error('No calendar.syncToken found');
 	}
 
 	return new Promise((resolve, reject) => {
@@ -92,7 +93,7 @@ function getSyncToken(calendarId) {
 	return new Promise((resolve, reject) => {
 		getFullSync(calendarId)
 			.then(response => {
-				let syncToken = response.nextSyncToken;
+				const syncToken = response.nextSyncToken;
 				if (!syncToken) {
 					throw new Error('No syncToken found in response');
 				}

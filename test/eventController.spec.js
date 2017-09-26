@@ -42,7 +42,7 @@ describe('Event Controller', () => {
 		done();
 	});
 
-	const events = eventController._parseEvents(eventsMock);	
+	const events = eventController._parseEvents(eventsMock);
 
 	it('should remove attendees without modifying abilities', done => {
 		const updatedEvents = eventController._removeNonCapableAttendees(events);

@@ -37,15 +37,18 @@ describe('Administer User Service', () => {
 		const listStub = function list(params, cb) {
 			// To prevent infinite loop, call the stub without a pageToken property,
 			// and check responding with a 2nd pagetoken will indicate the third call
-			if (!params.pageToken)
+			if (!params.pageToken) {
 				return cb(null, mockWithToken);
+			}
 
-			if (params.pageToken === 1)
+			if (params.pageToken === 1) {
 				return cb(null, secondPageMock);
+			}
 
-			if (params.pageToken === 2)
+			if (params.pageToken === 2) {
 				return cb(null, thirdPageMock);
-		}
+			}
+		};
 
 		revert = AdministerUsers.__set__('getDirectory', Promise.promisify(listStub));
 	});
@@ -67,12 +70,12 @@ describe('Administer User Service', () => {
 		const expectedOverride = defaultRequiredParams;
 		expectedOverride.maxResults = 1;
 
-		expect(buildParams({}, { maxResults: 1 })).to.deep.equal(expectedOverride);
+		expect(buildParams({}, {maxResults: 1})).to.deep.equal(expectedOverride);
 		done();
 	});
 
 
-	it('should return a combined response if paginated', function PaginateTest(done) {
+	it('should return a combined response if paginated', done => {
 		const requestUserList = AdministerUsers.requestUserList;
 		requestUserList({})
 			.then((resp) => {
@@ -85,15 +88,16 @@ describe('Administer User Service', () => {
 
 	it('should get a token and get users', done => {
 		const listUsers = AdministerUsers.list;
-		const JWTStub = sinon.stub().returns(Promise.resolve({ auth: 'secure client' }));
+		const JWTStub = sinon.stub().returns(Promise.resolve({auth: 'secure client'}));
 		const jwtRevert = AdministerUsers.__set__('createJWT', JWTStub);
-		listUsers({})
-			  .then(resp => {
-				  expect(JWTStub.calledOnce).to.be.true;
-				  expect(resp.users.length).to.equal(10);
-				  jwtRevert();
 
-				  done();
-			  });
+		listUsers({})
+			.then(resp => {
+				expect(JWTStub.calledOnce).to.be.true;
+				expect(resp.users.length).to.equal(10);
+				jwtRevert();
+
+				done();
+			});
 	});
 });

@@ -22,13 +22,13 @@ describe('Configuration Test Suite', function UserServiceTest() {
 
 	it('should contain default build the config', () => {
 		const testEnv = {
-			ADMIN: "test@apidevdemo.com",
-			DOMAIN: "apidevdemo.com",
-			CUSTOMER: "customerId",
-			RECEIVING_URL: "https://test.ngrok.io/",
-			DB_URL: "mongodb://localhost/webex",
-			DB_URL_TEST: "mongodb://localhost/test",
-			GOOGLE_APPLICATION_CREDENTIALS: "./secret/webex-secret.json"
+			ADMIN: 'test@apidevdemo.com',
+			DOMAIN: 'apidevdemo.com',
+			CUSTOMER: 'customerId',
+			RECEIVING_URL: 'https://test.ngrok.io/',
+			DB_URL: 'mongodb://localhost/webex',
+			DB_URL_TEST: 'mongodb://localhost/test',
+			GOOGLE_APPLICATION_CREDENTIALS: './secret/webex-secret.json'
 		};
 
 		expect(build(testEnv)).to.deep.equal({
@@ -45,13 +45,13 @@ describe('Configuration Test Suite', function UserServiceTest() {
 	});
 
 	it('should export a build app config', () => expect(config.APP).to.be.deep.equal({
-		authorizeAdmin: "admin@company.com",
-		domain: "companydomain.com",
+		authorizeAdmin: 'admin@company.com',
+		domain: 'companydomain.com',
 		port: 5000,
 		receivingUrl: {
-			base: "https://example.ngrok.io",
-			events: "https://example.ngrok.io/watch/events",
-			users: "https://example.ngrok.io/watch/users",
+			base: 'https://example.ngrok.io',
+			events: 'https://example.ngrok.io/watch/events',
+			users: 'https://example.ngrok.io/watch/users'
 		}
 	}));
 });

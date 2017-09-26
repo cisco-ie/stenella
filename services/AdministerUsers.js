@@ -1,13 +1,14 @@
 'use strict';
 
 const google = require('googleapis');
-const  _ = require('lodash');
-const scope = require('../constants/GoogleScopes');
+const _ = require('lodash');
 const Promise = require('bluebird');
+const scope = require('../constants/GoogleScopes');
 const config = require('../configs/config').APP;
-const { createJWT } = require('../services/AdministerJWT');
+const {createJWT} = require('../services/AdministerJWT');
 
 const directory = google.admin('directory_v1');
+// eslint-disable-next-line no-use-extend-native/no-use-extend-native
 const getDirectory = Promise.promisify(directory.users.list);
 
 const Interface = {
@@ -49,7 +50,7 @@ function requestUserList(params) {
 				return requestUserList(params)
 					.then(paginatedResponse => {
 						const mergeUsers = _.concat(userResponse.users, paginatedResponse.users);
-						let modifiedResponse = Object.create(userResponse);
+						const modifiedResponse = Object.create(userResponse);
 						modifiedResponse.users = mergeUsers;
 						return modifiedResponse;
 					});

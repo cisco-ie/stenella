@@ -57,7 +57,7 @@ function build(env) {
 // Strips the "/" from a url if it is there or not
 function _normalizeUrl(url) {
 	if (!url) {
-		throw new Erorr('Expected url to be defined');
+		throw new Error('Expected url to be defined');
 	}
 
 	// Check for trailing back slash
