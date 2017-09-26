@@ -29,11 +29,11 @@ function parseNotification(parsedHeaders) {
 
 	const eventUpdate = (parsedHeaders.resourceState === 'exists');
 	if (eventUpdate) {
-		debug('Event channel (%s) update detected, loading to controller', parsedHeaders.channelId)
+		debug('Event channel (%s) update detected, loading to controller', parsedHeaders.channelId);
 		eventController.load(parsedHeaders.channelId);
 	}
-};
+}
 
 function isWatchNotification(parsedHeaders) {
 	return (parsedHeaders.channelId && parsedHeaders.resourceId);
-};
+}

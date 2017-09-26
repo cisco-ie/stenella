@@ -1,21 +1,18 @@
-'use strict';
-
 const express = require('express');
-const router = express.Router();  // eslint-disable-line new-cap
-const AdminsterChannels = require('../services/AdministerChannels');
-const parseHeaders = AdminsterChannels.parseHeaders;
 const bodyParser = require('body-parser');
-const jsonParser = bodyParser.json({type: 'application/*'});
 const mongoose = require('mongoose');
-const Channel = mongoose.model('Channel', require('../data/schema/channel'));
 const debug = require('debug')('userRoute');
-/**
- * `watch/users` POST Route
- */
-router.post('/', jsonParser, function watchIndexResponse(request, response) {
-	const headers = parseHeaders(request);
+const Channel = mongoose.model('Channel', require('../data/schema/channel'));
+const AdminsterChannels = require('../services/AdministerChannels');
 
-	var syncNotification = (headers.resourceState === 'sync');
+const router = express.Router();  // eslint-disable-line new-cap
+const parseHeaders = AdminsterChannels.parseHeaders;
+const jsonParser = bodyParser.json({type: 'application/*'});
+
+router.post('/', jsonParser, (request, response) => {
+	const headers = parseHeaders(request);
+	const syncNotification = (headers.resourceState === 'sync');
+
 	if (syncNotification) {
 		logSyncConfirm(headers.channelId);
 		response.sendStatus(200);
@@ -54,19 +51,20 @@ function createNewChannel(calendarId) {
 }
 
 function isNewUserNotification(parsedHeaders) {
-	return (parsedHeaders.channelId && parsedHeaders.resourceId && parsedHeaders.resourceState === 'create') ? true : false;
+	return (parsedHeaders.channelId && parsedHeaders.resourceId && parsedHeaders.resourceState === 'create');
 }
 
 function createEventChannel(calendarId) {
 	const channelInfo = {
 		resourceType: 'event',
-		calendarId: calendarId
+		calendarId
 	};
+
 	return AdminsterChannels.create(channelInfo);
 }
 
 function findDirectoryChannel(channelId) {
-	return Channel.findOne({channelId: channelId});
+	return Channel.findOne({channelId});
 }
 
 module.exports = router;

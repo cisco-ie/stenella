@@ -48,7 +48,7 @@ function build(env) {
 
 	const throwError = message => {
 		throw new Error(message);
-	}
+	};
 
 	_.forOwn(config, (value, key) => (config[key]) ? null : throwError(`env.${key} is not defined`));
 	return config;
@@ -56,8 +56,8 @@ function build(env) {
 
 // Strips the "/" from a url if it is there or not
 function _normalizeUrl(url) {
-	if (typeof url !== 'string') {
-		throw new Error('Receiving URL is not defined');
+	if (!url) {
+		throw new Erorr('Expected url to be defined');
 	}
 
 	// Check for trailing back slash

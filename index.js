@@ -3,22 +3,21 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const app = express();
 const Promise = require('bluebird');
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const requireAll = require('require-all');
+const debug = require('debug')('main');
 const AdministerUsers = require('./services/AdministerUsers');
 const AdministerChannels = require('./services/AdministerChannels');
 const AdministerCalendars = require('./services/AdministerCalendars');
 const config = require('./configs/config').APP;
 const db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
-let calendarEvent = require('./controllers/eventController').observable;
-const debug = require('debug')('main');
 const eventController = require('./controllers/eventController');
 mongoose.Promise = require('bluebird');
-
 const Channel = mongoose.model('Channel', require('./data/schema/channel'));
+
+const app = express();
 
 app.get('/', (req, res) => res.send('Calender Listener Works!'));
 // This is used to allow drop-in html files for Google verification
@@ -91,24 +90,24 @@ function setUpChannels(whitelist) {
  * @return {Void} n/a
  */
 function createChannelsAndExtractIds(users) {
-  findDirectoryChannel()
-	 // If existing channel exist renew it, otherwise create new and save
-	.then(directoryChannel => directoryChannel ? directoryChannel : createDirChannelAndSave())
-	.then(AdministerChannels.renew)
-	.catch(debug);
+	findDirectoryChannel()
+	// If existing channel exist renew it, otherwise create new and save
+		.then(directoryChannel => directoryChannel ? directoryChannel : createDirChannelAndSave())
+		.then(AdministerChannels.renew)
+		.catch(debug);
 
 	const userIds = extractUserIds(users);
 	userIds.each(userId => {
-	  getEventChannelFromDB(userId)
-		.then(channelDBEntry => {
-			if (channelDBEntry) {
-				debug('Found entry for %s', channelDBEntry.calendarId);
-			}
-			return channelDBEntry;
-		})
-		.then(eventChannel => (eventChannel) ? renewChannelAndResync(eventChannel) : createNewEventChannel(userId));
-		})
-		.catch(debug);
+		getEventChannelFromDB(userId)
+			.then(channelDBEntry => {
+				if (channelDBEntry) {
+					debug('Found entry for %s', channelDBEntry.calendarId);
+				}
+				return channelDBEntry;
+			})
+			.then(eventChannel => (eventChannel) ? renewChannelAndResync(eventChannel) : createNewEventChannel(userId));
+	})
+	.catch(debug);
 }
 
 function renewChannelAndResync(eventChannel) {
@@ -126,7 +125,7 @@ function renewChannelAndResync(eventChannel) {
 			return syncResp;
 		})
 		.then(syncResponse => eventController.emitEvents(syncResponse))
-		.catch((err) => handleInvaldTokenError(err, eventChannel));
+		.catch(err => handleInvaldTokenError(err, eventChannel));
 
 	debug('Set renewal for %s', eventChannel);
 	AdministerChannels.renew(eventChannel);
