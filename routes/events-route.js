@@ -1,7 +1,7 @@
 const express = require('express');
-const debug = require('debug')('eventRoute');
-const parseHeaders = require('../services/AdministerChannels').parseHeaders;
-const eventController = require('../controllers/eventController');
+const debug = require('debug')('stenella:events-route');
+const parseHeaders = require('../services/channel-service').parseHeaders;
+const eventController = require('../controllers/event-controller');
 
 const router = express.Router(); // eslint-disable-line new-cap
 

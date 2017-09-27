@@ -4,10 +4,10 @@ const sinon = require('sinon');
 const Promise = require('bluebird');
 const mockEventList = require('./mocks/eventList.json');
 
-const AdministerCalendars = rewire('../services/AdministerCalendars');
+const CalendarService = rewire('../services/calendar-service');
 
-describe('Administer Calendar Test', () => {
-	const calendar = AdministerCalendars.__get__('calendar');
+describe('Calendar Test', () => {
+	const calendar = CalendarService.__get__('calendar');
 	let jwtRevert;
 
 	beforeEach(done => {
@@ -15,14 +15,14 @@ describe('Administer Calendar Test', () => {
 			createJWT: () => Promise.resolve('a secured client')
 		};
 
-		jwtRevert = AdministerCalendars.__set__('AdministerJWT', jwtMock);
+		jwtRevert = CalendarService.__set__('JWTService', jwtMock);
 		done();
 	});
 
 	afterEach(() => jwtRevert());
 
 	it('should send an update to Google Calendar', done => {
-		const updateEvent = AdministerCalendars.__get__('updateEvent');
+		const updateEvent = CalendarService.__get__('updateEvent');
 		const updateSpy = sinon.spy(calendar.events, 'update');
 		const fakeResourceBody = {
 			summary: 'testing',
@@ -47,8 +47,8 @@ describe('Administer Calendar Test', () => {
 
 	it('should return a sync token', done => {
 		const mockFullSync = () => Promise.resolve(mockEventList);
-		const revert = AdministerCalendars.__set__('getFullSync', mockFullSync);
-		const getSyncToken = AdministerCalendars.__get__('getSyncToken');
+		const revert = CalendarService.__set__('getFullSync', mockFullSync);
+		const getSyncToken = CalendarService.__get__('getSyncToken');
 
 		getSyncToken()
 			.then(syncToken => {
@@ -60,7 +60,7 @@ describe('Administer Calendar Test', () => {
 
 	// Save
 	// it('should perform a full sync', function fullSyncTest(done) {
-	//   var getFullSync = AdministerCalendars.__get__('getFullSync');
+	//   var getFullSync = CalendarService.__get__('getFullSync');
 	//   getFullSync('brhim@apidevdemo.com')
 	//     .then(function fullSyncResponse() {
 	//       // @TODO: Add nextPageToken test and rewrite
@@ -82,7 +82,7 @@ describe('Administer Calendar Test', () => {
 	//     }
 	//     return cb(undefined, mock1);
 	//   };
-	//   var revert = AdministerCalendars.__set__('calendar.events.list', eventListMock);
+	//   var revert = CalendarService.__set__('calendar.events.list', eventListMock);
 	//   getFullSync('brhim@apidevdemo.com')
 	//     .then(function fullSyncResponse(lastPageResponse) {
 	//       expect(lastPageResponse.syncToken).to.equal('token');
@@ -91,7 +91,7 @@ describe('Administer Calendar Test', () => {
 	//     });
 	// });
 	// it('should perform an incremental sync', function incrementSyncTest(done) {
-	//   var getIncrementalSync = AdministerCalendars.__get__('getIncrementalSync');
+	//   var getIncrementalSync = CalendarService.__get__('getIncrementalSync');
 	//   var mockCalendarInfo = {
 	//     syncToken: '12345abcefg',
 	//     calendarId: 'calendarId1'

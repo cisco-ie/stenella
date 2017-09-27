@@ -1,4 +1,3 @@
-'use strict';
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
@@ -7,13 +6,13 @@ const Promise = require('bluebird');
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const requireAll = require('require-all');
-const debug = require('debug')('main');
-const AdministerUsers = require('./services/AdministerUsers');
-const AdministerChannels = require('./services/AdministerChannels');
-const AdministerCalendars = require('./services/AdministerCalendars');
-const config = require('./configs/config').APP;
+const debug = require('debug')('stenella:index');
+const UserService = require('./services/user-service');
+const ChannelService = require('./services/channel-service');
+const CalendarService = require('./services/calendar-service');
+const config = require('./configs/app-config').APP;
 const db = require('./data/db/connection')('production'); // eslint-disable-line no-unused-vars
-const eventController = require('./controllers/eventController');
+const eventController = require('./controllers/event-controller');
 mongoose.Promise = require('bluebird');
 const Channel = mongoose.model('Channel', require('./data/schema/channel'));
 
@@ -28,8 +27,8 @@ const serverAPI = {
 	users: '/watch/users'
 };
 
-app.use(serverAPI.events, require('./routes/eventsRoute'));
-app.use(serverAPI.users, require('./routes/usersRoute'));
+app.use(serverAPI.events, require('./routes/events-route'));
+app.use(serverAPI.users, require('./routes/users-route'));
 
 initServer();
 
@@ -79,7 +78,7 @@ function setUpChannels(whitelist) {
 		return Promise.resolve(userlist)
 			.then(createChannelsAndExtractIds);
 	}
-	return AdministerUsers.list()
+	return UserService.list()
 		.then(resp => resp.users)
 		.then(createChannelsAndExtractIds);
 }
@@ -93,7 +92,7 @@ function createChannelsAndExtractIds(users) {
 	findDirectoryChannel()
 	// If existing channel exist renew it, otherwise create new and save
 		.then(directoryChannel => directoryChannel ? directoryChannel : createDirChannelAndSave())
-		.then(AdministerChannels.renew)
+		.then(ChannelService.renew)
 		.catch(debug);
 
 	const userIds = extractUserIds(users);
@@ -114,11 +113,11 @@ function renewChannelAndResync(eventChannel) {
 	debug('Resyncing %s', eventChannel);
 	// If the app has stopped, we use the previous syncToken and
 	// resync and inform all our observers
-	AdministerCalendars
+	CalendarService
 		.incrementalSync(eventChannel)
 		.then(syncResp => {
 			debug('Incremental sync: %o informing observers', syncResp);
-			AdministerCalendars
+			CalendarService
 				.persistNewSyncToken(syncResp)
 				.then(() => debug('Updated syncToken during resync'));
 
@@ -128,7 +127,7 @@ function renewChannelAndResync(eventChannel) {
 		.catch(err => handleInvaldTokenError(err, eventChannel));
 
 	debug('Set renewal for %s', eventChannel);
-	AdministerChannels.renew(eventChannel);
+	ChannelService.renew(eventChannel);
 	return eventChannel;
 }
 
@@ -139,13 +138,13 @@ function handleInvaldTokenError(err, eventChannel) {
 		debug(err.message);
 		const calendarId = eventChannel.calendarId;
 
-		AdministerCalendars
+		CalendarService
 			.fullSync(calendarId)
-			.then(AdministerCalendars.persistNewSyncToken)
+			.then(CalendarService.persistNewSyncToken)
 			.then(syncResp => {
 				// Update previous channel with new token and set future renewal and perform resync
 				const updatedChannel = Object.assign({}, eventChannel, {nextSyncToken: syncResp.nextSyncToken});
-				AdministerChannels.renew(updatedChannel);
+				ChannelService.renew(updatedChannel);
 				return syncResp;
 			})
 			.then(syncResponse => eventController.emitEvents(syncResponse));
@@ -155,9 +154,9 @@ function handleInvaldTokenError(err, eventChannel) {
 }
 
 function createNewEventChannel(calendarId) {
-	return AdministerChannels.create({calendarId, resourceType: 'event'})
-		.then(AdministerChannels.save)
-		.then(AdministerChannels.renew)
+	return ChannelService.create({calendarId, resourceType: 'event'})
+		.then(ChannelService.save)
+		.then(ChannelService.renew)
 		.catch(debug);
 }
 
@@ -172,11 +171,11 @@ function extractUserIds(users) {
 }
 
 function createDirChannelAndSave() {
-	return AdministerChannels
+	return ChannelService
 		.create({
 			resourceType: 'directory'
 		})
-		.then(AdministerChannels.save)
+		.then(ChannelService.save)
 		.catch(debug);
 }
 

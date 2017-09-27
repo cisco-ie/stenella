@@ -3,9 +3,9 @@
 const google = require('googleapis');
 const _ = require('lodash');
 const Promise = require('bluebird');
-const scope = require('../constants/GoogleScopes');
-const config = require('../configs/config').APP;
-const {createJWT} = require('../services/AdministerJWT');
+const scope = require('../constants/google-scopes');
+const config = require('../configs/app-config').APP;
+const {createJWT} = require('../services/jwt-service');
 
 const directory = google.admin('directory_v1');
 // eslint-disable-next-line no-use-extend-native/no-use-extend-native

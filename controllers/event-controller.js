@@ -4,9 +4,9 @@ const EventEmitter = require('events');
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const Rx = require('rxjs');
-const debug = require('debug')('eventController');
+const debug = require('debug')('stenella:event-controller');
 const NodeCache = require('node-cache');
-const AdministerCalendars = require('../services/AdministerCalendars');
+const CalendarService = require('../services/calendar-service');
 const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
 const eventCache = new NodeCache();
@@ -54,9 +54,9 @@ function load(channelId) {
 }
 
 function _syncAndEmit(channelEntry) {
-	AdministerCalendars.incrementalSync(channelEntry)
+	CalendarService.incrementalSync(channelEntry)
 		.then(syncResp => {
-			AdministerCalendars.persistNewSyncToken(channelEntry);
+			CalendarService.persistNewSyncToken(channelEntry);
 			debug('Syncing for calendar update (%s)', channelEntry.channelId);
 			return syncResp;
 		})

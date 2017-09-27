@@ -1,8 +1,6 @@
-'use strict';
-
 const google = require('googleapis');
 const Promise = require('bluebird');
-const config = require('../configs/config').APP;
+const config = require('../configs/app-config').APP;
 
 const Interface = {
 	createJWT

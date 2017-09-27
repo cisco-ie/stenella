@@ -3,9 +3,9 @@
 const google = require('googleapis');
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
-const debug = require('debug')('calendars');
-const AdministerJWT = require('../services/AdministerJWT');
-const scope = require('../constants/GoogleScopes');
+const debug = require('debug')('stenella:calendar-service');
+const JWTService = require('../services/jwt-service');
+const scope = require('../constants/google-scopes');
 const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
 const calendar = google.calendar('v3');
@@ -39,7 +39,7 @@ function getFullSync(calendarId) {
 	// the syncToken.
 	// REF: https://developers.google.com/google-apps/calendar/v3/pagination
 	const eventListRequest = function eventListRequest(listParams) {
-		return AdministerJWT.createJWT(scope.calendar)
+		return JWTService.createJWT(scope.calendar)
 			.then(jwtClient => Object.assign({}, listParams, {auth: jwtClient}))
 			.then(listEvents)
 			.then(result => {
@@ -71,7 +71,7 @@ function getIncrementalSync(calendarInfo) {
 	}
 
 	return new Promise((resolve, reject) => {
-		AdministerJWT.createJWT(scope.calendar)
+		JWTService.createJWT(scope.calendar)
 			.then(jwtClient => listEvents({
 				auth: jwtClient,
 				calendarId: calendarInfo.calendarId || calendarInfo.id,
@@ -131,7 +131,7 @@ function updateEvent(params, updateInfo) {
 	}
 
 	params.resource = updateInfo;
-	return AdministerJWT.createJWT(scope.calendar)
+	return JWTService.createJWT(scope.calendar)
 		.then(jwtClient => {
 			params.auth = jwtClient;
 			// eslint-disable-next-line no-use-extend-native/no-use-extend-native

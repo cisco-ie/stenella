@@ -1,5 +1,5 @@
 const expect = require('chai').expect;
-const eventController = require('../controllers/eventController');
+const eventController = require('../controllers/event-controller');
 
 const eventsMock = require('./mocks/eventList.json');
 const eventsMock2 = require('./mocks/eventList2.json');

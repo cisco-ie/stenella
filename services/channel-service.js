@@ -1,18 +1,16 @@
-'use strict';
-
 const google = require('googleapis');
 const _ = require('lodash');
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
 const retry = require('retry');
-const debug = require('debug')('AdministerChannels');
-const config = require('../configs/config').APP;
-const scope = require('../constants/GoogleScopes');
-const createJWT = require('../services/AdministerJWT').createJWT;
-const getDateMsDifference = require('../libs/timeUtils').getDateMsDifference;
+const debug = require('debug')('stenella:channel-service');
+const config = require('../configs/app-config').APP;
+const scope = require('../constants/google-scopes');
+const createJWT = require('../services/jwt-service').createJWT;
+const getDateMsDifference = require('../libs/time-utils').getDateMsDifference;
 
 const Channel = mongoose.model('Channel', require('../data/schema/channel'));
-const AdministerCalendars = require('./AdministerCalendars');
+const CalendarService = require('./calendar-service');
 
 const calendar = google.calendar('v3');
 const directory = google.admin('directory_v1');
@@ -48,7 +46,7 @@ function channelFactory(channelInfo) {
 
 function createEventChannel(channelInfo) {
 	const eventChannelPromise = createChannel(channelInfo);
-	const syncTokenPromise = AdministerCalendars.getSyncToken(channelInfo.calendarId);
+	const syncTokenPromise = CalendarService.getSyncToken(channelInfo.calendarId);
 
 	// We need to get the syncToken as a pointer in time
 	// for calling the calendar.events.list(), thus it a

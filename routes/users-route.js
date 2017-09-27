@@ -1,12 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const debug = require('debug')('userRoute');
+const debug = require('debug')('stenella:user-route');
 const Channel = mongoose.model('Channel', require('../data/schema/channel'));
-const AdminsterChannels = require('../services/AdministerChannels');
+const ChannelService = require('../services/channel-service');
 
 const router = express.Router();  // eslint-disable-line new-cap
-const parseHeaders = AdminsterChannels.parseHeaders;
+const parseHeaders = ChannelService.parseHeaders;
 const jsonParser = bodyParser.json({type: 'application/*'});
 
 router.post('/', jsonParser, (request, response) => {
@@ -45,8 +45,8 @@ function logSyncConfirm(channelId) {
 
 function createNewChannel(calendarId) {
 	createEventChannel(calendarId)
-		.then(AdminsterChannels.save)
-		.then(AdminsterChannels.renew)
+		.then(ChannelService.save)
+		.then(ChannelService.renew)
 		.catch(debug);
 }
 
@@ -60,7 +60,7 @@ function createEventChannel(calendarId) {
 		calendarId
 	};
 
-	return AdminsterChannels.create(channelInfo);
+	return ChannelService.create(channelInfo);
 }
 
 function findDirectoryChannel(channelId) {

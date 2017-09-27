@@ -4,9 +4,9 @@ const Promise = require('bluebird');
 const sinon = require('sinon');
 const userListMock = require('./mocks/userList.json');
 
-const AdministerUsers = rewire('../services/AdministerUsers');
+const UserService = rewire('../services/user-service');
 
-describe('Administer User Service', () => {
+describe('User Service', () => {
 	let revert;
 
 	beforeEach(() => {
@@ -48,13 +48,13 @@ describe('Administer User Service', () => {
 		};
 
 		// eslint-disable-next-line no-use-extend-native/no-use-extend-native
-		revert = AdministerUsers.__set__('getDirectory', Promise.promisify(listStub));
+		revert = UserService.__set__('getDirectory', Promise.promisify(listStub));
 	});
 
 	afterEach(() => revert());
 
 	it('should build user list params', done => {
-		const buildParams = AdministerUsers.buildParams;
+		const buildParams = UserService.buildParams;
 
 		const defaultRequiredParams = {
 			auth: {},
@@ -72,7 +72,7 @@ describe('Administer User Service', () => {
 	});
 
 	it('should return a combined response if paginated', done => {
-		const requestUserList = AdministerUsers.requestUserList;
+		const requestUserList = UserService.requestUserList;
 		requestUserList({})
 			.then(resp => {
 				// This would be the default mock + Henry + Simon
@@ -83,9 +83,9 @@ describe('Administer User Service', () => {
 	});
 
 	it('should get a token and get users', done => {
-		const listUsers = AdministerUsers.list;
+		const listUsers = UserService.list;
 		const JWTStub = sinon.stub().returns(Promise.resolve({auth: 'secure client'}));
-		const jwtRevert = AdministerUsers.__set__('createJWT', JWTStub);
+		const jwtRevert = UserService.__set__('createJWT', JWTStub);
 
 		listUsers({})
 			.then(resp => {

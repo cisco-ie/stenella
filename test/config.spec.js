@@ -1,5 +1,5 @@
 const expect = require('chai').expect;
-const config = require('../configs/config');
+const config = require('../configs/app-config');
 
 const build = config.build;
 
