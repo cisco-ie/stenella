@@ -1,18 +1,21 @@
 const expect = require('chai').expect;
 const config = require('../configs/config');
+
 const build = config.build;
 
-describe('Configuration Test Suite', (done) => {
+describe('Configuration Test Suite', () => {
 	it('Should strip the url of trailing backslash', done => {
 		const _normalizeUrl = config._normalizeUrl;
 		const testUrl = 'http://example.com/';
 
 		expect(_normalizeUrl(testUrl)).to.equal('http://example.com');
+		// eslint-disable-next-line no-unused-expressions
 		expect(() => _normalizeUrl(null)).to.throw;
 		done();
 	});
 
 	it('Should throw errors for undefined values in the config', done => {
+		// eslint-disable-next-line no-unused-expressions
 		expect(() => build({
 			test: undefined
 		})).to.throw;

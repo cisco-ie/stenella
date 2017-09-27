@@ -1,13 +1,8 @@
-'use strict';
+const expect = require('chai').expect;
+const rewire = require('rewire');
+const connectToDb = require('../data/db/connection');
 
-const expect             = require('chai').expect;
-// const sinon              = require('sinon');
-// const AdministerJWT      = require('../services/AdministerJWT');
-// const google             = require('googleapis');
-// const calendar           = google.calendar('v3');
-const rewire             = require('rewire');
 const AdministerChannels = rewire('../services/AdministerChannels');
-const connectToDb        = require('../data/db/connection');
 connectToDb('test');
 
 describe('Administer Channels Service', () => {
@@ -63,7 +58,7 @@ describe('Administer Channels Service', () => {
 		done();
 	});
 
-	it('should save a channel', function saveChannelTest(done) {
+	it('should save a channel', done => {
 		const mongoose = require('mongoose');
 		const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 		const saveChannel = AdministerChannels.__get__('saveChannel');
@@ -78,19 +73,20 @@ describe('Administer Channels Service', () => {
 
 		saveChannel(channelInfo);
 
-		ChannelEntry.findOne({ channelId: 'test-12345'}, (err, document) => {
+		ChannelEntry.findOne({channelId: 'test-12345'}, (err, document) => {
+			// eslint-disable-next-line no-unused-expressions
 			expect(document).to.exist;
 			ChannelEntry.remove({});
 			done();
 		});
 	});
 
+	// Will reimplement
 	// it('should create a channel', function createChannelTest(done) {
 	//   // sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
 	//   //   return Promise.resolve('test');
 	//   // });
 	//   // const createEventChannel = sinon.spy(calendar.events, 'watch');
-
 	//   // const channel = {
 	//   //   resourceType: 'event'
 	//   // };

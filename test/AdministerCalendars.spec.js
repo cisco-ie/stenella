@@ -3,14 +3,14 @@ const rewire = require('rewire');
 const sinon = require('sinon');
 const Promise = require('bluebird');
 const mockEventList = require('./mocks/eventList.json');
+
 const AdministerCalendars = rewire('../services/AdministerCalendars');
 
-describe('Administer Calendar Test', function CalendarTestSuite() {
+describe('Administer Calendar Test', () => {
 	const calendar = AdministerCalendars.__get__('calendar');
-	const listSpy = sinon.spy(AdministerCalendars.__get__('listEvents'));
 	let jwtRevert;
 
-	beforeEach(function setUp(done) {
+	beforeEach(done => {
 		const jwtMock = {
 			createJWT: () => Promise.resolve('a secured client')
 		};
@@ -39,6 +39,7 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
 					auth: 'a secured client'
 				};
 
+				// eslint-disable-next-line no-unused-expressions
 				expect(updateSpy.calledWith(expectedParams)).to.be.true;
 				done();
 			});

@@ -1,10 +1,9 @@
 const expect = require('chai').expect;
-const google = require('googleapis');
 const rewire = require('rewire');
 const Promise = require('bluebird');
 const sinon = require('sinon');
-
 const userListMock = require('./mocks/userList.json');
+
 const AdministerUsers = rewire('../services/AdministerUsers');
 
 describe('Administer User Service', () => {
@@ -48,6 +47,7 @@ describe('Administer User Service', () => {
 			}
 		};
 
+		// eslint-disable-next-line no-use-extend-native/no-use-extend-native
 		revert = AdministerUsers.__set__('getDirectory', Promise.promisify(listStub));
 	});
 
@@ -74,7 +74,7 @@ describe('Administer User Service', () => {
 	it('should return a combined response if paginated', done => {
 		const requestUserList = AdministerUsers.requestUserList;
 		requestUserList({})
-			.then((resp) => {
+			.then(resp => {
 				// This would be the default mock + Henry + Simon
 				expect(resp.users.length).to.equal(10);
 				expect(resp.users[9].name).to.equal('Henry');
@@ -89,7 +89,9 @@ describe('Administer User Service', () => {
 
 		listUsers({})
 			.then(resp => {
+				// eslint-disable-next-line no-unused-expressions
 				expect(JWTStub.calledOnce).to.be.true;
+				// eslint-disable-next-line no-unused-expressions
 				expect(resp.users.length).to.equal(10);
 				jwtRevert();
 				done();

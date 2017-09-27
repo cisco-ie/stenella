@@ -4,7 +4,8 @@ const eventController = require('../controllers/eventController');
 const eventsMock = require('./mocks/eventList.json');
 const eventsMock2 = require('./mocks/eventList2.json');
 const eventsMock3 = require('./mocks/eventList3.json');
-const eventsMock4 = require('./mocks/eventList4.json');
+// Uncomment once code is revised
+// const eventsMock4 = require('./mocks/eventList4.json');
 
 describe('Event Controller', () => {
 	it('should get the user from the email', done => {
@@ -69,6 +70,7 @@ describe('Event Controller', () => {
 		expect(newerEvents.length).to.equal(1);
 		expect(newerEvents[0].summary).to.equal('Newer Event Should Pass Filter');
 
+		// Will re-add
 		// const mock4 = eventController._parseEvents(eventsMock4);
 		// const olderEvents = eventController._checkAgainstCache(mock4);
 		done();
