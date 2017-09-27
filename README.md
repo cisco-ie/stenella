@@ -1,9 +1,8 @@
 ![Stenella](https://user-images.githubusercontent.com/6020066/30722146-5f734936-9ee4-11e7-8f6b-111661b91f34.jpg)
 - - -
-[![Build Status](https://travis-ci.org/cisco-ie/stenella.svg?branch=master)](https://travis-ci.org/cisco-ie/stenella) [![license](https://img.shields.io/github/license/cisco-ie/stenella.svg?style=flat-square)]() [![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg?style=flat-square)](https://github.com/sindresorhus/xo)
-
-
 > Reactive application that listens on Google calendars within a [G Suite](https://gsuite.google.com/) with the ability to process business logic
+
+[![Build Status](https://travis-ci.org/cisco-ie/stenella.svg?branch=master)](https://travis-ci.org/cisco-ie/stenella) [![license](https://img.shields.io/github/license/cisco-ie/stenella.svg?style=flat-square)]() [![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg?style=flat-square)](https://github.com/sindresorhus/xo)
 
 `stenella` is an unofficial, server-to-server, Node.js application that listens to Google calendars events that are created, deleted, or updated. With each event, developers can define and execute their own business logic in regards to contextual cues found within a calenader event payload *(date, subject, summary, attendees, location, status, etc.)*. These are known as "observers" *(calendar event handlers)*, which are flexible, open-ended, and simple to write.
 
