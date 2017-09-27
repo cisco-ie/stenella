@@ -1,12 +1,7 @@
-/**
- * Variable Declarations
- */
 const mongoose = require('mongoose');
-const Schema   = mongoose.Schema;
 
-/**
- * Channel Schema
- */
+const Schema = mongoose.Schema;
+
 const channelSchema = new Schema({
 	calendarId: String,
 	channelId: String,

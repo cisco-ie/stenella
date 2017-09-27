@@ -1,15 +1,12 @@
 const expect = require('chai').expect;
-const google = require('googleapis');
-const directory = google.admin('directory_v1');
 const rewire = require('rewire');
 const Promise = require('bluebird');
 const sinon = require('sinon');
-
-const AdministerUsers = rewire('../services/AdministerUsers');
 const userListMock = require('./mocks/userList.json');
-const scope     = require('../constants/GoogleScopes');
 
-describe('Administer User Service', () => {
+const UserService = rewire('../services/user-service');
+
+describe('User Service', () => {
 	let revert;
 
 	beforeEach(() => {
@@ -34,26 +31,30 @@ describe('Administer User Service', () => {
 			]
 		};
 
-		const listStub = function list(params, cb) {
+		const listStub = (params, cb) => {
 			// To prevent infinite loop, call the stub without a pageToken property,
 			// and check responding with a 2nd pagetoken will indicate the third call
-			if (!params.pageToken)
+			if (!params.pageToken) {
 				return cb(null, mockWithToken);
+			}
 
-			if (params.pageToken === 1)
+			if (params.pageToken === 1) {
 				return cb(null, secondPageMock);
+			}
 
-			if (params.pageToken === 2)
+			if (params.pageToken === 2) {
 				return cb(null, thirdPageMock);
-		}
+			}
+		};
 
-		revert = AdministerUsers.__set__('getDirectory', Promise.promisify(listStub));
+		// eslint-disable-next-line no-use-extend-native/no-use-extend-native
+		revert = UserService.__set__('getDirectory', Promise.promisify(listStub));
 	});
 
 	afterEach(() => revert());
 
 	it('should build user list params', done => {
-		const buildParams = AdministerUsers.buildParams;
+		const buildParams = UserService.buildParams;
 
 		const defaultRequiredParams = {
 			auth: {},
@@ -66,16 +67,14 @@ describe('Administer User Service', () => {
 
 		const expectedOverride = defaultRequiredParams;
 		expectedOverride.maxResults = 1;
-
-		expect(buildParams({}, { maxResults: 1 })).to.deep.equal(expectedOverride);
+		expect(buildParams({}, {maxResults: 1})).to.deep.equal(expectedOverride);
 		done();
 	});
 
-
-	it('should return a combined response if paginated', function PaginateTest(done) {
-		const requestUserList = AdministerUsers.requestUserList;
+	it('should return a combined response if paginated', done => {
+		const requestUserList = UserService.requestUserList;
 		requestUserList({})
-			.then((resp) => {
+			.then(resp => {
 				// This would be the default mock + Henry + Simon
 				expect(resp.users.length).to.equal(10);
 				expect(resp.users[9].name).to.equal('Henry');
@@ -84,16 +83,18 @@ describe('Administer User Service', () => {
 	});
 
 	it('should get a token and get users', done => {
-		const listUsers = AdministerUsers.list;
-		const JWTStub = sinon.stub().returns(Promise.resolve({ auth: 'secure client' }));
-		const jwtRevert = AdministerUsers.__set__('createJWT', JWTStub);
-		listUsers({})
-			  .then(resp => {
-				  expect(JWTStub.calledOnce).to.be.true;
-				  expect(resp.users.length).to.equal(10);
-				  jwtRevert();
+		const listUsers = UserService.list;
+		const JWTStub = sinon.stub().returns(Promise.resolve({auth: 'secure client'}));
+		const jwtRevert = UserService.__set__('createJWT', JWTStub);
 
-				  done();
-			  });
+		listUsers({})
+			.then(resp => {
+				// eslint-disable-next-line no-unused-expressions
+				expect(JWTStub.calledOnce).to.be.true;
+				// eslint-disable-next-line no-unused-expressions
+				expect(resp.users.length).to.equal(10);
+				jwtRevert();
+				done();
+			});
 	});
 });

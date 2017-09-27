@@ -1,16 +1,11 @@
-'use strict';
+const expect = require('chai').expect;
+const rewire = require('rewire');
+const connectToDb = require('../data/db/connection');
 
-const expect             = require('chai').expect;
-// const sinon              = require('sinon');
-// const AdministerJWT      = require('../services/AdministerJWT');
-// const google             = require('googleapis');
-// const calendar           = google.calendar('v3');
-const rewire             = require('rewire');
-const AdministerChannels = rewire('../services/AdministerChannels');
-const connectToDb        = require('../data/db/connection');
+const ChannelService = rewire('../services/channel-service');
 connectToDb('test');
 
-describe('Administer Channels Service', () => {
+describe('Channels Service', () => {
 	it('should parse request headers', done => {
 		const sampleRequest = {
 			headers: {
@@ -27,7 +22,7 @@ describe('Administer Channels Service', () => {
 				'x-forwarded-for': '66.102.6.215'
 			}
 		};
-		const actualParsedHeaders = AdministerChannels.parseHeaders(sampleRequest);
+		const actualParsedHeaders = ChannelService.parseHeaders(sampleRequest);
 		const parsedHeaders = {
 			channelId: 'EVNT-7fadc50c-347c-4941-aca6-0abfa961be97',
 			expiration: 'Thu, 17 Nov 2016 01:05:06 GMT',
@@ -41,7 +36,7 @@ describe('Administer Channels Service', () => {
 	});
 
 	it('should build params based on type', done => {
-		const buildParams = AdministerChannels.__get__('buildParams');
+		const buildParams = ChannelService.__get__('buildParams');
 		let channelInfo = {
 			resourceType: 'event',
 			calendarId: 'testUser'
@@ -63,10 +58,10 @@ describe('Administer Channels Service', () => {
 		done();
 	});
 
-	it('should save a channel', function saveChannelTest(done) {
+	it('should save a channel', done => {
 		const mongoose = require('mongoose');
 		const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
-		const saveChannel = AdministerChannels.__get__('saveChannel');
+		const saveChannel = ChannelService.__get__('saveChannel');
 
 		const channelInfo = {
 			channelId: 'test-12345',
@@ -78,29 +73,30 @@ describe('Administer Channels Service', () => {
 
 		saveChannel(channelInfo);
 
-		ChannelEntry.findOne({ channelId: 'test-12345'}, (err, document) => {
+		ChannelEntry.findOne({channelId: 'test-12345'}, (err, document) => {
+			// eslint-disable-next-line no-unused-expressions
 			expect(document).to.exist;
 			ChannelEntry.remove({});
 			done();
 		});
 	});
 
+	// Will reimplement
 	// it('should create a channel', function createChannelTest(done) {
 	//   // sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
 	//   //   return Promise.resolve('test');
 	//   // });
 	//   // const createEventChannel = sinon.spy(calendar.events, 'watch');
-
 	//   // const channel = {
 	//   //   resourceType: 'event'
 	//   // };
-	//   // AdministerChannels.create(channel);
+	//   // ChannelService.create(channel);
 	//   // expect(createEventChannel.calledOnce).to.be(true);
 	//   // done();
 	// });
 
 	it('should get the delta of expiration of channel', done => {
-		const getTimeoutMs = AdministerChannels.__get__('getTimeoutMs');
+		const getTimeoutMs = ChannelService.__get__('getTimeoutMs');
 		const today = new Date();
 		const addHours = 5;
 		const addMs = addHours * 60000;

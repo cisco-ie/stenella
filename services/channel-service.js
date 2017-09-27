@@ -1,23 +1,23 @@
-'use strict';
-
 const google = require('googleapis');
-const calendar = google.calendar('v3');
-const directory = google.admin('directory_v1');
-const config = require('../configs/config').APP;
-const scope = require('../constants/GoogleScopes');
 const _ = require('lodash');
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
-const Channel = mongoose.model('Channel', require('../data/schema/channel'));
-const createJWT = require('../services/AdministerJWT').createJWT;
-const AdministerCalendars = require('./AdministerCalendars');
-const getDateMsDifference = require('../libs/timeUtils').getDateMsDifference;
 const retry = require('retry');
-const debug = require('debug')('AdministerChannels');
+const debug = require('debug')('stenella:channel-service');
+const config = require('../configs/app-config').APP;
+const scope = require('../constants/google-scopes');
+const createJWT = require('../services/jwt-service').createJWT;
+const getDateMsDifference = require('../libs/time-utils').getDateMsDifference;
+
+const Channel = mongoose.model('Channel', require('../data/schema/channel'));
+const CalendarService = require('./calendar-service');
+
+const calendar = google.calendar('v3');
+const directory = google.admin('directory_v1');
 
 const Interface = {
 	create: channelFactory,
-	parseHeaders: parseHeaders,
+	parseHeaders,
 	save: saveChannel,
 	renew: renewChannel
 };
@@ -32,7 +32,9 @@ module.exports = Interface;
  * @return {object}             Promise which is resolved to the channel information
  */
 function channelFactory(channelInfo) {
-	if (!channelInfo) throw new Error('No channel information presented');
+	if (!channelInfo) {
+		throw new Error('No channel information presented');
+	}
 
 	const factory = {
 		directory: createDirectoryChannel,
@@ -44,7 +46,7 @@ function channelFactory(channelInfo) {
 
 function createEventChannel(channelInfo) {
 	const eventChannelPromise = createChannel(channelInfo);
-	const syncTokenPromise = AdministerCalendars.getSyncToken(channelInfo.calendarId);
+	const syncTokenPromise = CalendarService.getSyncToken(channelInfo.calendarId);
 
 	// We need to get the syncToken as a pointer in time
 	// for calling the calendar.events.list(), thus it a
@@ -53,11 +55,11 @@ function createEventChannel(channelInfo) {
 		syncTokenPromise,
 		eventChannelPromise
 	])
-		.spread(function syncTokenAndChannelResolve(syncToken, eventChannel) {
-			eventChannel.syncToken = syncToken;
-			eventChannel.type = 'event';
-			return Promise.resolve(eventChannel);
-		});
+	.spread((syncToken, eventChannel) => {
+		eventChannel.syncToken = syncToken;
+		eventChannel.type = 'event';
+		return Promise.resolve(eventChannel);
+	});
 }
 
 function createDirectoryChannel(channelInfo) {
@@ -70,61 +72,61 @@ function createDirectoryChannel(channelInfo) {
  * @return {object} a promise for the channel being created
  */
 function createChannel(channelInfo) {
-	return new Promise(function createChannelPromise(resolve, reject) {
+	return new Promise((resolve, reject) => {
 		// Creating a JWT in implementation,
 		// as JWT can be expired on renewal
 		switch (channelInfo.resourceType) {
-		case 'event':
-			createJWT(scope.calendar)
-				.then((jwtClient) => {
-					let params = buildParams(jwtClient, channelInfo);
+			case 'event':
+				createJWT(scope.calendar)
+					.then(jwtClient => {
+						const params = buildParams(jwtClient, channelInfo);
 
-					const eventChannelOperation = retry.operation();
-					eventChannelOperation.attempt(currentAttempt => {
-						debug('Attempt #%s to create event channel for %s', currentAttempt, channelInfo.calendarId);
-   						calendar.events.watch(params, (err, res) => {
-							if (eventChannelOperation.retry(err)) {
-								reject(eventChannelOperation.mainError());
-							}
+						const eventChannelOperation = retry.operation();
+						eventChannelOperation.attempt(currentAttempt => {
+							debug('Attempt #%s to create event channel for %s', currentAttempt, channelInfo.calendarId);
+							calendar.events.watch(params, (err, res) => {
+								if (eventChannelOperation.retry(err)) {
+									reject(eventChannelOperation.mainError());
+								}
 
-							if (res) {
-								res.resourceType = 'event';
-								res.calendarId = channelInfo.calendarId;
-								debug('Event channel successfully created on attempt #%s', currentAttempt);
-								resolve(res);
-							}
+								if (res) {
+									res.resourceType = 'event';
+									res.calendarId = channelInfo.calendarId;
+									debug('Event channel successfully created on attempt #%s', currentAttempt);
+									resolve(res);
+								}
+							});
 						});
-					});
-				})
-				.catch(reject);
-			break;
+					})
+					.catch(reject);
+				break;
 
-		case 'directory':
-			createJWT(scope.userDirectory)
-				.then(jwtClient => {
-					let params = buildParams(jwtClient, channelInfo);
-					const dirChannelOperation = retry.operation();
+			case 'directory':
+				createJWT(scope.userDirectory)
+					.then(jwtClient => {
+						const params = buildParams(jwtClient, channelInfo);
+						const dirChannelOperation = retry.operation();
 
-					dirChannelOperation.attempt(currentAttempt => {
-						debug('Attempt #%s to create directory channel', currentAttempt);
-						directory.users.watch(params, function dirWatchCallback(err, res) {
-							if (dirChannelOperation.retry(err)) {
-								reject(dirChannelOperation.mainError());
-							}
+						dirChannelOperation.attempt(currentAttempt => {
+							debug('Attempt #%s to create directory channel', currentAttempt);
+							directory.users.watch(params, (err, res) => {
+								if (dirChannelOperation.retry(err)) {
+									reject(dirChannelOperation.mainError());
+								}
 
-							if (res) {
-								res.resourceType = 'directory';
-								debug('Directory channel successfully created on attempt #%s', currentAttempt);
-								resolve(res);
-							}
+								if (res) {
+									res.resourceType = 'directory';
+									debug('Directory channel successfully created on attempt #%s', currentAttempt);
+									resolve(res);
+								}
+							});
 						});
-					});
-				})
-				.catch(reject);
-			break;
+					})
+					.catch(reject);
+				break;
 
-		default:
-			throw new Error('Attempted to create channel, using a unknown type');
+			default:
+				throw new Error('Attempted to create channel, using a unknown type');
 		}
 	});
 }
@@ -202,7 +204,10 @@ function parseHeaders(request) {
  */
 function saveChannel(channelInfo) {
 	debug('Saved event channel for %s', channelInfo.id || channelInfo.calendarId);
-	if (!channelInfo) throw new Error('Undefined channel information');
+	if (!channelInfo) {
+		throw new Error('Undefined channel information');
+	}
+
 	const props = {
 		channelId: channelInfo.id || '',
 		resourceId: '',
@@ -220,7 +225,7 @@ function saveChannel(channelInfo) {
 }
 
 function renewChannel(existingChannel) {
-	// subtract 5 seconds (5000ms) to allow some overlap
+	// Subtract 5 seconds (5000ms) to allow some overlap
 	const timeoutMs = getTimeoutMs(existingChannel) - 5000;
 	setTimeout(createAndDeleteChannel, timeoutMs);
 
@@ -234,7 +239,7 @@ function renewChannel(existingChannel) {
 
 	function deleteExistingAndRenew(newChannel) {
 		const oldChannelId = existingChannel.channelId;
-		Channel.remove({ channelId: oldChannelId }).exec();
+		Channel.remove({channelId: oldChannelId}).exec();
 		renewChannel(newChannel);
 	}
 }

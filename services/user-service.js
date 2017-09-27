@@ -1,13 +1,15 @@
 'use strict';
 
 const google = require('googleapis');
-const  _  = require('lodash');
-const scope = require('../constants/GoogleScopes');
-const directory = google.admin('directory_v1');
+const _ = require('lodash');
 const Promise = require('bluebird');
-const config = require('../configs/config').APP;
-let { createJWT } = require('../services/AdministerJWT');
-let getDirectory = Promise.promisify(directory.users.list);
+const scope = require('../constants/google-scopes');
+const config = require('../configs/app-config').APP;
+const {createJWT} = require('../services/jwt-service');
+
+const directory = google.admin('directory_v1');
+// eslint-disable-next-line no-use-extend-native/no-use-extend-native
+const getDirectory = Promise.promisify(directory.users.list);
 
 const Interface = {
 	list: getUsers,
@@ -46,22 +48,22 @@ function requestUserList(params) {
 				// multiple response async
 
 				return requestUserList(params)
-					.then(function mergeResponse(paginatedResponse) {
+					.then(paginatedResponse => {
 						const mergeUsers = _.concat(userResponse.users, paginatedResponse.users);
-						let modifiedResponse = Object.create(userResponse);
+						const modifiedResponse = Object.create(userResponse);
 						modifiedResponse.users = mergeUsers;
 						return modifiedResponse;
 					});
 			}
 			return userResponse;
 		})
-		.catch(function handleListError(error) {
-			throw error;
+		.catch(err => {
+			throw err;
 		});
 }
 
 function buildParams(jwtClient, overrideParams) {
-	let defaultParams = {
+	const defaultParams = {
 		auth: jwtClient,
 		maxResults: 500,
 		orderBy: 'email'

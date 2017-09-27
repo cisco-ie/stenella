@@ -1,21 +1,18 @@
-'use strict';
-
 const express = require('express');
-const router = express.Router();  // eslint-disable-line new-cap
-const AdminsterChannels = require('../services/AdministerChannels');
-const parseHeaders = AdminsterChannels.parseHeaders;
 const bodyParser = require('body-parser');
-const jsonParser = bodyParser.json({type: 'application/*'});
 const mongoose = require('mongoose');
+const debug = require('debug')('stenella:user-route');
 const Channel = mongoose.model('Channel', require('../data/schema/channel'));
-const debug = require('debug')('userRoute');
-/**
- * `watch/users` POST Route
- */
-router.post('/', jsonParser, function watchIndexResponse(request, response) {
-	const headers = parseHeaders(request);
+const ChannelService = require('../services/channel-service');
 
-	var syncNotification = (headers.resourceState === 'sync');
+const router = express.Router();  // eslint-disable-line new-cap
+const parseHeaders = ChannelService.parseHeaders;
+const jsonParser = bodyParser.json({type: 'application/*'});
+
+router.post('/', jsonParser, (request, response) => {
+	const headers = parseHeaders(request);
+	const syncNotification = (headers.resourceState === 'sync');
+
 	if (syncNotification) {
 		logSyncConfirm(headers.channelId);
 		response.sendStatus(200);
@@ -48,25 +45,26 @@ function logSyncConfirm(channelId) {
 
 function createNewChannel(calendarId) {
 	createEventChannel(calendarId)
-		.then(AdminsterChannels.save)
-		.then(AdminsterChannels.renew)
+		.then(ChannelService.save)
+		.then(ChannelService.renew)
 		.catch(debug);
 }
 
 function isNewUserNotification(parsedHeaders) {
-	return (parsedHeaders.channelId && parsedHeaders.resourceId && parsedHeaders.resourceState === 'create') ? true : false;
+	return (parsedHeaders.channelId && parsedHeaders.resourceId && parsedHeaders.resourceState === 'create');
 }
 
 function createEventChannel(calendarId) {
 	const channelInfo = {
 		resourceType: 'event',
-		calendarId: calendarId
+		calendarId
 	};
-	return AdminsterChannels.create(channelInfo);
+
+	return ChannelService.create(channelInfo);
 }
 
 function findDirectoryChannel(channelId) {
-	return Channel.findOne({channelId: channelId});
+	return Channel.findOne({channelId});
 }
 
 module.exports = router;

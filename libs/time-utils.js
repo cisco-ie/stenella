@@ -1,7 +1,7 @@
 const moment = require('moment');
 
 const Interface = {
-	getDateMsDifference: getDateMsDifference
+	getDateMsDifference
 };
 
 module.exports = Interface;
