@@ -1,13 +1,11 @@
 const expect = require('chai').expect;
 const google = require('googleapis');
-const directory = google.admin('directory_v1');
 const rewire = require('rewire');
 const Promise = require('bluebird');
 const sinon = require('sinon');
 
-const AdministerUsers = rewire('../services/AdministerUsers');
 const userListMock = require('./mocks/userList.json');
-const scope = require('../constants/GoogleScopes');
+const AdministerUsers = rewire('../services/AdministerUsers');
 
 describe('Administer User Service', () => {
 	let revert;
@@ -34,7 +32,7 @@ describe('Administer User Service', () => {
 			]
 		};
 
-		const listStub = function list(params, cb) {
+		const listStub = (params, cb) => {
 			// To prevent infinite loop, call the stub without a pageToken property,
 			// and check responding with a 2nd pagetoken will indicate the third call
 			if (!params.pageToken) {
@@ -69,11 +67,9 @@ describe('Administer User Service', () => {
 
 		const expectedOverride = defaultRequiredParams;
 		expectedOverride.maxResults = 1;
-
 		expect(buildParams({}, {maxResults: 1})).to.deep.equal(expectedOverride);
 		done();
 	});
-
 
 	it('should return a combined response if paginated', done => {
 		const requestUserList = AdministerUsers.requestUserList;
@@ -96,7 +92,6 @@ describe('Administer User Service', () => {
 				expect(JWTStub.calledOnce).to.be.true;
 				expect(resp.users.length).to.equal(10);
 				jwtRevert();
-
 				done();
 			});
 	});

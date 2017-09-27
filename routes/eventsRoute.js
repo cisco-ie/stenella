@@ -2,11 +2,9 @@ const express = require('express');
 const debug = require('debug')('eventRoute');
 const parseHeaders = require('../services/AdministerChannels').parseHeaders;
 const eventController = require('../controllers/eventController');
+
 const router = express.Router(); // eslint-disable-line new-cap
 
-/**
- * `watch/event` POST Route
- */
 router.post('/', (request, response) => {
 	const headers = parseHeaders(request);
 

@@ -1,8 +1,8 @@
 const expect = require('chai').expect;
 const rewire = require('rewire');
-const sinon  = require('sinon');
-const mockEventList = require('./mocks/eventList.json');
+const sinon = require('sinon');
 const Promise = require('bluebird');
+const mockEventList = require('./mocks/eventList.json');
 const AdministerCalendars = rewire('../services/AdministerCalendars');
 
 describe('Administer Calendar Test', function CalendarTestSuite() {
@@ -60,24 +60,20 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
 	// Save
 	// it('should perform a full sync', function fullSyncTest(done) {
 	//   var getFullSync = AdministerCalendars.__get__('getFullSync');
-
 	//   getFullSync('brhim@apidevdemo.com')
 	//     .then(function fullSyncResponse() {
 	//       // @TODO: Add nextPageToken test and rewrite
 	//       expect(listSpy.called).to.be.true;
 	//       done();
 	//     });
-
 	//   var mock1 = {
 	//     events: [1, 2],
 	//     nextPageToken: 2
 	//   };
-
 	//   var mock2 = {
 	//     events: [3, 4],
 	//     syncToken: 'token'
 	//   };
-
 	//   // Override eventList to check integrity of callback
 	//   var eventListMock = function list(params, cb) {
 	//     if (params.nextPageToken) {
@@ -85,9 +81,7 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
 	//     }
 	//     return cb(undefined, mock1);
 	//   };
-
 	//   var revert = AdministerCalendars.__set__('calendar.events.list', eventListMock);
-
 	//   getFullSync('brhim@apidevdemo.com')
 	//     .then(function fullSyncResponse(lastPageResponse) {
 	//       expect(lastPageResponse.syncToken).to.equal('token');
@@ -95,7 +89,6 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
 	//       done();
 	//     });
 	// });
-
 	// it('should perform an incremental sync', function incrementSyncTest(done) {
 	//   var getIncrementalSync = AdministerCalendars.__get__('getIncrementalSync');
 	//   var mockCalendarInfo = {
@@ -112,7 +105,6 @@ describe('Administer Calendar Test', function CalendarTestSuite() {
 	//         syncToken: '12345abcefg',
 	//         showDeleted: true
 	//       };
-
 	//       expect(listSpy.calledWith(expectedParams)).to.be.true;
 	// 	done();
 	//     });

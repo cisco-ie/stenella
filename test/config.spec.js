@@ -1,10 +1,9 @@
 const expect = require('chai').expect;
 const config = require('../configs/config');
-const APPConfig = config.APP;
 const build = config.build;
 
-describe('Configuration Test Suite', function UserServiceTest() {
-	it('Should strip the url of trailing backslash', function normalizeUrlTest(done) {
+describe('Configuration Test Suite', (done) => {
+	it('Should strip the url of trailing backslash', done => {
 		const _normalizeUrl = config._normalizeUrl;
 		const testUrl = 'http://example.com/';
 
@@ -13,14 +12,14 @@ describe('Configuration Test Suite', function UserServiceTest() {
 		done();
 	});
 
-	it('Should throw errors for undefined values in the config', function configTest(done) {
+	it('Should throw errors for undefined values in the config', done => {
 		expect(() => build({
 			test: undefined
 		})).to.throw;
 		done();
 	});
 
-	it('should contain default build the config', () => {
+	it('should contain default build the config', done => {
 		const testEnv = {
 			ADMIN: 'test@apidevdemo.com',
 			DOMAIN: 'apidevdemo.com',
@@ -42,6 +41,7 @@ describe('Configuration Test Suite', function UserServiceTest() {
 			domain: 'apidevdemo.com',
 			customer: 'customerId'
 		});
+		done();
 	});
 
 	it('should export a build app config', () => expect(config.APP).to.be.deep.equal({

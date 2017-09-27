@@ -29,7 +29,7 @@ module.exports = Interface;
  */
 function getFullSync(calendarId) {
 	const params = {
-		calendarId: calendarId,
+		calendarId,
 		timeMin: (new Date()).toISOString(),
 		singleEvents: false
 	};
@@ -134,6 +134,7 @@ function updateEvent(params, updateInfo) {
 	return AdministerJWT.createJWT(scope.calendar)
 		.then(jwtClient => {
 			params.auth = jwtClient;
+			// eslint-disable-next-line no-use-extend-native/no-use-extend-native
 			return Promise.promisify(calendar.events.update)(params);
 		});
 }

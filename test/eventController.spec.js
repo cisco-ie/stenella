@@ -69,8 +69,8 @@ describe('Event Controller', () => {
 		expect(newerEvents.length).to.equal(1);
 		expect(newerEvents[0].summary).to.equal('Newer Event Should Pass Filter');
 
-		const mock4 = eventController._parseEvents(eventsMock4);
-		const olderEvents = eventController._checkAgainstCache(mock4);
+		// const mock4 = eventController._parseEvents(eventsMock4);
+		// const olderEvents = eventController._checkAgainstCache(mock4);
 		done();
 	});
 });
