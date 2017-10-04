@@ -186,5 +186,10 @@ While `stenella` is using several Google APIs, it heavily relies on Google Calen
 ## Contributing
 We know `Stenella` is far from perfect, so we are excited to build upon our existing work with other community members. With that said, please submit an issue prior to getting started to avoid duplicated effort.
 
+For additional developer docs, refer to the [Wiki's Development Docs](https://github.com/cisco-ie/stenella/wiki/Development-Docs).
+
+## Questions
+Feel free to submit a issue for any questions in regards to bugs, deployment, details, etc.
+
 ## License
 Apache License 2.0 © [Innovation Edge @ Cisco](https://github.com/cisco-ie/stenella)
