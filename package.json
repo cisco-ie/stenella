@@ -1,5 +1,5 @@
 {
-  "name": "google-calendar-listener",
+  "name": "stenella",
   "version": "0.1.0",
   "description": "A reactive application for calendar events created within a G Suite with easy-to-add observer hooks",
   "main": "index.js",
