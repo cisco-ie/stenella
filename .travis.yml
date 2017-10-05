@@ -1,10 +1,11 @@
 language: node_js
 node_js:
     - 7.10
-services: mongodb
+services: 
+  - mongodb
 before_script:
   - npm install
   - npm run pretest
   - sleep 15
-  - mongo mydb_test --eval 'db.addUser("travis", "test");'
+  - mongo mydb_test --eval 'db.createUser("travis", "test");'
 script: npm test
