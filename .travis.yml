@@ -7,5 +7,5 @@ before_script:
   - npm install
   - npm run pretest
   - sleep 15
-  - mongo mydb_test --eval 'db.createUser({user: "travis", pwd: "test" });'
+  - mongo mydb_test --eval 'db.createUser({user:"travis", pwd:"test"});'
 script: npm test
