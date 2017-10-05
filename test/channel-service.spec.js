@@ -3,7 +3,6 @@ const rewire = require('rewire');
 const connectToDb = require('../data/db/connection');
 
 const ChannelService = rewire('../services/channel-service');
-connectToDb('test');
 
 describe('Channels Service', () => {
 	it('should parse request headers', done => {
@@ -60,6 +59,7 @@ describe('Channels Service', () => {
 
 	it('should save a channel', done => {
 		const mongoose = require('mongoose');
+		connectToDb('test');		
 		const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 		const saveChannel = ChannelService.__get__('saveChannel');
 
