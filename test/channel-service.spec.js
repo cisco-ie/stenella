@@ -71,14 +71,16 @@ describe('Channels Service', () => {
 			resourceType: 'event'
 		};
 
-		saveChannel(channelInfo);
-
-		ChannelEntry.findOne({channelId: 'test-12345'}, (err, document) => {
-			// eslint-disable-next-line no-unused-expressions
-			expect(document).to.exist;
-			ChannelEntry.remove({});
-			done();
-		});
+		saveChannel(channelInfo)
+			.then(() => {
+				ChannelEntry.findOne({channelId: 'test-12345'}, (err, document) => {
+					// eslint-disable-next-line no-unused-expressions
+					expect(document).to.exist;
+					ChannelEntry.remove({});
+					done();
+				});
+			})
+			.catch(console.log)
 	});
 
 	// Will reimplement
