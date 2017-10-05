@@ -3,7 +3,6 @@ const rewire = require('rewire');
 const connectToDb = require('../data/db/connection');
 
 const ChannelService = rewire('../services/channel-service');
-connectToDb('test');
 
 describe('Channels Service', () => {
 	it('should parse request headers', done => {
@@ -60,6 +59,7 @@ describe('Channels Service', () => {
 
 	it('should save a channel', done => {
 		const mongoose = require('mongoose');
+		connectToDb('test');		
 		const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 		const saveChannel = ChannelService.__get__('saveChannel');
 
@@ -71,14 +71,16 @@ describe('Channels Service', () => {
 			resourceType: 'event'
 		};
 
-		saveChannel(channelInfo);
-
-		ChannelEntry.findOne({channelId: 'test-12345'}, (err, document) => {
-			// eslint-disable-next-line no-unused-expressions
-			expect(document).to.exist;
-			ChannelEntry.remove({});
-			done();
-		});
+		saveChannel(channelInfo)
+			.then(() => {
+				ChannelEntry.findOne({channelId: 'test-12345'}, (err, document) => {
+					// eslint-disable-next-line no-unused-expressions
+					expect(document).to.exist;
+					ChannelEntry.remove({});
+					done();
+				});
+			})
+			.catch(console.log)
 	});
 
 	// Will reimplement
