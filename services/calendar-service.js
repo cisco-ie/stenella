@@ -4,7 +4,9 @@ const google = require('googleapis');
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
 const debug = require('debug')('stenella:calendar-service');
-const JWTService = require('../services/jwt-service');
+// Is reassigned through rewire
+// eslint-disable-next-line prefer-const
+let JWTService = require('../services/jwt-service');
 const scope = require('../constants/google-scopes');
 const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
