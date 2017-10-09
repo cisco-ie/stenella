@@ -59,7 +59,7 @@ describe('Channels Service', () => {
 
 	it('should save a channel', done => {
 		const mongoose = require('mongoose');
-		connectToDb('test');		
+		connectToDb('test');
 		const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 		const saveChannel = ChannelService.__get__('saveChannel');
 
@@ -84,18 +84,18 @@ describe('Channels Service', () => {
 	});
 
 	// Will reimplement
-	// it('should create a channel', function createChannelTest(done) {
-	//   // sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
-	//   //   return Promise.resolve('test');
-	//   // });
-	//   // const createEventChannel = sinon.spy(calendar.events, 'watch');
-	//   // const channel = {
-	//   //   resourceType: 'event'
-	//   // };
-	//   // ChannelService.create(channel);
-	//   // expect(createEventChannel.calledOnce).to.be(true);
-	//   // done();
-	// });
+	it('should create a channel', function createChannelTest(done) {
+	  sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
+	    return Promise.resolve('test');
+	  });
+	  const createEventChannel = sinon.spy(calendar.events, 'watch');
+	  const channel = {
+	    resourceType: 'event'
+	  };
+	  ChannelService.create(channel);
+	  expect(createEventChannel.calledOnce).to.be(true);
+	  done();
+	});
 
 	it('should get the delta of expiration of channel', done => {
 		const getTimeoutMs = ChannelService.__get__('getTimeoutMs');
