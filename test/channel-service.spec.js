@@ -59,7 +59,7 @@ describe('Channels Service', () => {
 
 	it('should save a channel', done => {
 		const mongoose = require('mongoose');
-		connectToDb('test');		
+		connectToDb('test');
 		const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 		const saveChannel = ChannelService.__get__('saveChannel');
 
@@ -80,7 +80,7 @@ describe('Channels Service', () => {
 					done();
 				});
 			})
-			.catch(console.log)
+			.catch(console.log);
 	});
 
 	// Will reimplement
