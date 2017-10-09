@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "pretest": "cp ./example.env ./.env",
-    "test": "xo && nyc mocha"",
+    "test": "xo && nyc mocha",
     "ci-test": "npm run pretest & ./node_modules/mocha/bin/mocha",
     "start": "node index.js",
     "debug": "DEBUG=* npm start",
