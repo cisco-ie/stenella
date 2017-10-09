@@ -5,14 +5,12 @@
   "main": "index.js",
   "scripts": {
     "pretest": "cp ./example.env ./.env",
-    "test": "./node_modules/mocha/bin/mocha",
+    "test": "xo && nyc mocha"",
     "ci-test": "npm run pretest & ./node_modules/mocha/bin/mocha",
     "start": "node index.js",
     "debug": "DEBUG=* npm start",
     "lint": "eslint .",
-    "validate": "npm ls",
-    "test-cov": "npm run pretest & istanbul cover _mocha",
-    "test-codecov": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && codecov --token=a032f333-f808-4dc6-8b1f-31e4519ebccb"
+    "validate": "npm ls"
   },
   "engines": {
     "node": ">=6"
