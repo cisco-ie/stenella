@@ -11,11 +11,8 @@ describe('Calendar Test', () => {
 	let jwtRevert;
 
 	beforeEach(done => {
-		const jwtMock = {
-			createJWT: () => Promise.resolve('a secured client')
-		};
-
-		jwtRevert = CalendarService.__set__('JWTService', jwtMock);
+		const stub = sinon.stub().returns(Promise.resolve('a secured client'));
+		jwtRevert = CalendarService.__set__('createJWT', stub);
 		done();
 	});
 
@@ -90,24 +87,29 @@ describe('Calendar Test', () => {
 	//       done();
 	//     });
 	// });
-	// it('should perform an incremental sync', function incrementSyncTest(done) {
-	//   var getIncrementalSync = CalendarService.__get__('getIncrementalSync');
-	//   var mockCalendarInfo = {
-	//     syncToken: '12345abcefg',
-	//     calendarId: 'calendarId1'
-	//   };
 
-	//   getIncrementalSync(mockCalendarInfo)
-	//     .catch(function incrementSyncResp() {
-	//       var expectedParams = {
-	//         auth: 'a secured client',
-	//         calendarId: 'calendarId1',
-	//         singleEvents: false,
-	//         syncToken: '12345abcefg',
-	//         showDeleted: true
-	//       };
-	//       expect(listSpy.calledWith(expectedParams)).to.be.true;
-	// 	done();
-	//     });
-	// });
+	it('should perform an incremental sync', done => {
+		const listStub = sinon.stub().returns(Promise.resolve([]));
+		const listRevert = CalendarService.__set__('listEvents', listStub);
+		const getIncrementalSync = CalendarService.__get__('getIncrementalSync');
+		const mockCalendarInfo = {
+			syncToken: '12345abcefg',
+			calendarId: 'calendarId1'
+		};
+
+		getIncrementalSync(mockCalendarInfo)
+			.then(() => {
+				const expectedParams = {
+					auth: 'a secured client',
+					calendarId: 'calendarId1',
+					singleEvents: false,
+					syncToken: '12345abcefg',
+					showDeleted: true
+				};
+				// eslint-disable-next-line no-unused-expressions
+				expect(listStub.calledWith(expectedParams)).to.be.true;
+				listRevert();
+				done();
+			});
+	});
 });

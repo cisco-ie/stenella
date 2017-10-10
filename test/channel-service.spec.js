@@ -1,5 +1,6 @@
 const expect = require('chai').expect;
 const rewire = require('rewire');
+const sinon = require('sinon');
 const connectToDb = require('../data/db/connection');
 
 const ChannelService = rewire('../services/channel-service');
@@ -80,21 +81,25 @@ describe('Channels Service', () => {
 					done();
 				});
 			})
-			.catch(console.log)
+			.catch(console.log);
 	});
 
-	// Will reimplement
-	it('should create a channel', function createChannelTest(done) {
-	  sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
-	    return Promise.resolve('test');
-	  });
-	  const createEventChannel = sinon.spy(calendar.events, 'watch');
-	  const channel = {
-	    resourceType: 'event'
-	  };
-	  ChannelService.create(channel);
-	  expect(createEventChannel.calledOnce).to.be(true);
-	  done();
+	it('should create a channel', done => {
+		const jwtStub = sinon.stub().returns(Promise.resolve('test'));
+		const jwtRevert = ChannelService.__set__('createJWT', jwtStub);
+		const watchStub = sinon.stub().returns(Promise.resolve());
+		const eventsWatchRevert = ChannelService.__set__('watchEvents', watchStub);
+		const channel = {
+			resourceType: 'event'
+		};
+
+		ChannelService.create(channel).catch(() => {
+			// eslint-disable-next-line no-unused-expressions
+			expect(watchStub.calledOnce).to.be.true;
+			jwtRevert();
+			eventsWatchRevert();
+			done();
+		});
 	});
 
 	it('should get the delta of expiration of channel', done => {
