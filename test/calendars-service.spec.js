@@ -55,38 +55,30 @@ describe('Calendar Test', () => {
 			});
 	});
 
-	// Save
-	// it('should perform a full sync', function fullSyncTest(done) {
-	//   var getFullSync = CalendarService.__get__('getFullSync');
-	//   getFullSync('brhim@apidevdemo.com')
-	//     .then(function fullSyncResponse() {
-	//       // @TODO: Add nextPageToken test and rewrite
-	//       expect(listSpy.called).to.be.true;
-	//       done();
-	//     });
-	//   var mock1 = {
-	//     events: [1, 2],
-	//     nextPageToken: 2
-	//   };
-	//   var mock2 = {
-	//     events: [3, 4],
-	//     syncToken: 'token'
-	//   };
-	//   // Override eventList to check integrity of callback
-	//   var eventListMock = function list(params, cb) {
-	//     if (params.nextPageToken) {
-	//       return cb(undefined, mock2);
-	//     }
-	//     return cb(undefined, mock1);
-	//   };
-	//   var revert = CalendarService.__set__('calendar.events.list', eventListMock);
-	//   getFullSync('brhim@apidevdemo.com')
-	//     .then(function fullSyncResponse(lastPageResponse) {
-	//       expect(lastPageResponse.syncToken).to.equal('token');
-	//       revert();
-	//       done();
-	//     });
-	// });
+	it('should perform a full sync', done => {
+		const getFullSync = CalendarService.__get__('getFullSync');
+		const mock1 = {
+			events: [1, 2],
+			nextPageToken: 2
+		};
+		const mock2 = {
+			events: [3, 4],
+			syncToken: 'token'
+		};
+		// Override eventList to check integrity of callback
+		const eventListMock = params => {
+			if (params.nextPageToken) {
+				return Promise.resolve(mock2);
+			}
+			return Promise.resolve(mock1);
+		};
+		const revert = CalendarService.__set__('listEvents', eventListMock);
+		getFullSync('brhim@apidevdemo.com').then(lastPageResponse => {
+			expect(lastPageResponse.syncToken).to.equal('token');
+			revert();
+			done();
+		});
+	});
 
 	it('should perform an incremental sync', done => {
 		const listStub = sinon.stub().returns(Promise.resolve([]));
