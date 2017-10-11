@@ -84,10 +84,10 @@ describe('Channels Service', () => {
 			.catch(console.log);
 	});
 
-	it('should create a channel', done => {
+	it('should create an event channel', done => {
 		const jwtStub = sinon.stub().returns(Promise.resolve('test'));
 		const jwtRevert = ChannelService.__set__('createJWT', jwtStub);
-		const watchStub = sinon.stub().returns(Promise.resolve());
+		const watchStub = sinon.stub().callThrough();
 		const eventsWatchRevert = ChannelService.__set__('watchEvents', watchStub);
 		const channel = {
 			resourceType: 'event'
@@ -98,6 +98,24 @@ describe('Channels Service', () => {
 			expect(watchStub.calledOnce).to.be.true;
 			jwtRevert();
 			eventsWatchRevert();
+			done();
+		});
+	});
+
+	it('should create a directory channel', done => {
+		const jwtStub = sinon.stub().returns(Promise.resolve('test'));
+		const jwtRevert = ChannelService.__set__('createJWT', jwtStub);
+		const watchStub = sinon.stub().callThrough();
+		const usersWatchRevert = ChannelService.__set__('watchUsers', watchStub);
+		const channel = {
+			resourceType: 'directory'
+		};
+
+		ChannelService.create(channel).catch(err => {
+			// eslint-disable-next-line no-unused-expressions
+			expect(watchStub.calledOnce).to.be.true;
+			jwtRevert();
+			usersWatchRevert();
 			done();
 		});
 	});

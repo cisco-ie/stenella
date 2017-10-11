@@ -18,6 +18,8 @@ const calendar = google.calendar('v3');
 let watchEvents = calendar.events.watch;
 
 const directory = google.admin('directory_v1');
+// eslint-disable-next-line prefer-const
+let watchUsers = directory.users.watch;
 
 const Interface = {
 	create: channelFactory,
@@ -112,11 +114,11 @@ function createChannel(channelInfo) {
 
 						dirChannelOperation.attempt(currentAttempt => {
 							debug('Attempt #%s to create directory channel', currentAttempt);
-							directory.users.watch(params, (err, res) => {
+							watchUsers(params, (err, res) => {
 								if (dirChannelOperation.retry(err)) {
 									reject(dirChannelOperation.mainError());
 								}
-
+								
 								if (res) {
 									res.resourceType = 'directory';
 									debug('Directory channel successfully created on attempt #%s', currentAttempt);
