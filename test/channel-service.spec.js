@@ -6,6 +6,15 @@ const connectToDb = require('../data/db/connection');
 const ChannelService = rewire('../services/channel-service');
 
 describe('Channels Service', () => {
+	let jwtRevert;
+
+	beforeEach(() => {
+		const jwtStub = sinon.stub().returns(Promise.resolve('test'));
+		jwtRevert = ChannelService.__set__('createJWT', jwtStub);
+	});
+
+	afterEach(() => jwtRevert());
+
 	it('should parse request headers', done => {
 		const sampleRequest = {
 			headers: {
@@ -88,10 +97,9 @@ describe('Channels Service', () => {
 	});
 
 	it('should create an event channel', done => {
-		const jwtStub = sinon.stub().returns(Promise.resolve('test'));
-		const jwtRevert = ChannelService.__set__('createJWT', jwtStub);
 		const watchStub = sinon.stub().callThrough();
 		const eventsWatchRevert = ChannelService.__set__('watchEvents', watchStub);
+		
 		const channel = {
 			resourceType: 'event'
 		};
@@ -99,15 +107,12 @@ describe('Channels Service', () => {
 		ChannelService.create(channel).catch(() => {
 			// eslint-disable-next-line no-unused-expressions
 			expect(watchStub.calledOnce).to.be.true;
-			jwtRevert();
 			eventsWatchRevert();
 			done();
 		});
 	});
 
 	it('should create a directory channel', done => {
-		const jwtStub = sinon.stub().returns(Promise.resolve('test'));
-		const jwtRevert = ChannelService.__set__('createJWT', jwtStub);
 		const watchStub = sinon.stub().callThrough();
 		const usersWatchRevert = ChannelService.__set__('watchUsers', watchStub);
 		const channel = {
@@ -117,7 +122,6 @@ describe('Channels Service', () => {
 		ChannelService.create(channel).catch(() => {
 			// eslint-disable-next-line no-unused-expressions
 			expect(watchStub.calledOnce).to.be.true;
-			jwtRevert();
 			usersWatchRevert();
 			done();
 		});
