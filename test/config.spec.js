@@ -35,7 +35,7 @@ describe('Configuration Test Suite', () => {
 			FULL_CHAIN_CERT_PATH: './fullchain.pem',
 			CERT_PASSPHRASE: 'testing123',
 			USER_WHITELIST_PATH: './test/fixtures/whitelist.js',
-			TTL: 30,
+			TTL: 30
 		};
 
 		expect(build(testEnv)).to.deep.equal({
