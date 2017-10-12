@@ -97,7 +97,7 @@ describe('Channels Service', () => {
 	});
 
 	it('should create an event channel', done => {
-		const watchStub = sinon.stub().callThrough();
+		const watchStub = sinon.stub().returns('');
 		const eventsWatchRevert = ChannelService.__set__('watchEvents', watchStub);
 
 		const channel = {
