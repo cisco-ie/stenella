@@ -75,6 +75,9 @@ describe('Channels Service', () => {
 		saveChannel(channelInfo)
 			.then(() => {
 				ChannelEntry.findOne({channelId: 'test-12345'}, (err, document) => {
+					if (err) {
+						console.log(err);
+					}
 					// eslint-disable-next-line no-unused-expressions
 					expect(document).to.exist;
 					ChannelEntry.remove({});
@@ -111,7 +114,7 @@ describe('Channels Service', () => {
 			resourceType: 'directory'
 		};
 
-		ChannelService.create(channel).catch(err => {
+		ChannelService.create(channel).catch(() => {
 			// eslint-disable-next-line no-unused-expressions
 			expect(watchStub.calledOnce).to.be.true;
 			jwtRevert();

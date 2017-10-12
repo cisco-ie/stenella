@@ -118,7 +118,7 @@ function createChannel(channelInfo) {
 								if (dirChannelOperation.retry(err)) {
 									reject(dirChannelOperation.mainError());
 								}
-								
+
 								if (res) {
 									res.resourceType = 'directory';
 									debug('Directory channel successfully created on attempt #%s', currentAttempt);
