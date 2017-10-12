@@ -34,7 +34,8 @@ describe('Configuration Test Suite', () => {
 			PRIVATE_KEY_PATH: './key.pem',
 			FULL_CHAIN_CERT_PATH: './fullchain.pem',
 			CERT_PASSPHRASE: 'testing123',
-			USER_WHITELIST_PATH: './test/fixtures/whitelist.js'
+			USER_WHITELIST_PATH: './test/fixtures/whitelist.js',
+			TTL: 30,
 		};
 
 		expect(build(testEnv)).to.deep.equal({
@@ -56,7 +57,8 @@ describe('Configuration Test Suite', () => {
 			whitelist: [
 				'test@gmail.com',
 				'tester2@gmail.com'
-			]
+			],
+			ttl: 30
 		});
 		done();
 	});
