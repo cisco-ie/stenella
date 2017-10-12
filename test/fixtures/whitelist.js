@@ -1,0 +1,1 @@
+module.exports = ['test@gmail.com', 'tester2@gmail.com'];
