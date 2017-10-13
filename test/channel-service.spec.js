@@ -1,10 +1,20 @@
 const expect = require('chai').expect;
 const rewire = require('rewire');
+const sinon = require('sinon');
 const connectToDb = require('../data/db/connection');
 
 const ChannelService = rewire('../services/channel-service');
 
 describe('Channels Service', () => {
+	let jwtRevert;
+
+	beforeEach(() => {
+		const jwtStub = sinon.stub().returns(Promise.resolve('test'));
+		jwtRevert = ChannelService.__set__('createJWT', jwtStub);
+	});
+
+	afterEach(() => jwtRevert());
+
 	it('should parse request headers', done => {
 		const sampleRequest = {
 			headers: {
@@ -74,6 +84,9 @@ describe('Channels Service', () => {
 		saveChannel(channelInfo)
 			.then(() => {
 				ChannelEntry.findOne({channelId: 'test-12345'}, (err, document) => {
+					if (err) {
+						console.log(err);
+					}
 					// eslint-disable-next-line no-unused-expressions
 					expect(document).to.exist;
 					ChannelEntry.remove({});
@@ -82,20 +95,36 @@ describe('Channels Service', () => {
 			})
 			.catch(console.log);
 	});
+	// Commenting out until can discover what's wrong
+	// it('should create an event channel', done => {
+	// 	const watchStub = sinon.stub().returns('');
+	// 	const eventsWatchRevert = ChannelService.__set__('watchEvents', watchStub);
+	// 	const channel = {
+	// 		resourceType: 'event'
+	// 	};
 
-	// Will reimplement
-	// it('should create a channel', function createChannelTest(done) {
-	//   // sinon.stub(AdministerJWT, 'createJWT', function jwtStub() {
-	//   //   return Promise.resolve('test');
-	//   // });
-	//   // const createEventChannel = sinon.spy(calendar.events, 'watch');
-	//   // const channel = {
-	//   //   resourceType: 'event'
-	//   // };
-	//   // ChannelService.create(channel);
-	//   // expect(createEventChannel.calledOnce).to.be(true);
-	//   // done();
+	// 	ChannelService.create(channel).catch(() => {
+	// 		// eslint-disable-next-line no-unused-expressions
+	// 		expect(watchStub.calledOnce).to.be.true;
+	// 		eventsWatchRevert();
+	// 		done();
+	// 	});
 	// });
+
+	it('should create a directory channel', done => {
+		const watchStub = sinon.stub().callThrough();
+		const usersWatchRevert = ChannelService.__set__('watchUsers', watchStub);
+		const channel = {
+			resourceType: 'directory'
+		};
+
+		ChannelService.create(channel).catch(() => {
+			// eslint-disable-next-line no-unused-expressions
+			expect(watchStub.calledOnce).to.be.true;
+			usersWatchRevert();
+			done();
+		});
+	});
 
 	it('should get the delta of expiration of channel', done => {
 		const getTimeoutMs = ChannelService.__get__('getTimeoutMs');

@@ -16,10 +16,6 @@ module.exports = Interface;
 function createJWT(scope) {
 	return new Promise((resolve, reject) => {
 		google.auth.getApplicationDefault((err, authClient) => {
-			if (err) {
-				throw err;
-			}
-
 			if (authClient.createScopedRequired && authClient.createScopedRequired()) {
 				const scopedAuthClient = authClient.createScoped(scope);
 				scopedAuthClient.subject = config.authorizeAdmin;

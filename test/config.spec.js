@@ -30,7 +30,12 @@ describe('Configuration Test Suite', () => {
 			RECEIVING_URL: 'https://test.ngrok.io/',
 			DB_URL: 'mongodb://localhost/webex',
 			DB_URL_TEST: 'mongodb://localhost/test',
-			GOOGLE_APPLICATION_CREDENTIALS: './secret/webex-secret.json'
+			GOOGLE_APPLICATION_CREDENTIALS: './secret/webex-secret.json',
+			PRIVATE_KEY_PATH: './key.pem',
+			FULL_CHAIN_CERT_PATH: './fullchain.pem',
+			CERT_PASSPHRASE: 'testing123',
+			USER_WHITELIST_PATH: './test/fixtures/whitelist.js',
+			TTL: 30
 		};
 
 		expect(build(testEnv)).to.deep.equal({
@@ -42,7 +47,18 @@ describe('Configuration Test Suite', () => {
 				users: 'https://test.ngrok.io/watch/users'
 			},
 			domain: 'apidevdemo.com',
-			customer: 'customerId'
+			customer: 'customerId',
+			sslOptions: {
+				privateKey: './key.pem',
+				cert: './fullchain.pem',
+				passphrase: 'testing123'
+			},
+			ssl: true,
+			whitelist: [
+				'test@gmail.com',
+				'tester2@gmail.com'
+			],
+			ttl: 30
 		});
 		done();
 	});

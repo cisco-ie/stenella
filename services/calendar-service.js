@@ -6,13 +6,13 @@ const mongoose = require('mongoose');
 const debug = require('debug')('stenella:calendar-service');
 // Is reassigned through rewire
 // eslint-disable-next-line prefer-const
-let JWTService = require('../services/jwt-service');
+let {createJWT} = require('../services/jwt-service');
 const scope = require('../constants/google-scopes');
 const ChannelEntry = mongoose.model('Channel', require('../data/schema/channel'));
 
 const calendar = google.calendar('v3');
-// eslint-disable-next-line no-use-extend-native/no-use-extend-native
-const listEvents = Promise.promisify(calendar.events.list);
+// eslint-disable-next-line no-use-extend-native/no-use-extend-native, prefer-const
+let listEvents = Promise.promisify(calendar.events.list);
 
 const Interface = {
 	fullSync: getFullSync,
@@ -41,7 +41,7 @@ function getFullSync(calendarId) {
 	// the syncToken.
 	// REF: https://developers.google.com/google-apps/calendar/v3/pagination
 	const eventListRequest = function eventListRequest(listParams) {
-		return JWTService.createJWT(scope.calendar)
+		return createJWT(scope.calendar)
 			.then(jwtClient => Object.assign({}, listParams, {auth: jwtClient}))
 			.then(listEvents)
 			.then(result => {
@@ -73,7 +73,7 @@ function getIncrementalSync(calendarInfo) {
 	}
 
 	return new Promise((resolve, reject) => {
-		JWTService.createJWT(scope.calendar)
+		createJWT(scope.calendar)
 			.then(jwtClient => listEvents({
 				auth: jwtClient,
 				calendarId: calendarInfo.calendarId || calendarInfo.id,
@@ -133,7 +133,7 @@ function updateEvent(params, updateInfo) {
 	}
 
 	params.resource = updateInfo;
-	return JWTService.createJWT(scope.calendar)
+	return createJWT(scope.calendar)
 		.then(jwtClient => {
 			params.auth = jwtClient;
 			// eslint-disable-next-line no-use-extend-native/no-use-extend-native

@@ -6,14 +6,20 @@ const retry = require('retry');
 const debug = require('debug')('stenella:channel-service');
 const config = require('../configs/app-config').APP;
 const scope = require('../constants/google-scopes');
-const createJWT = require('../services/jwt-service').createJWT;
+// eslint-disable-next-line prefer-const
+let createJWT = require('../services/jwt-service').createJWT;
 const getDateMsDifference = require('../libs/time-utils').getDateMsDifference;
 
 const Channel = mongoose.model('Channel', require('../data/schema/channel'));
 const CalendarService = require('./calendar-service');
 
 const calendar = google.calendar('v3');
+// eslint-disable-next-line prefer-const
+let watchEvents = calendar.events.watch;
+
 const directory = google.admin('directory_v1');
+// eslint-disable-next-line prefer-const
+let watchUsers = directory.users.watch;
 
 const Interface = {
 	create: channelFactory,
@@ -80,15 +86,14 @@ function createChannel(channelInfo) {
 				createJWT(scope.calendar)
 					.then(jwtClient => {
 						const params = buildParams(jwtClient, channelInfo);
-
 						const eventChannelOperation = retry.operation();
+
 						eventChannelOperation.attempt(currentAttempt => {
 							debug('Attempt #%s to create event channel for %s', currentAttempt, channelInfo.calendarId);
-							calendar.events.watch(params, (err, res) => {
+							watchEvents(params, (err, res) => {
 								if (eventChannelOperation.retry(err)) {
 									reject(eventChannelOperation.mainError());
 								}
-
 								if (res) {
 									res.resourceType = 'event';
 									res.calendarId = channelInfo.calendarId;
@@ -109,7 +114,7 @@ function createChannel(channelInfo) {
 
 						dirChannelOperation.attempt(currentAttempt => {
 							debug('Attempt #%s to create directory channel', currentAttempt);
-							directory.users.watch(params, (err, res) => {
+							watchUsers(params, (err, res) => {
 								if (dirChannelOperation.retry(err)) {
 									reject(dirChannelOperation.mainError());
 								}
