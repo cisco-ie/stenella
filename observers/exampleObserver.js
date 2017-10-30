@@ -1,6 +1,17 @@
-const calendarEvents = require('../controllers/eventController').observable;
+const calendarEvents = require('../controllers/event-controller').observable;
 calendarEvents.subscribe(catchPTOs);
 
 function catchPTOs (calendarEvent) {
-  if (calendarEvent.summary.match(/PTO/g)) console.log('%s is on PTO', calendarEvent.userId);
+	const verbType = {
+		confirmed: 'new/updated',
+		cancelled: 'cancelled'
+	};
+
+	const verb = verbType[calendarEvent.status];
+
+	const output = `${calendarEvent.userId} has a ${verb} event.
+Summary: ${calendarEvent.summary}
+Date: ${calendarEvent.start.dateTime}`;
+
+	if (calendarEvent.summary.match(/@example/ig)) console.log(output);
 }
