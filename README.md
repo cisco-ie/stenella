@@ -35,6 +35,7 @@
   * [Observers](#observers)
       * [Create an Observer](#create-an-observer)
       * [Best Practices](#best-practices)
+  * [Restricting Users](#restricting-users)
   * [Authors](#authors)
   * [Contributing](#contributing)
   * [License](#license)
@@ -163,7 +164,7 @@ While `stenella` is using several Google APIs, it heavily relies on Google Calen
 
 2. Within your file, import the observable object from the event controller to allow the observer to subscribe to new calendar events.
    ```
-   const calendarEvents = require('../controllers/eventController').observable;
+   const calendarEvents = require('../controllers/event-controller').observable;
    ```
 3. Now subscribe to events, and write your own handler to perform any logic
    ```
@@ -173,10 +174,28 @@ While `stenella` is using several Google APIs, it heavily relies on Google Calen
    ```
 4. Start the listener and your `Observer` will now be invoked upon calendar event notifications
 
+Refer to the example observer within the `/observers` directory for coding reference.
+
 ### Best Practices
 - Avoid multiple observers processing for the same condition
 - Include a means to indicate a change was caused by your observer as `stenella` is unaware of any events created, deleted, or updated by observers
 - For every update done on an event, this will count as 1 API call and + (1 * `X` # Attendees) since this will count as a theoretical new event
+
+## Restricting Users
+Restrict the calendar to only listen on a subset of users by exporting a JavaScript array of emails to only listen to and set the `USER_WHITELIST_PATH` to the path of the JavaScript file.
+
+Example: `exampleList.js`
+```js
+module.exports = [
+  "testuser1@gmail.com",
+  "testuser2@gmail.com"
+];
+```
+
+Setting the environment variable:
+```
+USER_WHITELIST_PATH=./exampleList.js
+```
 
 ## Authors
 - [Brandon Him](https://github.com/brh55/)
