@@ -7,6 +7,7 @@
 > Reactive application that listens on Google calendars within a [G Suite](https://gsuite.google.com/) with the ability to process business logic
 
 - - -
+> 🚨 This project is no longer being actively maintained, and remains as provided as good will for public consumption. Please use at your own discretion.
 
 [![Build Status](https://img.shields.io/travis/cisco-ie/stenella.svg?style=flat-square)](https://travis-ci.org/cisco-ie/stenella) [![license](https://img.shields.io/github/license/cisco-ie/stenella.svg?style=flat-square)]() [![XO code style](https://img.shields.io/badge/code_style-XO-5ed9c7.svg?style=flat-square)](https://github.com/sindresorhus/xo) [![Coveralls branch](https://img.shields.io/coveralls/cisco-ie/stenella/master.svg?style=flat-square)](https://coveralls.io/github/cisco-ie/stenella)
 
